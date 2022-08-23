@@ -1,6 +1,6 @@
 Folder: myPython
 Created: August 2022 
-by: Izel Gediz
+by: Izel Gediz 
 
 This folder contains all Python scripts I used during my Master Thesis.
 Most of them will concerne the data analysis of Bolometerrelated measurements and modelations.
