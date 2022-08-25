@@ -108,6 +108,45 @@ def PlotAllTimeseriesTogether (figheight=None, figwidth=None, save=False):
     if save==True:
         fig1.savefig(str(outfile)+"shot{n}/shot{n}_all_bolo_channels_raw_signals_together.pdf".format(n=shotnumber), bbox_inches='tight')
 
+def CombinedTimeSeries (shot1, shot2, shot3, shot4, shot5, shot6, shot7, shot8, Plot=False, save =False):
+    path='/home/gediz/Measurements/Calibration_Bolometer_17_08_2022/Bolometer_calibration_air_different_lamps_17_08_2022/shot{name}.dat'
+    location=path.format(name=shot1)
+    B1, time1=LoadData(location)['Bolo1'], LoadData(location)['Zeit [ms]']
+    location=path.format(name=shot2)
+    B2, time2=LoadData(location)['Bolo2'], LoadData(location)['Zeit [ms]']
+    location=path.format(name=shot3)
+    B3, time3=LoadData(location)['Bolo3'], LoadData(location)['Zeit [ms]']
+    location=path.format(name=shot4)
+    B4, time4=LoadData(location)['Bolo4'], LoadData(location)['Zeit [ms]']
+    location=path.format(name=shot5)
+    B5, time5=LoadData(location)['Bolo5'], LoadData(location)['Zeit [ms]']
+    location=path.format(name=shot6)
+    B6, time6=LoadData(location)['Bolo6'], LoadData(location)['Zeit [ms]']
+    location=path.format(name=shot7)
+    B7, time7=LoadData(location)['Bolo7'], LoadData(location)['Zeit [ms]']
+    location=path.format(name=shot8)
+    B8, time8=LoadData(location)['Bolo8'], LoadData(location)['Zeit [ms]']
+    time=max([time1,time2,time3,time4,time5,time6,time7,time8], key=len)
+    print(len(time),len(B1),len(B2),len(B3),len(B4),len(B5),len(B6),len(B7),len(B8))
+    if Plot==True:
+        plt.plot(time1, B1, label="Channel 1")
+        plt.plot(time2, B2, label="Channel 2")
+        plt.plot(time3, B3, label="Channel 3")
+        plt.plot(time4, B4, label="Channel 4")
+        plt.plot(time5, B5, label="Channel 5")
+        plt.plot(time6, B6, label="Channel 6")
+        plt.plot(time7, B7, label="Channel 7")
+        plt.plot(time8, B8, label="Channel 8")
+        plt.legend(loc=1, bbox_to_anchor=(1.2,1) )
+        fig1 = plt.gcf()
+        plt.show()
+    if save == True:
+        data = np.column_stack([np.array(time), np.array(B1), np.array(B2), np.array(B3),np.array(B4),np.array(B5),np.array(B6),np.array(B7),np.array(B8)])#, np.array(z), np.array(abs(y-z))])
+        datafile_path = str(outfile)+"combined_shots/from{a}to{b}.txt".format(a=shot1, b=shot8)
+        np.savetxt(datafile_path , data, delimiter='\t \t', header='Bolometerdata of channels 1 to 8 taken from shots {a} to {b}'.format(a=shot1, b=shot8))
+
+
+
 
 #This is a Function to derive the Time (indices) in which the Plasma was on
 #It needs to be fed the MW Power data.
@@ -169,7 +208,7 @@ def SignalHeight_rough(Type='', i=1, Plot=False, save=False):
     signal_off=np.mean(list(y[stop+100:stop+200]))
     signal_on=np.mean(list(y[stop-200:stop-100]))
     div=signal_off-signal_on
-    #print(div)
+    print(div)
     if Plot== True:
         plt.show()
         plt.plot(time,y, alpha=0.5)
@@ -353,7 +392,7 @@ def CompareBolometerProfiles(shot_number_1, shot_number_2, shot_number_3, shot_n
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=50017
+    shotnumber=50018
 
     #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     location='/home/gediz/Measurements/Calibration_Bolometer_17_08_2022/Bolometer_calibration_air_different_lamps_17_08_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
@@ -370,8 +409,17 @@ if __name__ == "__main__":
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
-    PlotAllTimeseriesTogether(save=True)
+    SignalHeight_rough('Bolo', 8, Plot=True, save=False)
+    #PlotAllTimeseriesTogether(save=True)
+    #CombinedTimeSeries('50025','50024','50023','50022','50021','50020','50019','50018', Plot=True)
     #BolometerProfile('Bolo', save=True)
     #CompareBolometerProfiles(50012, 50013,50001, 50013, save=True)
+
+    x,y=np.loadtxt('/home/gediz/Results/Calibration/Bolometer_calibration_air_different_lamps_17_08_2022/combined_shots/cali_test.txt', unpack=True)
+    plt.plot(x,y,'bo')
+    plt.show()
+
+
+
 
 # %%

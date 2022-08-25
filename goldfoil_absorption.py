@@ -35,6 +35,7 @@ def Gold_Abs():
 def Spectrum(lightsource=''):
     x,y= np.genfromtxt(str(spectrumdata)+'spectrometer_data_of_lightsource_'+lightsource+'.txt', skip_header=2,unpack='true')  
     name='Spectral Data'
+    print (x[np.argmax(y)])
     return x,y, name
 
 
@@ -125,7 +126,7 @@ if __name__ == "__main__":
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
 
 
-    Double_Plot('UV_Taschenlampe_snapshot_weitweg', save=True)
+    #Double_Plot('UV_Taschenlampe_snapshot_weitweg', save=True)
     #Spectrometer_Data('UV_Taschenlampe_snapshot_weitweg', save=True)
-
+    Spectrum('UV_Taschenlampe_snapshot_weitweg')
 # %%
