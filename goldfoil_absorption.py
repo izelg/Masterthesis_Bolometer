@@ -38,6 +38,27 @@ def Spectrum(lightsource=''):
     print (x[np.argmax(y)])
     return x,y, name
 
+#Use this function to plot the Absportion line of Gold using the data and interpolation
+def GoldAbsorptionPlot(save=False):
+    wavelength, golddata= np.loadtxt('/home/gediz/Results/Goldfoil_Absorption/gold_abs_Anne.txt', unpack='true')
+    wavelength_new_array=np.arange(0,10E5,1)
+    fittedgolddata= pchip_interpolate(wavelength, golddata, wavelength_new_array)
+    fig,ax=plt.subplots()
+    fig.set_figheight(5)
+    fig.set_figwidth(7)
+    plt.rcParams.update({'font.family':'sans-serif'})
+    ax.set(xlabel='wavelength [nm]', ylabel='relative Absorption')
+    plt.suptitle('Absorption of Goldfoil')
+    ax.semilogx(wavelength_new_array, fittedgolddata, color='Red', label='Interpolated Data')
+    ax.semilogx(wavelength, golddata, '.', label='Literature Data')
+    ax.axvspan(400,750,facecolor='green', alpha=0.3)
+    plt.annotate('visible light', (780, 0.8), color='green')
+    plt.grid(True,linestyle='dotted')
+    plt.legend()
+    fig1= plt.gcf()
+    plt.show()
+    if save==True:
+        fig1.savefig("/home/gediz/Results/Goldfoil_Absorption/Golddata_and_Interpolation_with_visible_light.pdf")
 
 #Use this function to fuse the data of the three spectrometerchannels, plot them and save the plot as well as the new fused datafile
 #They should be saved with names similar to those in this folder
@@ -126,7 +147,5 @@ if __name__ == "__main__":
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
 
 
-    #Double_Plot('UV_Taschenlampe_snapshot_weitweg', save=True)
-    #Spectrometer_Data('UV_Taschenlampe_snapshot_weitweg', save=True)
-    Spectrum('UV_Taschenlampe_snapshot_weitweg')
+    GoldAbsorptionPlot()
 # %%

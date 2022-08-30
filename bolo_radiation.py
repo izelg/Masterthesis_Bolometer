@@ -342,14 +342,17 @@ def BolometerProfile(Type="", save=False):
     if Type == 'Bolo':
         ylabel1= 'Signal [V]'
         name='raw data'
+        name_='raw_data'
     if Type == 'Power':
         ylabel1= 'Power [\u03bcW]'
         name= 'radiation powers'
+        name_='radiation_powers'
     if Type =='Cali':
         ylabel1='Signal [V]'
         name='raw data'
+        
     plt.figure(figsize=(10,5))
-    plt.plot(x,y, marker='o', linestyle='None')
+    plt.plot(x,y, marker='o', linestyle='dashed')
     #plt.plot(x,z, marker='x', linestyle='None', label='Annes Daten zum Vergleich')
     plt.ylabel(ylabel1)
     plt.xlabel('Bolometerchannel')
@@ -359,27 +362,29 @@ def BolometerProfile(Type="", save=False):
     plt.show()
     if save == True:
         data = np.column_stack([np.array(x), np.array(y)])#, np.array(z), np.array(abs(y-z))])
-        datafile_path = str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shotnumber)
-        np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. MW Power was {m} \n Label for plot \n Data of shot n°{s} with MW power {m}\nchanneln° \t Power I derived [\u03bcW]'.format(n=name, s= shotnumber, m=MW))
+        datafile_path = str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shotnumber, t=name_)
+        np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. MW Power was {m} \n Label for plot \n Data of shot n°{s} with MW power {m}\nchanneln° \t {u}'.format(n=name, s= shotnumber, m=MW, u =ylabel1))
         #np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. MW Power was {m} \n channeln° \t Power I derived [\u03bcW]\t Power Anne derived [\u03bcW] \t Difference [\u03bcW]'.format(n=name, s= shotnumber, m=MW))
-        fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile.pdf".format(n=shotnumber), bbox_inches='tight')
+        fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.pdf".format(n=shotnumber, t=name_), bbox_inches='tight')
     return x, y#, z, y-z
 
 #This function can compare the Bolometerprofiles of 4 different shots
 #There must already be a .txt file with the Signals for each channel as created with the function BolometerProfile()
 def CompareBolometerProfiles(shot_number_1, shot_number_2, shot_number_3, shot_number_4, save=False):
     x=[1,2,3,4,5,6,7,8]
-    z=[8,7,6,5,4,3,2,1]
+    #z=[8,7,6,5,4,3,2,1]
     shot1=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_1),usecols=1)
     shot2=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_2),usecols=1)
     shot3=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_3),usecols=1)
-    shot4=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_4),usecols=1)
+    #shot4=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_4),usecols=1)
+    shot4=np.loadtxt("/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_signal_heights.txt",usecols=1)
     plt.plot(x,shot1, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_1), 'r').readlines()[2][3:-1])
-    plt.plot(z,shot2, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_2), 'r').readlines()[2][3:-1])
-    plt.plot(x,shot3, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_3), 'r').readlines()[2][3:-1])
-    plt.plot(z,shot4, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_4), 'r').readlines()[2][3:-1])
+    plt.plot(x,shot2, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_2), 'r').readlines()[2][3:-1])
+    #plt.plot(x,shot3, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_3), 'r').readlines()[2][3:-1])
+    plt.plot(x,shot4, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_4), 'r').readlines()[2][3:-1])
     plt.xlabel('Bolometerchannel')
-    plt.ylabel('Power [\u03bcW]')
+    plt.ylabel('Signal [V]')
+    #plt.ylabel('Power [\u03bcW]')
     plt.suptitle('Comparison of the Bolometerprofiles from Shots \n {a}, {b}, {c}, and {d}'.format(a=shot_number_1, b=shot_number_2, c=shot_number_3, d=shot_number_4))
     plt.legend(loc=1, bbox_to_anchor=(1.7,1) )
     fig1= plt.gcf()
@@ -397,7 +402,7 @@ if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
     shotnumber=50025
 
-    #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+    #location ='/data4/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     location='/home/gediz/Measurements/Calibration/Calibration_Bolometer_August_2022/Bolometer_calibration_air_different_lamps_17_08_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     time = LoadData(location)['Zeit [ms]'] / 1000 # s
     infile= '/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/All_channels_from_shots_50025_to_50018.txt'
@@ -413,22 +418,15 @@ if __name__ == "__main__":
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
-    #SignalHeight_rough('Cali', 1, Plot=True, save=False)
-    #PlotAllTimeseriesTogether(save=True)
-    #CombinedTimeSeries('50025','50024','50023','50022','50021','50020','50019','50018', Plot=True, save=True)
-    BolometerProfile('Cali')
-    #CompareBolometerProfiles(50012, 50013,50001, 50013, save=True)
-
-    # x,y=np.loadtxt('/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_signal_heights.txt', unpack=True)
-    # plt.plot(x,y,'bo')
-    # plt.xlabel('Bolometerchannel')
-    # plt.ylabel('Signal [V]')
+    CompareBolometerProfiles(50001, 50007, 50016, 50015)
+    # x,y = np.loadtxt('/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_power.txt', unpack=True, skiprows=5)
+    # plt.plot(x,y, '--bo')
     # plt.suptitle('Green laser on each channel in different measurements \n shots 50018 to 50025')
+    # plt.xlabel('Bolometerchannel')
+    # plt.ylabel('Power [\u03bcW]')
     # fig1= plt.gcf()
     # plt.show()
-    # fig1.savefig('/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_signal_heights.pdf', bbox_inches='tight')
-
-
+    # fig1.savefig('/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_power.pdf')
 
 
 # %%

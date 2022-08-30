@@ -115,25 +115,26 @@ def Figure(input, Save=False):
 
 # %%
 
-if __name__ == "__main__":
-    infile ='/scratch.mv3/koehn/backup_Anne/zilch/measurements/Cal/Bolo_cal_vak/Messwerte_2010_10_08/'
-    outfile='/home/gediz/Results/Calibration/old_calibration/'
-    x=[]
-    tau=[]
-    kappa=[]
-    R_M=[]
-    for channelnumber in [0,1,2,3,4,5,6,7]:
-        x.append(channelnumber+1)
-        tau.append(Get_Tau(channelnumber, Plot=False)[2])
-        kappa.append(abs(Get_Kappa(channelnumber)[0]))
-        R_M.append(Get_Kappa(channelnumber)[1])
-    Figure(tau, Save=True)
-    Figure(kappa, Save=True)
-    Figure(R_M, Save=True)
-    data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
-    np.savetxt(str(outfile)+"old_calibration_of_Anne.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
-
-
+# if __name__ == "__main__":
+#     infile ='/scratch.mv3/koehn/backup_Anne/zilch/measurements/Cal/Bolo_cal_vak/Messwerte_2010_10_08/'
+#     outfile='/home/gediz/Results/Calibration/old_calibration/'
+#     x=[]
+#     tau=[]
+#     kappa=[]
+#     R_M=[]
+#     for channelnumber in [0,1,2,3,4,5,6,7]:
+#         x.append(channelnumber+1)
+#         tau.append(Get_Tau(channelnumber, Plot=False)[2])
+#         kappa.append(abs(Get_Kappa(channelnumber)[0]))
+#         R_M.append(Get_Kappa(channelnumber)[1])
+#     Figure(tau, Save=True)
+#     Figure(kappa, Save=True)
+#     Figure(R_M, Save=True)
+#     data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
+#     np.savetxt(str(outfile)+"old_calibration_of_Anne.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
+infile ='/scratch.mv3/koehn/backup_Anne/zilch/measurements/Cal/Bolo_cal_vak/Messwerte_2010_10_08/'
+outfile='/home/gediz/Results/Calibration/old_calibration/'
+Get_Tau(1,Plot=True)
 
 
 # %%
