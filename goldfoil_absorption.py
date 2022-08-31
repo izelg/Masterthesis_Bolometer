@@ -1,6 +1,9 @@
 #%%
 #Written by: Izel Gediz
 #Date of Creation: 16.08.2022
+#Here you'll find functions to plot the Absorption curve of Gold, different spectra and their percentage absorbed by goldfoil.
+#It uses the gold absorption data from Anne and takes spectrometer data in 2 column .txt format
+#For my measurements the oceanview yaz spectrometer was used which saves the data in three different documents. there is also a funciton here to fuse the data.
 
 
 from pdb import line_prefix
@@ -38,7 +41,7 @@ def Spectrum(lightsource=''):
     print (x[np.argmax(y)])
     return x,y, name
 
-#Use this function to plot the Absportion line of Gold using the data and interpolation
+#Use this function to plot the Absportion line of Gold using the literature data and an interpolation
 def GoldAbsorptionPlot(save=False):
     wavelength, golddata= np.loadtxt('/home/gediz/Results/Goldfoil_Absorption/gold_abs_Anne.txt', unpack='true')
     wavelength_new_array=np.arange(0,10E5,1)
@@ -85,6 +88,10 @@ def Spectrometer_Data(lightsource='', save=False):
         np.savetxt(str(outfile)+"spectrometer_data_of_lightsource_{}.txt".format(lightsource), data, delimiter='\t \t', header='Data of all three Spectrometer-channels for the lightsource {} \n wavelength [nm] \t counts'.format(lightsource))
     return x,y
 
+#This function creates an interpolated curve of the golddata with the same x(wavelength)-data
+#then each spectral point is multiplyed by the relative absorption of gold at that wavelength
+#it returns the reduced spectrum that is absorbed by gold and the percentage of the original spectrum 
+#by deriving both integrals.
 def Gold_Fit(lightsource=''):
     gold_interpolation=pchip_interpolate(Gold_Abs()[0],Gold_Abs()[1], Spectrum(lightsource)[0])
     reduced_spectrum=[]
@@ -98,7 +105,7 @@ def Gold_Fit(lightsource=''):
     absorbed_percentage=(new_spec_int_trap/spec_int_trap)*100
     return reduced_spectrum, absorbed_percentage
 
-
+#Plot spectral or gold data quickly on a log scale
 def Log_Plot(data):
     x=data[0]
     y=data[1]
@@ -106,6 +113,8 @@ def Log_Plot(data):
     ax.semilogx(x,y)
     plt.show()
 
+#This function plots and saves the original spectrum, the gold absorption curve and the reduces spectrum as 
+#absorbed by gold all together and prints the absorbed percentage in the legend
 def Double_Plot(lightsource='', save=False):
     x1=Gold_Abs()[0]
     y1=Gold_Abs()[1]
@@ -138,6 +147,7 @@ def Double_Plot(lightsource='', save=False):
     
 
 #%%
+#Down here insert the data you want to analyze and one or several of the above functions and run the script
 
 if __name__ == "__main__":
     infile ='/scratch.mv3/koehn/backup_Anne/zilch/Bolo/Absorption_AU/'

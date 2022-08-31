@@ -108,6 +108,10 @@ def PlotAllTimeseriesTogether (figheight=None, figwidth=None, save=False):
     if save==True:
         fig1.savefig(str(outfile)+"shot{n}/shot{n}_all_bolo_channels_raw_signals_together.pdf".format(n=shotnumber), bbox_inches='tight')
 
+#You need this function if you did a measurement where you shone light on only one channel per measurement; so if you want to combine 8 measurements 
+#It saves the time series of the 8 channels from the 8 measurements in one document
+#It also plots all time series together even if they have different lengths
+#So for shot1 enter the shotnumber where you collected data only on channel 1 etc. example: CombinedTimeSeries('50018', '50019',...)
 def CombinedTimeSeries (shot1,shot2,shot3, shot4, shot5, shot6, shot7, shot8, Plot=False, save =False):
     path='/home/gediz/Measurements/Calibration/Calibration_Bolometer_August_2022/Bolometer_calibration_air_different_lamps_17_08_2022/shot{name}.dat'
     a=[shot1,shot2,shot3,shot4,shot5,shot6,shot7,shot8]
@@ -143,7 +147,7 @@ def CombinedTimeSeries (shot1,shot2,shot3, shot4, shot5, shot6, shot7, shot8, Pl
 
 #This is a Function to derive the Time (indices) in which the Plasma was on
 #It needs to be fed the MW Power data.
-#-->Channelname can therefore either be '8 GHz' or '2 GHz'
+#Down in the running part of the script the code finds out if 8 or 2 GHZ MW power was used. search for errors there if this step fails
 def SignalHighLowTime(Plot= False, save=False):
     if MW == '8 GHz':
         MW_n = '8 GHz power'
@@ -175,6 +179,7 @@ def SignalHighLowTime(Plot= False, save=False):
 #This function derives the signal heights without fits to account for the drift
 #It just takes the right edge of the signal and the mean value of 100 datapoints to the left and right to derive the Signalheight
 #It is useful for noisy measurements where the fits don't work or for calibrationmeasurements with no reference MW data
+#Use Type= Cali if you have a combined file like created with CombinedTimeSeries stored outside of the normal shot folders
 def SignalHeight_rough(Type='', i=1, Plot=False, save=False):
     Type_types =['Bolo', 'Power', 'Cali']
     if Type not in Type_types:
@@ -293,7 +298,6 @@ def SignalHeight(Type="", i=1,  Plot=False, save=False):
 #This function derives the Power time series from the raw Bolometer Voltage Time Series of your choosing
 #It uses the formula (4.21) of Anne Zilchs Diploma Thesis 'Untersuchung von Strahlungsverlusten mittels Bolometrie an einem toroidalen Niedertemperaturplasma' from 2011
 #--> i is the number of the Bolometerchannel
-
 def PowerTimeSeries(i=1, Plot=False, save=False):
     def power(g,k,U_ac, t, U_Li):
         return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,LoadData(location)['Zeit [ms]'] )+U_Li)
@@ -325,6 +329,7 @@ def PowerTimeSeries(i=1, Plot=False, save=False):
 #Tipp: This Routine doesn't show you the Fit Plots of SignalHeight that were used to derive the signal heights. 
 #      So if you want to make sure the code used the good Fits to derive the signal heights change 'Plot' to 'True' at the --><--
 #-->Type is either 'Bolo' or 'Power' depending on if you want to plot the signal heights of raw Voltage data or Power data
+#Use Type= Cali if you have a combined file like created with CombinedTimeSeries stored outside of the normal shot folders
 def BolometerProfile(Type="", save=False):
     print('This could take a second')
     x=[]
@@ -376,11 +381,11 @@ def CompareBolometerProfiles(shot_number_1, shot_number_2, shot_number_3, shot_n
     shot1=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_1),usecols=1)
     shot2=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_2),usecols=1)
     shot3=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_3),usecols=1)
-    #shot4=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_4),usecols=1)
-    shot4=np.loadtxt("/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_signal_heights.txt",usecols=1)
+    shot4=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_4),usecols=1)
+    #shot4=np.loadtxt("/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_signal_heights.txt",usecols=1)
     plt.plot(x,shot1, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_1), 'r').readlines()[2][3:-1])
     plt.plot(x,shot2, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_2), 'r').readlines()[2][3:-1])
-    #plt.plot(x,shot3, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_3), 'r').readlines()[2][3:-1])
+    plt.plot(x,shot3, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_3), 'r').readlines()[2][3:-1])
     plt.plot(x,shot4, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile.txt".format(n=shot_number_4), 'r').readlines()[2][3:-1])
     plt.xlabel('Bolometerchannel')
     plt.ylabel('Signal [V]')
@@ -394,23 +399,22 @@ def CompareBolometerProfiles(shot_number_1, shot_number_2, shot_number_3, shot_n
     
     
 #%% -------------------------------------------------------------------------------------------------------- 
-# Important Variables 
-# You should not change anything except the shotnumber. 
-# Enter a Shot number of the form 'xxxxx'
+#Enter the shotnumber you want to analyze, if you must, change the locations of data (but please don't erase the original ones)
+#Then enter one or several of the above functions according to what you want to analyze and run the script
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=50025
+    shotnumber=50001
 
     #location ='/data4/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    location='/home/gediz/Measurements/Calibration/Calibration_Bolometer_August_2022/Bolometer_calibration_air_different_lamps_17_08_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
+    location=             '/home/gediz/Measurements/Calibration/Calibration_Bolometer_August_2022/Bolometer_calibration_air_different_lamps_17_08_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     time = LoadData(location)['Zeit [ms]'] / 1000 # s
     infile= '/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/All_channels_from_shots_50025_to_50018.txt'
     outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/'
     #outfile = '/home/gediz/Results/Bolometer_Profiles/'
     z= LoadData(location)['2 GHz Richtk. forward']
     height_z = abs(max(z)-min(z))
-    if height_z <= 0.21:
+    if height_z <= 0.21:        #This is the part where the code finds out if 8 or 2GHz MW heating was used. Change the signal height if MW powers used change in the future
         MW = '8 GHz'
     else: 
         MW = '2 GHz'
@@ -418,7 +422,7 @@ if __name__ == "__main__":
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
-    CompareBolometerProfiles(50001, 50007, 50016, 50015)
+    BolometerProfile('Power')
     # x,y = np.loadtxt('/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_power.txt', unpack=True, skiprows=5)
     # plt.plot(x,y, '--bo')
     # plt.suptitle('Green laser on each channel in different measurements \n shots 50018 to 50025')

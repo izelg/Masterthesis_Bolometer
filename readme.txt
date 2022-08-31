@@ -12,3 +12,9 @@ to derive the Signal heights per Bolometerchannel and to compare different Bolom
 
 additional_functions.py: During the development of the script above I created some functions that became
 obsolete later. I will collect them here for the case that I ever need them or a function of similar structure again.
+
+golfoil_absorption.py: I wrote functions to plot the goldfoil absorption line, functions to plot the spectra of measurements
+and a function to derive the percentage of an arbitrary spectra that will be absorbed by the goldfoil.
+
+bolo_calibration.py: Here are the functions to derive kappa and tau from the omic calibration. (possibly to be extended by relative
+calibration and optical absolut calibration functions.)
