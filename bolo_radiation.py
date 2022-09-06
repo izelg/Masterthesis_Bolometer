@@ -47,13 +47,21 @@ def LoadData(location):
 
 #This Function plots a timeseries of your choosing
 #-->use these channelnames: Zeit [ms]		8 GHz power		2 GHz Richtk. forward	I_Bh			U_B			Pressure		2 GHz Richtk. backward	slot1			I_v			Interferometer (Mueller)	Interferometer digital	8 GHz refl. power	Interferometer (Zander)	Bolo_sum		Bolo1			Bolo2			Bolo3			Bolo4			Bolo5			Bolo6			Bolo7			Bolo8			optDiode		r_vh			Coil Temperature
-def PlotSingleTimeseries(channelname="", save=False):
-    y = LoadData(location)[channelname]
+def PlotSingleTimeseries(i=1, save=False):
+    if Datatype=='Data':
+        y= LoadData(location)["Bolo{}".format(i)]
+        time = LoadData(location)['Zeit [ms]'] / 1000
+        title='Shot n° {s} // Channel "Bolo {n}"'.format(s=shotnumber, n=i)
+    elif Datatype=='Source':
+        time=np.genfromtxt(str(source), usecols=(0), unpack=True, skip_footer=200)
+        y=np.genfromtxt(str(source), usecols=(i), unpack=True, skip_footer=200)
+        title='Raw signal data of {s} // Channeln° {n}'.format(s=sourcetitle, n=i)
+    print(len(y))
     plt.figure(figsize=(10,5))
     plt.plot(time, y)
-    plt.suptitle('Shot n° {s} // Channel "{n}"'.format(s=shotnumber, n=channelname))
+    plt.suptitle(title)
     plt.xlabel('Time [s]')
-    plt.ylabel('Signal [arb]')
+    plt.ylabel('Signal [V]')
     fig1= plt.gcf()
     plt.show()
     if save==True:
@@ -67,6 +75,7 @@ def PlotAllTimeseries (figheight=None, figwidth=None, save=False):
     if figwidth is None:
         print("You didn't choose a figurewidth so I set it to 10")
         figwidth=10
+    time = LoadData(location)['Zeit [ms]'] / 1000
     fig, axs = plt.subplots(4,2)
     fig.set_figheight(figheight)
     fig.set_figwidth(figwidth)
@@ -97,6 +106,7 @@ def PlotAllTimeseriesTogether (figheight=None, figwidth=None, save=False):
         figwidth=10
     plt.figure(figsize=(figwidth, figheight))
     plt.suptitle ('All Bolometer Signals of shot n°{n} together. MW used: {m}'.format(n=shotnumber, m=MW))
+    time = LoadData(location)['Zeit [ms]'] / 1000
     for i in np.arange(1,9):
         bolo_raw_data = LoadData(location)["Bolo{}".format(i)]
         plt.plot(time,  bolo_raw_data, label="Bolo{}".format(i) )
@@ -131,7 +141,7 @@ def CombinedTimeSeries (shot1,shot2,shot3, shot4, shot5, shot6, shot7, shot8, Pl
         print(len(j))
         plt.plot(time_longest,j, label='Channel {}'.format(l))
     if Plot==True:
-        plt.suptitle('Calibration with green laser \n shots 50018 to 50025')
+        plt.suptitle('Calibration with green laser \n shots {a} to {b}'.format(a=shot1, b=shot8))
         plt.legend(loc=1, bbox_to_anchor=(1.4,1))
         plt.xlabel('time [s]')
         plt.ylabel('Signal [V]')
@@ -144,7 +154,6 @@ def CombinedTimeSeries (shot1,shot2,shot3, shot4, shot5, shot6, shot7, shot8, Pl
 
 
 
-
 #This is a Function to derive the Time (indices) in which the Plasma was on
 #It needs to be fed the MW Power data.
 #Down in the running part of the script the code finds out if 8 or 2 GHZ MW power was used. search for errors there if this step fails
@@ -154,7 +163,7 @@ def SignalHighLowTime(Plot= False, save=False):
     if MW== '2 GHz':
         MW_n= '2 GHz Richtk. forward'
     y= LoadData(location)[MW_n]
-    x= LoadData(location)['Zeit [ms]']
+    time= LoadData(location)['Zeit [ms]']
 
     steps=[]
     for i in np.arange(0, len(y)-10):
@@ -181,23 +190,27 @@ def SignalHighLowTime(Plot= False, save=False):
 #It is useful for noisy measurements where the fits don't work or for calibrationmeasurements with no reference MW data
 #Use Type= Cali if you have a combined file like created with CombinedTimeSeries stored outside of the normal shot folders
 def SignalHeight_rough(Type='', i=1, Plot=False, save=False):
-    Type_types =['Bolo', 'Power', 'Cali']
+    Type_types =['Bolo', 'Power']
     if Type not in Type_types:
         raise ValueError("Invalid Type input. Insert one of these arguments {}".format(Type_types))
     if Type == 'Bolo':
-        y= LoadData(location)["Bolo{}".format(i)]
-        time= LoadData(location)['Zeit [ms]']
+        if Datatype=='Data':
+            y= LoadData(location)["Bolo{}".format(i)]
+            time= LoadData(location)['Zeit [ms]']
+        elif Datatype=='Source':
+            time,y=np.loadtxt(str(source), usecols=(0,i), unpack=True)
         ylabel= 'Signal [V]'
         unit = 'V'
     if Type == 'Power':
-        y= PowerTimeSeries(i)
-        time= LoadData(location)['Zeit [ms]']
+        if Datatype=='Data':
+            y= PowerTimeSeries(i)
+            time= LoadData(location)['Zeit [ms]']
+        elif Datatype=='Source':
+            time=np.loadtxt(str(source), usecols=(0), unpack=True)
+            y=PowerTimeSeries(i)
         ylabel= 'Power [\u03bcW]'
         unit='\u03bcW'
-    if Type=='Cali':
-        time,y=np.loadtxt(str(infile), usecols=(0,i), unpack=True)
-        ylabel= 'Signal [V]'
-        unit = 'V'
+
         
 
     jump=((max(y)-min(y))/2)
@@ -242,6 +255,7 @@ def SignalHeight_rough(Type='', i=1, Plot=False, save=False):
 def SignalHeight(Type="", i=1,  Plot=False, save=False):
     def lin (x,a,b):
         return a*x + b
+    time = LoadData(location)['Zeit [ms]'] / 1000
     x=time
 
     Type_types =['Bolo', 'Power']
@@ -300,7 +314,7 @@ def SignalHeight(Type="", i=1,  Plot=False, save=False):
 #--> i is the number of the Bolometerchannel
 def PowerTimeSeries(i=1, Plot=False, save=False):
     def power(g,k,U_ac, t, U_Li):
-        return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,LoadData(location)['Zeit [ms]'] )+U_Li)
+        return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,time )+U_Li)
     kappa =  [ 4.2813209E-01,  4.3431544E-01,  4.2536712E-01,  4.5481977E-01, 4.5481977E-01*1.4397, 4.2536712E-01*1.2147, 4.3431544E-01*1.2493, 4.2813209E-01*1.17938]
     #kappa =  [ 4.2813209E-01,  4.3431544E-01,  4.2536712E-01,  4.5481977E-01, 4.5481977E-01, 4.2536712E-01, 4.3431544E-01, 4.2813209E-01]
     tau = [0.102900,     0.111500,     0.114500,     0.115400,    0.0736000,  0.0814000,    0.0704000,    0.0709000]
@@ -311,17 +325,26 @@ def PowerTimeSeries(i=1, Plot=False, save=False):
     U_ac=8
     k= kappa[i-1]
     t = tau[i-1]
-    U_Li= LoadData(location)["Bolo{}".format(i)]
+    if Datatype=='Data':
+        U_Li= LoadData(location)["Bolo{}".format(i)]
+        time = LoadData(location)['Zeit [ms]'] / 1000
+        title='Power data of Shot n° {s} // Channel "Bolo{n}"'.format(s=shotnumber, n=i)
+    elif Datatype=='Source':
+        time=np.genfromtxt(str(source), usecols=(0), unpack=True)
+        U_Li=np.genfromtxt(str(source), usecols=(i), unpack=True)
+        title='Power data of {s} // Channeln° {n}'.format(s=sourcetitle, n=i)
+
     if Plot==True:
         plt.figure(figsize=(10,5))
         plt.plot(time, power(g,k,U_ac, t, U_Li)*1000000)
-        plt.suptitle('Power data of Shot n° {s} // Channel "Bolo{n}"'.format(s=shotnumber, n=i))
+        plt.suptitle(title)
         plt.xlabel('Time [s]')
         plt.ylabel('Power [\u03bcW]')
         fig1= plt.gcf()
         plt.show()
     if save==True:
         fig1.savefig(str(outfile)+"shot{n}/shot{n}_channel_Bolo{c}_power_signal.pdf".format(n=shotnumber, c=i), bbox_inches='tight')
+    data = np.column_stack([np.array(time), np.array(power(g,k,U_ac, t, U_Li)*1000000)])
     return power(g,k,U_ac, t, U_Li)*1000000
 
 #This function derives the Signal height of all 8 Time Series using the SignalHeight function
@@ -337,7 +360,7 @@ def BolometerProfile(Type="", save=False):
     
     #Activate the parts with z to compare your data with Annes Data of the same shot
     #z= np.loadtxt('/scratch.mv3/koehn/backup_Anne/zilch/results/7680/7680_BCh_jump.dat', usecols=(1,))*1000000
-    Type_types =['Bolo', 'Power', 'Cali']
+    Type_types =['Bolo', 'Power']
     if Type not in Type_types:
         raise ValueError("Invalid Type input. Insert one of these arguments {}".format(Type_types))
     for i in [1,2,3,4,5,6,7,8]:
@@ -352,9 +375,7 @@ def BolometerProfile(Type="", save=False):
         ylabel1= 'Power [\u03bcW]'
         name= 'radiation powers'
         name_='radiation_powers'
-    if Type =='Cali':
-        ylabel1='Signal [V]'
-        name='raw data'
+
         
     plt.figure(figsize=(10,5))
     plt.plot(x,y, marker='o', linestyle='dashed')
@@ -404,14 +425,21 @@ def CompareBolometerProfiles(shot_number_1, shot_number_2, shot_number_3, shot_n
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=50001
+    shotnumber=50019
+    Datatype= 'Source' #'Source'
+   
 
     #location ='/data4/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    location=             '/home/gediz/Measurements/Calibration/Calibration_Bolometer_August_2022/Bolometer_calibration_air_different_lamps_17_08_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
-    time = LoadData(location)['Zeit [ms]'] / 1000 # s
-    infile= '/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/All_channels_from_shots_50025_to_50018.txt'
+    location=  '/home/gediz/Measurements/Calibration/Calibration_Bolometer_August_2022/Bolometer_calibration_air_different_lamps_17_08_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
+    #time = LoadData(location)['Zeit [ms]'] / 1000 # s
+    
+    source= '/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/All_channels_from_shots_50025_to_50018.txt'
+    sourcetitle='calibration with green laser'
+    
     outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/'
     #outfile = '/home/gediz/Results/Bolometer_Profiles/'
+    
+    
     z= LoadData(location)['2 GHz Richtk. forward']
     height_z = abs(max(z)-min(z))
     if height_z <= 0.21:        #This is the part where the code finds out if 8 or 2GHz MW heating was used. Change the signal height if MW powers used change in the future
@@ -422,7 +450,10 @@ if __name__ == "__main__":
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
-    BolometerProfile('Power')
+    #PlotSingleTimeseries(8)
+    PowerTimeSeries(7, Plot=True)
+    SignalHeight_rough('Bolo', 7, Plot=True)
+    #BolometerProfile('Power')
     # x,y = np.loadtxt('/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_power.txt', unpack=True, skiprows=5)
     # plt.plot(x,y, '--bo')
     # plt.suptitle('Green laser on each channel in different measurements \n shots 50018 to 50025')
@@ -431,6 +462,7 @@ if __name__ == "__main__":
     # fig1= plt.gcf()
     # plt.show()
     # fig1.savefig('/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_power.pdf')
+
 
 
 # %%
