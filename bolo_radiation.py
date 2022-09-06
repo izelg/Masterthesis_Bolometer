@@ -127,20 +127,18 @@ def CombinedTimeSeries (shot1,shot2,shot3, shot4, shot5, shot6, shot7, shot8, Pl
     path='/home/gediz/Measurements/Calibration/Calibration_Bolometer_August_2022/Bolometer_calibration_air_different_lamps_17_08_2022/shot{name}.dat'
     a=[shot1,shot2,shot3,shot4,shot5,shot6,shot7,shot8]
     bolo=[[],[],[],[],[],[],[],[]]
-    boloplot=[[],[],[],[],[],[],[],[]]
     time=[[],[],[],[],[],[],[],[]]
     c=[1,2,3,4,5,6,7,8]
-    for (i,j,b,k,l) in zip(a,bolo,boloplot,time,c):
+    for (i,j,k,l) in zip(a,bolo,time,c):
         location=path.format(name=i)
         j.extend(LoadData(location)['Bolo{}'.format(l)])
-        b.extend(LoadData(location)['Bolo{}'.format(l)])
         k.extend(LoadData(location)['Zeit [ms]'])
     time_longest=max(time, key=len)
     time_longest=[x/1000 for x in time_longest]
-    for (b,l) in zip(boloplot,c):
-        length_extend=len(time_longest)-len(b)
-        b.extend([b[-1]]*length_extend)
-        plt.plot(time_longest,b, label='Channel {}'.format(l))
+    for (j,l) in zip(bolo,c):
+        length_extend=len(time_longest)-len(j)
+        j.extend([j[-1]]*length_extend)
+        plt.plot(time_longest,j, label='Channel {}'.format(l))
     if Plot==True:
         plt.suptitle('Calibration with green laser \n shots {a} to {b}'.format(a=shot1, b=shot8))
         plt.legend(loc=1, bbox_to_anchor=(1.4,1))
@@ -152,7 +150,7 @@ def CombinedTimeSeries (shot1,shot2,shot3, shot4, shot5, shot6, shot7, shot8, Pl
             os.makedirs('/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/shots_{a}_to_{b}'.format(a=shot1, b=shot8))
         fig1= plt.gcf()
         fig1.savefig('/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/shots_{a}_to_{b}/All_channels_from_shots_{a}_to_{b}.pdf'.format(a=shot1, b=shot8), bbox_inches='tight')
-        data = np.column_stack([np.array(time_longest),np.array(bolo[0]), np.array(bolo[1]), np.array(bolo[2]), np.array(bolo[3]), np.array(bolo[4]), np.array(bolo[5]), np.array(bolo[6]), np.array(bolo[7])])
+        data = np.column_stack([np.array(time_longest), np.array(bolo[0]), np.array(bolo[1]), np.array(bolo[2]), np.array(bolo[3]), np.array(bolo[4]), np.array(bolo[5]), np.array(bolo[6]), np.array(bolo[7])])
         #data=list(itertools.zip_longest([time, bolo]))#, time[2], time[3],time[4], time[5], time[6], time[7], bolo[0], bolo[1], bolo[2], bolo[3],bolo[4], bolo[5], bolo[6], bolo[7]], fillvalue=''))
         np.savetxt('/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/shots_{a}_to_{b}/All_channels_from_shots_{a}_to_{b}.txt'.format(a=shot1, b=shot8) , data, header='Signals of all Bolometerchannels combined from shots {a} to {b}. \n time1//time2//time3//time4//time5//time6//time7//time8 // Bolo1 //Bolo2 // Bolo3 // Bolo4 //Bolo5 / Bolo6 // Bolo7 // Bolo8'.format(a=shot1, b=shot8))
         print(data)
@@ -242,7 +240,7 @@ def SignalHeight_rough(Type='', i=1, Plot=False, save=False):
         plt.plot(time[stop-200], y[stop-200], marker='o', color='red')
         plt.suptitle('Bolometerdata channel {} with markers for the signal height data'.format(i))
         plt.xlabel('Time [s]')
-        plt.ylabel('Signal [V]')
+        plt.ylabel(ylabel)
         fig1= plt.gcf()
         plt.show()
     if save==True:
@@ -319,7 +317,7 @@ def SignalHeight(Type="", i=1,  Plot=False, save=False):
 #--> i is the number of the Bolometerchannel
 def PowerTimeSeries(i=1, Plot=False, save=False):
     def power(g,k,U_ac, t, U_Li):
-        return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,time )+U_Li)
+        return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li)
     kappa =  [ 4.2813209E-01,  4.3431544E-01,  4.2536712E-01,  4.5481977E-01, 4.5481977E-01*1.4397, 4.2536712E-01*1.2147, 4.3431544E-01*1.2493, 4.2813209E-01*1.17938]
     #kappa =  [ 4.2813209E-01,  4.3431544E-01,  4.2536712E-01,  4.5481977E-01, 4.5481977E-01, 4.2536712E-01, 4.3431544E-01, 4.2813209E-01]
     tau = [0.102900,     0.111500,     0.114500,     0.115400,    0.0736000,  0.0814000,    0.0704000,    0.0709000]
@@ -335,8 +333,8 @@ def PowerTimeSeries(i=1, Plot=False, save=False):
         time = LoadData(location)['Zeit [ms]'] / 1000
         title='Power data of Shot n° {s} // Channel "Bolo{n}"'.format(s=shotnumber, n=i)
     elif Datatype=='Source':
-        time=np.genfromtxt(str(source), usecols=(0), unpack=True)
-        U_Li=np.genfromtxt(str(source), usecols=(i), unpack=True)
+        time=np.genfromtxt(str(source+'/All_channels_from_shots_50025_to_50018.txt'), usecols=(0), unpack=True)
+        U_Li=np.genfromtxt(str(source+'/All_channels_from_shots_50025_to_50018.txt'), usecols=(i), unpack=True)
         title='Power data of {s} // Channeln° {n}'.format(s=sourcetitle, n=i)
 
     if Plot==True:
@@ -375,16 +373,16 @@ def BolometerProfile(Type="", save=False):
         ylabel1= 'Signal [V]'
         name='raw data'
         name_='raw_data'
-        if Datatype=='Data':
-            title= 'Signals of the Bolometerchannels from {n} of shot n°{s} \n MW used: {m}'.format(n=name, s= shotnumber, m=MW)
-        if Datatype=='Source':
-            title='Signals of the Bolometerchannels from {n} of {s}'.format(n=name,s=sourcetitle)
 
     if Type == 'Power':
         ylabel1= 'Power [\u03bcW]'
         name= 'radiation powers'
         name_='radiation_powers'
-        
+    if Datatype=='Data':
+        title= 'Signals of the Bolometerchannels from {n} of shot n°{s} \n MW used: {m}'.format(n=name, s= shotnumber, m=MW)
+    if Datatype=='Source':
+        title='Signals of the Bolometerchannels from {n} of {s}'.format(n=name,s=sourcetitle)
+    
     plt.figure(figsize=(10,5))
     plt.plot(x,y, marker='o', linestyle='dashed')
     plt.ylabel(ylabel1)
@@ -395,9 +393,14 @@ def BolometerProfile(Type="", save=False):
     plt.show()
     if save == True:
         data = np.column_stack([np.array(x), np.array(y)])#, np.array(z), np.array(abs(y-z))])
-        datafile_path = str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shotnumber, t=name_)
-        np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. MW Power was {m} \n Label for plot \n Data of shot n°{s} with MW power {m}\nchanneln° \t {u}'.format(n=name, s= shotnumber, m=MW, u =ylabel1))
-        fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.pdf".format(n=shotnumber, t=name_), bbox_inches='tight')
+        if Datatype=='Data':
+            datafile_path = str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shotnumber, t=name_)
+            np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. MW Power was {m} \n Label for plot \n Data of shot n°{s} with MW power {m}\nchanneln° \t {u}'.format(n=name, s= shotnumber, m=MW, u =ylabel1))
+            fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.pdf".format(n=shotnumber, t=name_), bbox_inches='tight')
+        if Datatype=='Source':
+            np.savetxt(str(source)+'bolometerprofile_from_{t}_of_{n}.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n channel // {l}'.format(n=name, s= sourcetitle,l=ylabel1))
+            fig1.savefig(str(source)+'bolometerprofile_from_{t}_of_{n}.pdf'.format(t=name_,n=sourcetitlesave), bbox_inches='tight')
+
     return x, y#, z, y-z
 
 #This function can compare the Bolometerprofiles of 4 different shots
@@ -431,15 +434,15 @@ def CompareBolometerProfiles(shot_number_1, shot_number_2, shot_number_3, shot_n
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=50019
+    shotnumber=50025
     Datatype= 'Source' #'Source'
    
 
-    #location ='/data4/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+    #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     location=  '/home/gediz/Measurements/Calibration/Calibration_Bolometer_August_2022/Bolometer_calibration_air_different_lamps_17_08_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = LoadData(location)['Zeit [ms]'] / 1000 # s
     
-    source= '/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/shots_50025_to_50018'#/All_channels_from_shots_50025_to_50018.txt'
+    source= '/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/shots_50025_to_50018/'#/All_channels_from_shots_50025_to_50018.txt'
     sourcetitle='calibration with green laser'
     sourcetitlesave='calibration_with_green_laser'
     
@@ -457,6 +460,9 @@ if __name__ == "__main__":
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
     
-    CombinedTimeSeries('50025','50024','50023','50022','50021','50020','50019','50018', save=True)
-    ##BolometerProfile('Bolo')
+    #CombinedTimeSeries('50025','50024','50023','50022','50021','50020','50019','50018', save=True)
+    BolometerProfile('Bolo',save=True)
+    #SignalHeight_rough('Power',1,Plot=True)
+    #PlotSingleTimeseries(1)
+    #PowerTimeSeries(1, Plot=True)
 # %%
