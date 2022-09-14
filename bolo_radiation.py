@@ -323,7 +323,7 @@ def PowerTimeSeries(i=1, Plot=False, save=False):
     g1= (10,30,50)
     g2= (20,100,250)
     g3= (1,2,5)
-    g=2*g1[1]*g2[1]*g3[2]
+    g=2*g1[1]*g2[1]*g3[1]
     U_ac=8
     k= kappa[i-1]
     t = tau[i-1]
@@ -399,7 +399,7 @@ def BolometerProfile(Type="", save=False):
             np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. MW Power was {m} \n Label for plot \n shot n°{s}, {n}, MW power: {m}, {e}\n channeln° \t {u}'.format(n=name, s= shotnumber, m=MW, u =ylabel1,e=extratitle))
             fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.pdf".format(n=shotnumber, t=name_), bbox_inches='tight')
         if Datatype=='Source':
-            np.savetxt(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n  Label for plot \n {e}\nchanneln° // {l}'.format(n=name, s= sourcetitle,e=extratitle,l=ylabel1))
+            np.savetxt(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n  Label for plot \nshot n°{s}, {n}, MW power: {m}, {e}\nchanneln° // {l}'.format(n=name, s= sourcetitle,m=MW,e=extratitle,l=ylabel1))
             fig1.savefig(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.pdf'.format(t=name_,n=sourcetitlesave), bbox_inches='tight')
 
     return x, y#, z, y-z
@@ -439,9 +439,9 @@ def CompareBolometerProfiles(Type="",shot_number_1=1, shot_number_2=2, save=Fals
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=60003
-    Datatype= 'Source' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
-    extratitle=''      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+    shotnumber=60002
+    Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
+    extratitle='White light source//P=1.7E-2mbar//Amplf. x2'      #As a title for your plots specify what the measurement was about. If you don' use this type ''
 
     #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     location=  '/home/gediz/Measurements/Calibration/Calibration_Bolometer_September_2022/Bolometer_calibration_vacuum_and_air_different_sources_09_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement

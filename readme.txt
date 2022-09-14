@@ -18,3 +18,6 @@ and a function to derive the percentage of an arbitrary spectra that will be abs
 
 bolo_calibration.py: Here are the functions to derive kappa and tau from the omic calibration. (possibly to be extended by relative
 calibration and optical absolut calibration functions.)
+
+powermeter.py: There is only one function here to plot and analyze the height of the powermetermeasurements. We measured the powermeter
+of the white light source and the green laser with a Thorlabs powermeter we borrwed.

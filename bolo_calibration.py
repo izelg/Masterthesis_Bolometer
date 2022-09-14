@@ -1,9 +1,9 @@
 #%%
 #Written by: Izel Gediz
 #Date of Creation: 11.08.2022
-#This skript takes the calibration Data and determines tau and kapa
+#This skript takes the calibration Data of the omic calibration and determines tau and kapa
 #It needs the Oscilloscope Timeseries of the excitation Square Wave and the Measured Voltage at the Bolometerchannels
-
+#In September I added the parts for the relative and absolut calibration with the green laser
 
 
 from pdb import line_prefix
@@ -113,28 +113,64 @@ def Figure(input, Save=False):
         fig1.savefig(str(outfile)+"old_calibration_of_Anne_{}.pdf".format(name))
     return
 
+#This function derives all kappas and taus from a measurement series and saves their plots and values.
+def GetAllOmicCalibration():
+    infile ='/scratch.mv3/koehn/backup_Anne/zilch/measurements/Cal/Bolo_cal_vak/Messwerte_2010_10_08/'
+    outfile='/home/gediz/Results/Calibration/old_calibration/'
+    x=[]
+    tau=[]
+    kappa=[]
+    R_M=[]
+    for channelnumber in [0,1,2,3,4,5,6,7]:
+        x.append(channelnumber+1)
+        tau.append(Get_Tau(channelnumber, Plot=False)[2])
+        kappa.append(abs(Get_Kappa(channelnumber)[0]))
+        R_M.append(Get_Kappa(channelnumber)[1])
+    Figure(tau, Save=True)
+    Figure(kappa, Save=True)
+    Figure(R_M, Save=True)
+    data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
+    np.savetxt(str(outfile)+"old_calibration_of_Anne.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
+
+#This function derives relative correction constants based on bolometerprofiles derived by raw data.
+#Use bolo_radiation.py to create such profiles from your bolometerdata
+#Type=mean uses the mean value of all signals as reference, so by multiplying each channel with the resulting correction constant you equalize all signals to the mean signal
+#Type=value uses the measured value of 0.419 mW (old batteries) or 0.487 mW (new batteries) to calculate the correction constants and can consequently only be used when Powerprofiles created with the green laser are investigated
+def RelativeOpticalCalibration(Type='',save=False):
+    x,y=np.genfromtxt(boloprofile, unpack=True)
+    if Type=='mean':
+        mean=np.mean(y)
+    if Type=='value':
+        mean=419 
+    corr_abs=[]
+    corr_rel=[]
+    for (i,j) in zip(y,np.arange(0,8)):
+        corr_abs.append(mean-i)
+        corr_rel.append(mean/i)
+        plt.plot([j+1,j+1],[mean,mean-corr_abs[j]], alpha=0.5, label='Relative correction channel°{b}: {c}'.format(b=j+1,c=float(f'{corr_rel[j]:.3f}')))
+        
+    plt.suptitle(open(boloprofile, 'r').readlines()[2][3:-1])
+    plt.plot(x,y,'bo--')
+    plt.plot([1,8],[mean,mean], label='Relative to {t}: {m}'.format(t=Type,m=float(f'{mean:.3f}')), color='r')
+    plt.ylabel(open(boloprofile, 'r').readlines()[3][14:-1])
+    plt.xlabel('Bolometerchannel')
+    plt.legend(loc=1,bbox_to_anchor=(1.7,1))
+    fig1 = plt.gcf()
+    plt.show()
+    if save==True:
+        data = np.column_stack([np.array(x), np.array(corr_rel)])#, np.array(z), np.array(abs(y-z))])
+        np.savetxt(outfile+'relative_calibration_constants_from_'+filename[:-4]+'_using_{}.txt'.format(Type), data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Correction constants to be multiplied with each channel signal to equalize to {v} V\n relative correction constants from {f}\nchanneln° \t relative correction'.format(v=float(f'{mean:.3f}'), f=filename[:-4]))
+        fig1.savefig(outfile+'relative_calibration_constants_from_'+filename[:-4]+'_using_{}.pdf'.format(Type), bbox_inches='tight')
+
+
 # %%
 
-# if __name__ == "__main__":
-#     infile ='/scratch.mv3/koehn/backup_Anne/zilch/measurements/Cal/Bolo_cal_vak/Messwerte_2010_10_08/'
-#     outfile='/home/gediz/Results/Calibration/old_calibration/'
-#     x=[]
-#     tau=[]
-#     kappa=[]
-#     R_M=[]
-#     for channelnumber in [0,1,2,3,4,5,6,7]:
-#         x.append(channelnumber+1)
-#         tau.append(Get_Tau(channelnumber, Plot=False)[2])
-#         kappa.append(abs(Get_Kappa(channelnumber)[0]))
-#         R_M.append(Get_Kappa(channelnumber)[1])
-#     Figure(tau, Save=True)
-#     Figure(kappa, Save=True)
-#     Figure(R_M, Save=True)
-#     data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
-#     np.savetxt(str(outfile)+"old_calibration_of_Anne.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
 infile ='/scratch.mv3/koehn/backup_Anne/zilch/measurements/Cal/Bolo_cal_vak/Messwerte_2010_10_08/'
-outfile='/home/gediz/Results/Calibration/old_calibration/'
-Get_Tau(1,Plot=True)
+outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/'
+boloprofile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum.txt'
+path,filename=os.path.split(boloprofile)
 
+
+RelativeOpticalCalibration(Type='value',save=True)
 
 # %%
