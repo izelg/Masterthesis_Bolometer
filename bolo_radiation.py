@@ -439,12 +439,12 @@ def CompareBolometerProfiles(Type="",shot_number_1=1, shot_number_2=2, save=Fals
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=60002
+    shotnumber=60038
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
-    extratitle='White light source//P=1.7E-2mbar//Amplf. x2'      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+    extratitle='Laserscan over all Channels'      #As a title for your plots specify what the measurement was about. If you don' use this type ''
 
     #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    location=  '/home/gediz/Measurements/Calibration/Calibration_Bolometer_September_2022/Bolometer_calibration_vacuum_and_air_different_sources_09_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
+    location=  '/home/gediz/Measurements/Lines_of_sight/shot_data/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = LoadData(location)['Zeit [ms]'] / 1000 # s
     
     sourcefolder= '/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/'   #the folder where the combined shots data should be stored
@@ -452,7 +452,7 @@ if __name__ == "__main__":
     sourcetitle='calibration with green laser in vacuum'
     sourcetitlesave='calibration_with_green_laser_vacuum'
     
-    outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/'
+    outfile='/home/gediz/Results/Lines_of_sight/shot_data/'
     #outfile = '/home/gediz/Results/Bolometer_Profiles/'
     
     
@@ -472,9 +472,9 @@ if __name__ == "__main__":
     
     
     #CombinedTimeSeries('60004','60005','60006','60007','60008','60009','60010','60011',Plot=True, save=True)
-    BolometerProfile('Power', save=True)
+    #BolometerProfile('Power', save=True)
     #CompareBolometerProfiles('Bolo', 60000,60001,save=True)
-    #PlotAllTimeseriesTogether(save=True)
+    PlotAllTimeseriesTogether(save=True)
     #PlotAllTimeseries(save=True)
     #BolometerProfile('Bolo')#, save=True)
     #BolometerProfile('Power',save=True)
