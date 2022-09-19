@@ -137,7 +137,7 @@ def GetAllOmicCalibration():
 #Type=mean uses the mean value of all signals as reference, so by multiplying each channel with the resulting correction constant you equalize all signals to the mean signal
 #Type=value uses the measured value of 0.419 mW (old batteries) or 0.487 mW (new batteries) to calculate the correction constants and can consequently only be used when Powerprofiles created with the green laser are investigated
 def RelativeOpticalCalibration(Type='',save=False):
-    x,y=np.genfromtxt(boloprofile, unpack=True)
+    x,y=np.genfromtxt(boloprofile, unpack=True, usecols=(0,1))
     if Type=='mean':
         mean=np.mean(y)
     if Type=='value':
@@ -148,10 +148,13 @@ def RelativeOpticalCalibration(Type='',save=False):
         corr_abs.append(mean-i)
         corr_rel.append(mean/i)
         plt.plot([j+1,j+1],[mean,mean-corr_abs[j]], alpha=0.5, label='Relative correction channel°{b}: {c}'.format(b=j+1,c=float(f'{corr_rel[j]:.3f}')))
-        
+    corr_y=[]
+    for a,b in zip(y, corr_rel):
+        corr_y.append(a*b)
     plt.suptitle(open(boloprofile, 'r').readlines()[2][3:-1])
     plt.plot(x,y,'bo--')
-    plt.plot([1,8],[mean,mean], label='Relative to {t}: {m}'.format(t=Type,m=float(f'{mean:.3f}')), color='r')
+    plt.plot(x,corr_y,'ro--', label='Relative to {t}: {m}'.format(t=Type,m=float(f'{mean:.3f}')))
+    #plt.plot([1,8],[mean,mean], label='Relative to {t}: {m}'.format(t=Type,m=float(f'{mean:.3f}')), color='r')
     plt.ylabel(open(boloprofile, 'r').readlines()[3][14:-1])
     plt.xlabel('Bolometerchannel')
     plt.legend(loc=1,bbox_to_anchor=(1.7,1))
@@ -163,14 +166,53 @@ def RelativeOpticalCalibration(Type='',save=False):
         fig1.savefig(outfile+'relative_calibration_constants_from_'+filename[:-4]+'_using_{}.pdf'.format(Type), bbox_inches='tight')
 
 
+def CompareBolometerProfiles():
+    x=[1,2,3,4,5,6,7,8]
+    y1=np.genfromtxt(boloprofile_1, unpack=True, usecols=1)
+    y2=np.genfromtxt(boloprofile_2, unpack=True, usecols=2)
+    plt.plot(x,y1,'bo--',label='derived from {}'.format(name_1))
+    plt.plot(x,y2 , 'go--',label='derived from {}'.format(name_2))
+    plt.plot([1,8],[np.mean(y1),np.mean(y1)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y1):.3f}')), color='b', alpha=0.5)
+    plt.plot([1,8],[np.mean(y2),np.mean(y2)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y2):.3f}')), color='g', alpha=0.5)
+    plt.suptitle('Bolometerprofiles derived from two different experiments')
+    plt.xlabel('Bolometerchannel')
+    plt.ylabel('Signal [V]')
+    plt.legend(loc=1,bbox_to_anchor=(1.7,1))
+    plt.show()
+
+
+def CompareRelativeCorrections():
+    x=[1,2,3,4,5,6,7,8]
+    y1=np.genfromtxt(relativecorrection_1, unpack=True, usecols=1)
+    y2=np.genfromtxt(relativecorrection_2, unpack=True, usecols=1)
+    plt.plot(x,y1,'bo--',label='derived from {}'.format(name_1))
+    plt.plot(x,y2 , 'go--',label='derived from {}'.format(name_2))
+    plt.suptitle('Relative correction constants derived from two different experiments')
+    plt.xlabel('Bolometerchannel')
+    plt.ylabel('relative correction constant')
+    plt.legend(loc=1,bbox_to_anchor=(1.7,1))
+    plt.show()
+
 # %%
 
 infile ='/scratch.mv3/koehn/backup_Anne/zilch/measurements/Cal/Bolo_cal_vak/Messwerte_2010_10_08/'
 outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/'
-boloprofile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum.txt'
+
+##Bolometerprofile from which to calculate the relative correction constants:
+boloprofile='/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/shots_50025_to_50018/bolometerprofile_from_raw_data_of_calibration_with_green_laser.txt'
+boloprofile_1='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum.txt'
+boloprofile_2='/home/gediz/Results/Lines_of_sight/shot_data/shot60038/shot60038_all_bolo_channels_raw_signals_together_analyzed.txt'
+
 path,filename=os.path.split(boloprofile)
 
+##Path of the derived correction constants to compare with each other:
+relativecorrection_1='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_using_mean.txt'
+name_1='green laser in vacuum \n by hand'
+relativecorrection_2='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_shot60038_all_bolo_channels_raw_signals_together_analyzed_using_mean.txt'
+name_2='green laser in air \n with motor sweep'
 
-RelativeOpticalCalibration(Type='value',save=True)
 
+#RelativeOpticalCalibration(Type='mean')#,save=True)
+#CompareRelativeCorrections()
+CompareBolometerProfiles()
 # %%
