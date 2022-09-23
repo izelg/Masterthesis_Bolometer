@@ -1,4 +1,5 @@
 #%%
+
 #Written by: Izel Gediz
 #Date of Creation: 01.08.2022
 #This code takes Bolometer data in Voltage Form and derives the Power in Watt
@@ -186,10 +187,45 @@ def SignalHighLowTime(Plot= False, save=False):
         fig1.savefig(str(outfile)+"shot{n}/shot{n}_signal_edge_with_{m}.pdf".format(n=shotnumber, m=MW), bbox_inches='tight')
     return start, stop
 
+#This function derives the signal heights by determining the background signal and substracting it from the maximum
+#It is useful for calibration measurements where the signal was maximized in several steps
+def SignalHeight_max(i=1,Plot=False, save=False):
+    cut=0
+    y= LoadData(location)["Bolo{}".format(i)][cut:]
+    time= LoadData(location)['Zeit [ms]'][cut:]/1000
+    steps=[]
+    
+    for j in np.arange(cut, len(y)-100):
+        step= (y[j]-y[j+100])
+        steps.append(abs(step))
+    start=(np.argwhere(np.array([steps])>0.009)[0][1]+cut)
+    stop=(np.argwhere(np.array([steps])>0.009)[-1][1]+cut)
+    background_x =np.concatenate((time[0:start-100-cut],time[stop+100-cut:-1]))
+    background_y=np.concatenate((y[0:start-100-cut],y[stop+100-cut:-1]))
+    background=np.mean(background_y)
+    print('last values:',y[stop+100])
+    print('background:',background)
+    print('minimum:',min(y))
+    print('last values signal:',y[stop-1000])
+    max=abs(min(y))+background
+    if Plot==True:
+        plt.plot(time,y)
+        plt.plot(time[start-100],y[start-100],'bo')
+        plt.plot(time[stop+100],y[stop+100],'bo')
+        plt.plot(time[int(np.argwhere(y==min(y))[0]+cut)],min(y),'ro', label='Signal height: {} V'.format(float(f'{max:.3f}')))
+        plt.legend(loc=1, bbox_to_anchor=(1.3,1) )
+        plt.suptitle('Bolometerdata channel {} with markers for the signal height'.format(i))
+        plt.xlabel('Time [s]')
+        plt.ylabel('Signal [V]')
+        fig1= plt.gcf()
+        plt.show()
+        if save==True:
+            fig1.savefig(str(outfile)+"shot{n}/shot{n}_signal_height_max.pdf".format(n=shotnumber), bbox_inches='tight')
+    return (max,background)
+
 #This function derives the signal heights without fits to account for the drift
 #It just takes the right edge of the signal and the mean value of 100 datapoints to the left and right to derive the Signalheight
 #It is useful for noisy measurements where the fits don't work or for calibrationmeasurements with no reference MW data
-#Use Type= Cali if you have a combined file like created with CombinedTimeSeries stored outside of the normal shot folders
 def SignalHeight_rough(Type='', i=1, Plot=False, save=False):
     Type_types =['Bolo', 'Power']
     if Type not in Type_types:
@@ -243,7 +279,7 @@ def SignalHeight_rough(Type='', i=1, Plot=False, save=False):
         fig1= plt.gcf()
         plt.show()
     if save==True:
-        fig1.savefig(str(outfile)+"shot{n}/shot{n}_signal_edge_with_{m}.pdf".format(n=shotnumber, m=MW), bbox_inches='tight')
+        fig1.savefig(str(outfile)+"shot{n}/shot{n}_signal_height_rough.pdf".format(n=shotnumber), bbox_inches='tight')
 
     return (div, jump)
 
@@ -367,7 +403,8 @@ def BolometerProfile(Type="", save=False):
     for i in [1,2,3,4,5,6,7,8]:
         x.append(i)
         if MW == 'none':
-            y.append(abs(SignalHeight_rough(Type,i,Plot=True)[0]))  
+            y.append(abs(SignalHeight_max(i,Plot=True)[0])) 
+            #y.append(abs(SignalHeight_rough(Type,i,Plot=True)[0]))  
         else:
             y.append(abs(SignalHeight(Type, i, Plot=False)[2])) #--><--
     if Type == 'Bolo':
@@ -439,21 +476,22 @@ def CompareBolometerProfiles(Type="",shot_number_1=1, shot_number_2=2, save=Fals
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=60038
+    shotnumber=60056
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
-    extratitle='Laserscan over all Channels'      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+    extratitle='Green Laser (new batteries) //vacuum // maximized by hand // downwards beam'      #As a title for your plots specify what the measurement was about. If you don' use this type ''
 
     #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    location=  '/home/gediz/Measurements/Lines_of_sight/shot_data/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
+    location=  '/home/gediz/Measurements/Calibration/Calibration_Bolometer_September_2022/Bolometer_calibration_vacuum_and_air_different_sources_09_2022/green_laser_by_hand_vacuum/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = LoadData(location)['Zeit [ms]'] / 1000 # s
     
+    #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
     sourcefolder= '/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/'   #the folder where the combined shots data should be stored
     sourcefile='All_channels_from_shots_60004_to_60011.txt'     #the name of the combined shots file
     sourcetitle='calibration with green laser in vacuum'
     sourcetitlesave='calibration_with_green_laser_vacuum'
     
-    outfile='/home/gediz/Results/Lines_of_sight/shot_data/'
-    #outfile = '/home/gediz/Results/Bolometer_Profiles/'
+    outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/green_laser_with_stepping_motor_vacuum/'
+    #outfile='/home/gediz/Results/Bolometer_Profiles/'
     
     
     z= LoadData(location)['2 GHz Richtk. forward']
@@ -471,11 +509,7 @@ if __name__ == "__main__":
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
     
     
-    #CombinedTimeSeries('60004','60005','60006','60007','60008','60009','60010','60011',Plot=True, save=True)
-    #BolometerProfile('Power', save=True)
-    #CompareBolometerProfiles('Bolo', 60000,60001,save=True)
-    PlotAllTimeseriesTogether(save=True)
-    #PlotAllTimeseries(save=True)
-    #BolometerProfile('Bolo')#, save=True)
-    #BolometerProfile('Power',save=True)
+    #PlotAllTimeseriesTogether(save=True)
+    SignalHeight_max(8,Plot=True)
+    #BolometerProfile('Bolo', save=True)
 # %%

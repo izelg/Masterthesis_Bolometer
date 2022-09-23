@@ -115,7 +115,7 @@ def Log_Plot(data):
 
 #This function plots and saves the original spectrum, the gold absorption curve and the reduces spectrum as 
 #absorbed by gold all together and prints the absorbed percentage in the legend
-def Double_Plot(lightsource='', save=False):
+def Reduced_Spectrum(lightsource='', save=False):
     x1=Gold_Abs()[0]
     y1=Gold_Abs()[1]
     label1=Gold_Abs()[2]
@@ -152,10 +152,10 @@ def Double_Plot(lightsource='', save=False):
 if __name__ == "__main__":
     infile ='/scratch.mv3/koehn/backup_Anne/zilch/Bolo/Absorption_AU/'
     #outfile='/home/gediz/Results/Goldfoil_Absorption/'
-    #outfile='/home/gediz/Results/Spectrometer/Spectra_of_lamps_17_08_2022/'
-    spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_lamps_17_08_2022/'
+    outfile='/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/'
+    spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/'
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
 
 
-    GoldAbsorptionPlot()
+    Reduced_Spectrum('Weißlichtquelle_Wellenlängenmessung_grüne_folie', save=True)
 # %%

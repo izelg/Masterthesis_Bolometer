@@ -141,7 +141,7 @@ def RelativeOpticalCalibration(Type='',save=False):
     if Type=='mean':
         mean=np.mean(y)
     if Type=='value':
-        mean=419 
+        mean=193#419 
     corr_abs=[]
     corr_rel=[]
     for (i,j) in zip(y,np.arange(0,8)):
@@ -168,13 +168,27 @@ def RelativeOpticalCalibration(Type='',save=False):
 
 def CompareBolometerProfiles():
     x=[1,2,3,4,5,6,7,8]
+    y0=np.genfromtxt(boloprofile_0, unpack=True, usecols=1)
     y1=np.genfromtxt(boloprofile_1, unpack=True, usecols=1)
-    y2=np.genfromtxt(boloprofile_2, unpack=True, usecols=2)
-    plt.plot(x,y1,'bo--',label='derived from {}'.format(name_1))
-    plt.plot(x,y2 , 'go--',label='derived from {}'.format(name_2))
-    plt.plot([1,8],[np.mean(y1),np.mean(y1)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y1):.3f}')), color='b', alpha=0.5)
-    plt.plot([1,8],[np.mean(y2),np.mean(y2)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y2):.3f}')), color='g', alpha=0.5)
-    plt.suptitle('Bolometerprofiles derived from two different experiments')
+    y2=np.genfromtxt(boloprofile_2, unpack=True, usecols=1)
+    y3=np.genfromtxt(boloprofile_3, unpack=True, usecols=1)
+    y4=np.genfromtxt(boloprofile_4, unpack=True, usecols=1)
+    y5=np.genfromtxt(boloprofile_5, unpack=True, usecols=1)
+    y6=np.genfromtxt(boloprofile_6, unpack=True, usecols=1)
+    y7=np.genfromtxt(boloprofile_7, unpack=True, usecols=1)
+    y8=np.genfromtxt(boloprofile_8, unpack=True, usecols=1)
+    plt.plot(x,y0,label='by hand, batteries, after reassemblance', marker='o')
+    plt.plot(x,y1,label='with step motor, batteries, by hand, 1mm steps', marker='o')
+    plt.plot(x,y2, label='2D scan, 3VDC, angle upwards',  marker='o')
+    plt.plot(x,y3,label='2D scan, 3VDC, angle downwards', marker='o')
+    plt.plot(x,y4 ,label='by Hand, 3VDC, horizontal', marker='o')    
+    plt.plot(x,y5,label='by Hand, 3VDC, angle upwards',  marker='o')
+    plt.plot(x,y6 ,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
+    plt.plot(x,y7,label='by Hand, new batteries, angle downwards', marker='o')
+    plt.plot(x,y8 ,label='by Hand, new batteries, angle downwards', marker='o')
+    #plt.plot([1,8],[np.mean(y1),np.mean(y1)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y1):.3f}')), color='b', alpha=0.5)
+    #plt.plot([1,8],[np.mean(y2),np.mean(y2)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y2):.3f}')), color='g', alpha=0.5)
+    plt.suptitle('Bolometerprofiles green laser in vacuum')
     plt.xlabel('Bolometerchannel')
     plt.ylabel('Signal [V]')
     plt.legend(loc=1,bbox_to_anchor=(1.7,1))
@@ -183,14 +197,30 @@ def CompareBolometerProfiles():
 
 def CompareRelativeCorrections():
     x=[1,2,3,4,5,6,7,8]
+    y0=np.genfromtxt(relativecorrection_0, unpack=True, usecols=1)
     y1=np.genfromtxt(relativecorrection_1, unpack=True, usecols=1)
     y2=np.genfromtxt(relativecorrection_2, unpack=True, usecols=1)
-    plt.plot(x,y1,'bo--',label='derived from {}'.format(name_1))
-    plt.plot(x,y2 , 'go--',label='derived from {}'.format(name_2))
-    plt.suptitle('Relative correction constants derived from two different experiments')
+    y3=np.genfromtxt(relativecorrection_3, unpack=True, usecols=1)
+    y4=np.genfromtxt(relativecorrection_4, unpack=True, usecols=1)
+    y5=np.genfromtxt(relativecorrection_5, unpack=True, usecols=1)
+    y6=np.genfromtxt(relativecorrection_6, unpack=True, usecols=1)
+    y7=np.genfromtxt(relativecorrection_7, unpack=True, usecols=1)
+    y8=np.genfromtxt(relativecorrection_8, unpack=True, usecols=1)
+    plt.plot(x,y0,label='by hand, batteries, after reassemblance', marker='o')
+    plt.plot(x,y1,label='with step motor, batteries, by hand, 1mm steps', marker='o')
+    plt.plot(x,y2, label='2D scan, 3VDC, angle upwards',  marker='o')
+    plt.plot(x,y3,label='2D scan, 3VDC, angle downwards', marker='o')
+    plt.plot(x,y4 ,label='by Hand, 3VDC, horizontal', marker='o')    
+    plt.plot(x,y5,label='by Hand, 3VDC, angle upwards',  marker='o')
+    plt.plot(x,y6 ,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
+    plt.plot(x,y7,label='by Hand, new batteries, angle downwards', marker='o')
+    plt.plot(x,y8 ,label='by Hand, new batteries, angle downwards', marker='o')
+    #plt.plot([1,8],[np.mean(y1),np.mean(y1)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y1):.3f}')), color='b', alpha=0.5)
+    #plt.plot([1,8],[np.mean(y2),np.mean(y2)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y2):.3f}')), color='g', alpha=0.5)
+    plt.suptitle('Relative correction constants // Green laser in vacuum')
     plt.xlabel('Bolometerchannel')
-    plt.ylabel('relative correction constant')
-    plt.legend(loc=1,bbox_to_anchor=(1.7,1))
+    plt.ylabel('Signal [V]')
+    plt.legend(loc=1,bbox_to_anchor=(1.9,1))
     plt.show()
 
 # %%
@@ -199,20 +229,31 @@ infile ='/scratch.mv3/koehn/backup_Anne/zilch/measurements/Cal/Bolo_cal_vak/Mess
 outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/'
 
 ##Bolometerprofile from which to calculate the relative correction constants:
-boloprofile='/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/shots_50025_to_50018/bolometerprofile_from_raw_data_of_calibration_with_green_laser.txt'
-boloprofile_1='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum.txt'
-boloprofile_2='/home/gediz/Results/Lines_of_sight/shot_data/shot60038/shot60038_all_bolo_channels_raw_signals_together_analyzed.txt'
+boloprofile_0='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum.txt'
+boloprofile_1='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shot60039/shot60039_bolometerprofile_from_raw_data.txt'
+boloprofile_2='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shots_60042_60043/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_2D_scan_upwards_angle.txt'
+boloprofile_3='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shots_60044_to_60046/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_2D_scan_downwards_angle.txt'
+boloprofile_4='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shots_60048_60050/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_horizontal_beam_3VDC.txt'
+boloprofile_5='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shot60052/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_upwards_beam_3VDC.txt'
+boloprofile_6='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shots60053_60054/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_3VDC.txt'
+boloprofile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shot60055/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries.txt'
+boloprofile_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shot60056/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_02.txt'
 
 path,filename=os.path.split(boloprofile)
 
 ##Path of the derived correction constants to compare with each other:
-relativecorrection_1='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_using_mean.txt'
-name_1='green laser in vacuum \n by hand'
-relativecorrection_2='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_shot60038_all_bolo_channels_raw_signals_together_analyzed_using_mean.txt'
-name_2='green laser in air \n with motor sweep'
+relativecorrection_0='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_using_mean.txt'
+relativecorrection_1='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_shot60039_bolometerprofile_from_raw_data_using_mean.txt'
+relativecorrection_2='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_2D_scan_upwards_angle_using_mean.txt'
+relativecorrection_3='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_2D_scan_downwards_angle_using_mean.txt'
+relativecorrection_4='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_horizontal_beam_3VDC_using_mean.txt'
+relativecorrection_5='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_upwards_beam_3VDC_using_mean.txt'
+relativecorrection_6='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_3VDC_using_mean.txt'
+relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_using_mean.txt'
+relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_02_using_mean.txt'
 
 
-#RelativeOpticalCalibration(Type='mean')#,save=True)
+RelativeOpticalCalibration(Type='value')#,save=True)
 #CompareRelativeCorrections()
-CompareBolometerProfiles()
+#CompareBolometerProfiles()
 # %%
