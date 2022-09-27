@@ -219,7 +219,7 @@ def CompareRelativeCorrections():
     #plt.plot([1,8],[np.mean(y2),np.mean(y2)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y2):.3f}')), color='g', alpha=0.5)
     plt.suptitle('Relative correction constants // Green laser in vacuum')
     plt.xlabel('Bolometerchannel')
-    plt.ylabel('Signal [V]')
+    plt.ylabel('[arb]')
     plt.legend(loc=1,bbox_to_anchor=(1.9,1))
     plt.show()
 
@@ -253,7 +253,7 @@ relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_Sept
 relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_02_using_mean.txt'
 
 
-RelativeOpticalCalibration(Type='value')#,save=True)
-#CompareRelativeCorrections()
+#RelativeOpticalCalibration(Type='value')#,save=True)
+CompareRelativeCorrections()
 #CompareBolometerProfiles()
 # %%

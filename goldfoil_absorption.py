@@ -103,7 +103,7 @@ def Gold_Fit(lightsource=''):
     spec_int_trap =integrate.trapezoid(Spectrum(lightsource)[1], Spectrum(lightsource)[0])
     new_spec_int_trap=integrate.trapezoid(reduced_spectrum, Spectrum(lightsource)[0])
     absorbed_percentage=(new_spec_int_trap/spec_int_trap)*100
-    return reduced_spectrum, absorbed_percentage
+    return reduced_spectrum, absorbed_percentage, spec_int_trap,new_spec_int_trap
 
 #Plot spectral or gold data quickly on a log scale
 def Log_Plot(data):
@@ -156,6 +156,6 @@ if __name__ == "__main__":
     spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/'
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
 
-
-    Reduced_Spectrum('Weißlichtquelle_Wellenlängenmessung_grüne_folie', save=True)
+    print(Gold_Fit('Weißlichtquelle_Wellenlängenmessung_grüne_folie')[1],Gold_Fit('Weißlichtquelle_Wellenlängenmessung_grüne_folie')[2], Gold_Fit('Weißlichtquelle_Wellenlängenmessung_grüne_folie')[3])
+    #Reduced_Spectrum('Weißlichtquelle_Wellenlängenmessung_grüne_folie', save=True)
 # %%

@@ -11,6 +11,7 @@ from scipy.optimize import curve_fit
 import os
 import re
 from scipy.interpolate import pchip_interpolate
+from scipy.signal import savgol_filter
 #from bolo_radiation import LoadData, PlotAllTimeseries, PlotAllTimeseriesTogether, PlotSingleTimeseries
 
 #%%
@@ -20,8 +21,10 @@ def MotorData(save=False):
     x_=np.arange(x[0],x[-1],0.00001)
     fit=pchip_interpolate(x,a,x_)
     amp=list(i-min(a) for i in fit)
-    plt.plot(x_,amp,'r.--', label='Interpolated signal "Amplitude"')
-    signal_edge_list=[np.argwhere(amp>max(amp)/np.e), np.argwhere(amp>max(amp)/10)]
+   # amp=savgol_filter(amp0,1000,3)
+    plt.plot(x_,amp,'r.--', label='Interpolated signal "Amplitude"', alpha=0.5)
+    #plt.plot(x_,amp,'r.--')
+    signal_edge_list=[np.argwhere(amp>max(amp)/np.e)]#, np.argwhere(amp>max(amp)/10)]
     for signal_edge in signal_edge_list:
         fwhm1, fwhm2=x_[signal_edge[0]],x_[signal_edge[-1]]
         plt.plot(fwhm1,amp[int(signal_edge[0])],'bo')
@@ -40,28 +43,68 @@ def MotorData(save=False):
     if save==True:
         fig1.savefig(str(motordataoutfile)+str(filename[:-4])+".pdf", bbox_inches='tight')
 
+
+def SmoothSignal(i=1):
+    cut=0
+    y= LoadData(location)["Bolo{}".format(i)][cut:]        #aprox. the first 10 seconds are ignored because due to the motormovement a second peak appeared there
+    time = LoadData(location)['Zeit [ms]'][cut:] 
+    title='Shot n° {s} // Channel "Bolo {n}" \n {e}'.format(s=shotnumber, n=i, e=extratitle)
+
+    y_smooth=savgol_filter(y,1000,3)
+
+    steps=[]
+    for j in np.arange(cut, len(y_smooth)-1000):
+        step= (y_smooth[j]-y_smooth[j+1000])
+        steps.append(abs(step))
+    #start=(np.argwhere(np.array([steps])>0.005)[0][1]+cut)
+    #stop=(np.argwhere(np.array([steps])>0.005)[-1][1]+cut)
+    #print(start,stop)
+    plt.plot(np.arange(0,len(steps)),steps,'bo')
+    plt.hlines(0.005,0,len(steps))
+    #plt.plot([start-cut,start-cut],[steps[start-cut],steps[start-cut]],'ro')
+    #plt.plot([stop-cut,stop-cut],[steps[stop-cut],steps[stop-cut]],'ro')
+    plt.show()
+
+    #print(start,stop)
+    plt.plot(time, y,color='red', alpha=0.5)
+    plt.plot(time,y_smooth)
+    #plt.plot(time[start],y_smooth[start],'bo')
+    #plt.plot(time[stop],y_smooth[stop],'ro')
+    #plt.plot(time[stop],y[stop],'go')
+    #print(time[stop], y_smooth[stop],y[stop])
+    print(len(y),len(y_smooth),len(steps))
+    plt.show()
+    return (y_smooth)
+
+
+
 #This function takes one channelsignal aquired during a sweep with a lightsource across it and determines
 #The width of the signal at different heights after inverting it and substracting the backgroundsignal
 def BoloDataWidths(i=1, save=False):
-    cut=1000
-    y= LoadData(location)["Bolo{}".format(i)][cut:]        #aprox. the first 10 seconds are ignored because due to the motormovement a second peak appeared there
+    cut=0
+    y0= LoadData(location)["Bolo{}".format(i)][cut:]    #aprox. the first 10 seconds are ignored because due to the motormovement a second peak appeared there
+    y=savgol_filter(y0,1000,3)
     time = LoadData(location)['Zeit [ms]'][cut:] / 1000
     title='Shot n° {s} // Channel "Bolo {n}" \n {e}'.format(s=shotnumber, n=i, e=extratitle)
 
     ##finding background mean value:
     steps=[]
-    for j in np.arange(cut, len(y)-100):
-        step= (y[j]-y[j+100])
+    def lin (x,a,b):
+        return a*x + b
+    for j in np.arange(cut, len(y)-1000):
+        step= (y[j]-y[j+1000])
         steps.append(abs(step))
-    start=(np.argwhere(np.array([steps])>0.009)[0][1]+cut-100)
-    stop=(np.argwhere(np.array([steps])>0.009)[-1][1]+cut+400)
+    start=(np.argwhere(np.array([steps])>0.005)[0][1]+cut)
+    stop=(np.argwhere(np.array([steps])>0.005)[-1][1]+cut)
     background_x = np.concatenate((time[0:start-cut],time[stop-cut:-1]))
     background_y=np.concatenate((y[0:start-cut],y[stop-cut:-1]))
-    amp=list((j-np.mean(background_y))*(-1) for j in y)
+    popt,pcov=curve_fit(lin,background_x,background_y)
+    amp=list((y[j]-lin(time[j],*popt))*(-1) for j in np.arange(cut,len(y)))
 
     ##enable these plots to see how the signal was manipulated
-    plt.plot(time, y,color='red', alpha=0.5)
-    plt.hlines(np.mean(background_y), time[cut],time[-2:-1])
+    plt.plot(time, y0,color='red', alpha=0.5)
+    plt.plot(time,y,color='red')
+    plt.plot(time, lin (time,*popt), color='black')
     plt.plot(time[start],y[start],'ro')
     plt.plot(time[stop],y[stop],'ro')
 
@@ -77,7 +120,7 @@ def BoloDataWidths(i=1, save=False):
         
 
     plt.legend(loc=1, bbox_to_anchor=(1.4,1))
-    plt.plot(time,amp,color='blue')
+    plt.plot(time,amp,color='blue',alpha=0.5)
     plt.suptitle(title)
     plt.xlabel('Time [s]')
     plt.ylabel('Signal [V]')
@@ -89,38 +132,45 @@ def BoloDataWidths(i=1, save=False):
 def BoloDataWholeSweep(save=False):
     plt.figure(figsize=(10,5))
     plt.suptitle ('All Bolometer Signals of shot n°{n} together. \n {e}'.format(n=shotnumber,  e=extratitle))
-    cut=1000
+    cut=0
     time = LoadData(location)['Zeit [ms]'][cut:] / 1000
     width=[]
     height=[]
     position=[]
     c=[1,2,3,4,5,6,7,8]
-    for i in c:
-        y= LoadData(location)["Bolo{}".format(i)][cut:] 
+    color=['blue','red','green','orange','magenta','gold','darkcyan','blueviolet']
+    def lin (x,a,b):
+        return a*x + b
+    for (i,b) in zip(c,color):
+        y0= LoadData(location)["Bolo{}".format(i)][cut:]    #aprox. the first 10 seconds are ignored because due to the motormovement a second peak appeared there
+        y=savgol_filter(y0,1000,3)
         steps=[]
-        for j in np.arange(cut, len(y)-100):
-            step= (y[j]-y[j+100])
+        for j in np.arange(cut, len(y)-1000):
+            step= (y[j]-y[j+1000])
             steps.append(abs(step))
-        start=(np.argwhere(np.array([steps])>0.009)[0][1]+cut-100)
-        stop=(np.argwhere(np.array([steps])>0.009)[-1][1]+cut+450)
+        start=(np.argwhere(np.array([steps])>0.005)[0][1]+cut)
+        stop=(np.argwhere(np.array([steps])>0.005)[-1][1]+cut)
         background_x = np.concatenate((time[0:start-cut],time[stop-cut:-1]))
         background_y=np.concatenate((y[0:start-cut],y[stop-cut:-1]))
-        amp=list((j-np.mean(background_y))*(-1) for j in y)
-        #plt.plot(time, y,color='red', alpha=0.5)
-        plt.plot(time,  amp, label="Bolo{}".format(i) )
+        popt,pcov=curve_fit(lin,background_x,background_y)
+        amp_origin=list((y[j]-lin(time[j],*popt))*(-1) for j in np.arange(cut,len(y)))
+        maximum=max(amp_origin)
+        amp=list(amp_origin[j]/maximum for j in np.arange(0,len(y)))
+        plt.plot(time,  amp, label="Bolo{}".format(i),color=b,alpha=0.7 )
+        
         signal_edge=np.argwhere(amp>max(amp)/np.e)
         fwhm1, fwhm2=time[cut+int(signal_edge[0])],time[cut+int(signal_edge[-1])]
-        plt.plot(fwhm1,amp[int(signal_edge[0])],'bo')
-        plt.plot(fwhm2,amp[int(signal_edge[-1])],'bo')
+        plt.plot(fwhm1,amp[int(signal_edge[0])],'o',color=b)
+        plt.plot(fwhm2,amp[int(signal_edge[-1])],'o',color=b)
         fwhm=float(fwhm2-fwhm1)
-        plt.plot([fwhm1,fwhm2],[amp[int(signal_edge[0])],amp[int(signal_edge[-1])]], color='blue', label='Width of channel: {} s'.format(float(f'{fwhm:.4f}')))
-        plt.plot(time[int(np.argwhere(amp==max(amp))[0])+cut], max(amp),'ro', label='Maximum: {} V'.format(float(f'{max(amp):.4f}')))
+        plt.plot([fwhm1,fwhm2],[amp[int(signal_edge[0])],amp[int(signal_edge[-1])]], color=b, label='Width of channel: {} s'.format(float(f'{fwhm:.4f}')))
+        plt.plot(time[int(np.argwhere(amp==max(amp))[0])+cut], max(amp),'o',color=b, label='Maximum: {} V'.format(float(f'{max(amp_origin):.4f}')))
         width.append(fwhm)
         position.append(time[int(np.argwhere(amp==max(amp))[0])+cut])
-        height.append(max(amp))
+        height.append(max(amp_origin))
     print(height,width,position)
     plt.xlabel('Time [s]')
-    plt.ylabel('Signal [V]')
+    plt.ylabel('Signal [V]/ Maximum')
     plt.legend(loc=1, bbox_to_anchor=(1.3,1) )
     fig1= plt.gcf()
     plt.show()
@@ -173,17 +223,18 @@ def MotorAndBoloData(i=1):
 
 
 #%%
-motordata='/home/gediz/Measurements/Lines_of_sight/motor_data/shot60030_bolo1_y.dat'
-motordatatitle='y-Sweep of all channels with green laser and motor // no vacuum'
+motordata='/home/gediz/Measurements/Lines_of_sight/motor_data/shot60071_y_scan_UV_Lamp_lines_of_sight.dat'
+motordatatitle='Motordata of shot60071 // Lines of Sight measurement //channel 1'
 motordataoutfile='/home/gediz/Results/Lines_of_sight/motor_data/'
 path,filename=os.path.split(motordata)
 
 #for the bolo_ratdiation functions:
 Datatype='Data'
-shotnumber=60038
-location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot{}.dat'.format(shotnumber)
+shotnumber=60071
+#location='/home/gediz/Measurements/Calibration/Calibration_Bolometer_September_2022/Bolometer_calibration_vacuum_and_air_different_sources_09_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
+location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot{}_cropped.dat'.format(shotnumber)
 outfile='/home/gediz/Results/Lines_of_sight/shot_data/'
-extratitle=motordatatitle
+extratitle='Lines of sight // air // UV-Lamp y-scan//distance 12.7cm// amplif. x5, x100'
 if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
@@ -191,6 +242,10 @@ if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
 #PlotSingleTimeseries(8, save=True)
 #MotorData(save=True)
 #MotorAndBoloData(1)
-#BoloDataWidths(8)#,save=True)
-BoloDataWholeSweep(save=True)
+#for i in (1,2,3,4,5,6,7,8):
+#    BoloDataWidths(i)#,save=True)
+#BoloDataWidths(4)
+#BoloDataWholeSweep(save=True)
+#SmoothSignal(4)
+MotorData(save=True)
 # %%
