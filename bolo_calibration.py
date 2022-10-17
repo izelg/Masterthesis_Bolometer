@@ -29,10 +29,9 @@ def LoadData(location):
     return data
 
 
-def Analyze_U_sq(channelnumber, Plot=True):
-    location =str(infile)+'TEK0000{}.CSV'.format(channelnumber)
-    time=LoadData(location)['"TIME"']
-    U_sq=LoadData(location)['"CH1"'] 
+def Analyze_U_sq(documentnumber, Plot=True):
+    location =str(infile)+'TEK000{}.CSV'.format(documentnumber)
+    time, U_sq= np.genfromtxt(location,delimiter=',',unpack=True, usecols=(3,4))
     start= np.argmax(np.gradient(U_sq, time))    #Start of the Square Signal
     stop= np.argmin(np.gradient(U_sq, time))     #End of the Square Signal
     signal_high_time = time[start+10:stop-10]
@@ -58,13 +57,11 @@ def Analyze_U_sq(channelnumber, Plot=True):
 #This function fits to the calibration Data a function of the form of Equation
 #4.31 of Anne Zilchs Diploma Thesis 'Untersuchung von Strahlungsverlusten mittels Bolometrie an einem toroidalen Niedertemperaturplasma' from 2011 
 # to determine the constant TAU for a given Bolometerchannel 
-def Get_Tau(channelnumber, Plot=False):
-    location =str(infile)+'TEK0000{}.CSV'.format(channelnumber)
+def Get_Tau(documentnumber_U_sq, documentnumber_U_b, Plot=False):
     def I_func(t,I_0, Delta_I, tau):
         return I_0+Delta_I*(1-np.exp(-t/tau))
-    time=LoadData(location)['"TIME"']
-    U_sq=LoadData(location)['"CH1"']                #Square Signal to warm the Resistors
-    U_b=LoadData(location)['"CH2"']                 #Response Voltage of the Resistors
+    time, U_sq= np.genfromtxt(str(infile)+'TEK000{}.CSV'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(3,4))    #Square Signal to warm the Resistors
+    U_b= np.genfromtxt(str(infile)+'TEK000{}.CSV'.format(documentnumber_U_b),delimiter=',',unpack=True, usecols=(4))    #Square Signal to warm the Resistors
     I_b=U_b/100                                     #Response Current  through Test Resistor 100 Ohm
     start= np.argmax(np.gradient(U_sq, time))+10    #Start of the Square Signal
     stop= np.argmin(np.gradient(U_sq, time))-10     #End of the Square Signal
@@ -129,8 +126,8 @@ def GetAllOmicCalibration():
     Figure(tau, Save=True)
     Figure(kappa, Save=True)
     Figure(R_M, Save=True)
-    data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
-    np.savetxt(str(outfile)+"old_calibration_of_Anne.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
+    #data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
+    #np.savetxt(str(outfile)+"old_calibration_of_Anne.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
 
 #This function derives relative correction constants based on bolometerprofiles derived by raw data.
 #Use bolo_radiation.py to create such profiles from your bolometerdata
@@ -225,7 +222,7 @@ def CompareRelativeCorrections():
 
 # %%
 
-infile ='/scratch.mv3/koehn/backup_Anne/zilch/measurements/Cal/Bolo_cal_vak/Messwerte_2010_10_08/'
+infile ='/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/'
 outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/'
 
 ##Bolometerprofile from which to calculate the relative correction constants:
@@ -254,6 +251,10 @@ relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_Sept
 
 
 #RelativeOpticalCalibration(Type='value')#,save=True)
-CompareRelativeCorrections()
+#CompareRelativeCorrections()
 #CompareBolometerProfiles()
+
+documentnumber= '1'
+Analyze_U_sq(documentnumber, Plot=True)
+Get_Tau('1','2',Plot=True)
 # %%

@@ -137,7 +137,7 @@ def BoloDataWholeSweep(save=False):
     width=[]
     height=[]
     position=[]
-    c=[1,2,3,4,5,6,7,8]
+    c=[6,7,8]
     color=['blue','red','green','orange','magenta','gold','darkcyan','blueviolet']
     def lin (x,a,b):
         return a*x + b
@@ -223,18 +223,18 @@ def MotorAndBoloData(i=1):
 
 
 #%%
-motordata='/home/gediz/Measurements/Lines_of_sight/motor_data/shot60071_y_scan_UV_Lamp_lines_of_sight.dat'
-motordatatitle='Motordata of shot60071 // Lines of Sight measurement //channel 1'
+motordata='/home/gediz/Measurements/Lines_of_sight/motor_data/shot60078_x_scan_UV_Lamp_lines_of_sight_channel_1.dat'
+motordatatitle='Motordata of shot60078 // Lines of Sight measurement //channel 1'
 motordataoutfile='/home/gediz/Results/Lines_of_sight/motor_data/'
 path,filename=os.path.split(motordata)
 
 #for the bolo_ratdiation functions:
 Datatype='Data'
-shotnumber=60071
+shotnumber=60080
 #location='/home/gediz/Measurements/Calibration/Calibration_Bolometer_September_2022/Bolometer_calibration_vacuum_and_air_different_sources_09_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
 location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot{}_cropped.dat'.format(shotnumber)
 outfile='/home/gediz/Results/Lines_of_sight/shot_data/'
-extratitle='Lines of sight // air // UV-Lamp y-scan//distance 12.7cm// amplif. x5, x100'
+extratitle='Lines of sight // air // UV-Lamp x-scan//distance~3.5cmcm// amplif. x5, x100'
 if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
@@ -242,10 +242,10 @@ if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
 #PlotSingleTimeseries(8, save=True)
 #MotorData(save=True)
 #MotorAndBoloData(1)
-#for i in (1,2,3,4,5,6,7,8):
+#for i in (6,7,8):
 #    BoloDataWidths(i)#,save=True)
 #BoloDataWidths(4)
 #BoloDataWholeSweep(save=True)
-#SmoothSignal(4)
+#SmoothSignal(1)
 MotorData(save=True)
 # %%
