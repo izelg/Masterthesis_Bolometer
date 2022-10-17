@@ -70,6 +70,10 @@ def Get_Tau(documentnumber_U_sq, documentnumber_U_b, Plot=False):
 
     popt, pcov = curve_fit(I_func, time_cut, I_b_cut)
     if Plot==True:
+        plt.plot(time, U_sq)
+        plt.show()
+        plt.plot(time, U_b)
+        plt.show()
         plt.plot(time_cut, I_b_cut)
         plt.xlabel('Time [s]')
         plt.ylabel('I_b [mA]')
@@ -255,6 +259,6 @@ relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_Sept
 #CompareBolometerProfiles()
 
 documentnumber= '1'
-Analyze_U_sq(documentnumber, Plot=True)
+#Analyze_U_sq(documentnumber, Plot=True)
 Get_Tau('1','2',Plot=True)
 # %%
