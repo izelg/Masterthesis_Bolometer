@@ -254,6 +254,7 @@ relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_Sept
 
 
 #RelativeOpticalCalibration(Type='value')#,save=True)
-CompareRelativeCorrections()
+#CompareRelativeCorrections()
 #CompareBolometerProfiles()
+Get_Tau(1,Plot=True)
 # %%
