@@ -222,6 +222,25 @@ def MotorAndBoloData(i=1):
     print(len(time),len(x),len(x_))
 
 
+def VisualizeLinesOfSight():
+    y0,y1,y2,y3,y4,y5,y6,y7,y8=np.genfromtxt('/home/gediz/Results/Lines_of_sight/lines_of_sight_data_y.txt', unpack=True)
+    x0,x1,x2,x3,x4,x5,x6,x7,x8=np.genfromtxt('/home/gediz/Results/Lines_of_sight/lines_of_sight_data_x.txt', unpack=True)
+    x=[x2,x3,x4,x5,x6,x7,x8]
+    plt.plot(x0,list(h/2 for h in x1),'ro--',label='horizontal line of sight')
+    for i in x:
+        plt.plot(x0,list(h/2 for h in i),'ro--',alpha=0.5)
+        plt.plot(x0,list(-h/2 for h in i),'ro--',alpha=0.5)
+    y=[y2,y3,y4,y5,y6,y7,y8]
+    plt.plot(y0,list(h/2 for h in y1),'bo--',label='vertical line of sight')
+    for j in y:
+        plt.plot(y0,list(h/2 for h in j),'bo--',alpha=0.5)
+        plt.plot(y0,list(-h/2 for h in j),'bo--',alpha=0.5)
+    plt.xlabel('Distance from slit [cm]')
+    plt.ylabel('line of sight widht [mm]')
+    plt.legend()
+    plt.suptitle('Widhts of the lines of sight from all 8 channels, vertical and horizontal')
+    plt.show()
+
 #%%
 motordata='/home/gediz/Measurements/Lines_of_sight/motor_data/shot60078_x_scan_UV_Lamp_lines_of_sight_channel_1.dat'
 motordatatitle='Motordata of shot60078 // Lines of Sight measurement //channel 1'
@@ -247,5 +266,7 @@ if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
 #BoloDataWidths(4)
 #BoloDataWholeSweep(save=True)
 #SmoothSignal(1)
-MotorData(save=True)
+#MotorData(save=True)
+VisualizeLinesOfSight()
+
 # %%
