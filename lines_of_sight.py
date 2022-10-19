@@ -16,6 +16,8 @@ from scipy.signal import savgol_filter
 
 #%%
 
+#This function plots the Motordata collected with the stepping motor
+#It can extract the width of the  signal which is needed to reconstruct the positional information in the data collected by TJ-K
 def MotorData(save=False):
     x,a,p =np.genfromtxt(motordata, unpack=True)    #x is the position data in mm, a is the "amplitude" data stored and processed by the software, p is the "Phase" data stored and processed by the software
     x_=np.arange(x[0],x[-1],0.00001)
@@ -42,40 +44,6 @@ def MotorData(save=False):
     plt.show()
     if save==True:
         fig1.savefig(str(motordataoutfile)+str(filename[:-4])+".pdf", bbox_inches='tight')
-
-
-def SmoothSignal(i=1):
-    cut=0
-    y= LoadData(location)["Bolo{}".format(i)][cut:]        #aprox. the first 10 seconds are ignored because due to the motormovement a second peak appeared there
-    time = LoadData(location)['Zeit [ms]'][cut:] 
-    title='Shot n° {s} // Channel "Bolo {n}" \n {e}'.format(s=shotnumber, n=i, e=extratitle)
-
-    y_smooth=savgol_filter(y,1000,3)
-
-    steps=[]
-    for j in np.arange(cut, len(y_smooth)-1000):
-        step= (y_smooth[j]-y_smooth[j+1000])
-        steps.append(abs(step))
-    #start=(np.argwhere(np.array([steps])>0.005)[0][1]+cut)
-    #stop=(np.argwhere(np.array([steps])>0.005)[-1][1]+cut)
-    #print(start,stop)
-    plt.plot(np.arange(0,len(steps)),steps,'bo')
-    plt.hlines(0.005,0,len(steps))
-    #plt.plot([start-cut,start-cut],[steps[start-cut],steps[start-cut]],'ro')
-    #plt.plot([stop-cut,stop-cut],[steps[stop-cut],steps[stop-cut]],'ro')
-    plt.show()
-
-    #print(start,stop)
-    plt.plot(time, y,color='red', alpha=0.5)
-    plt.plot(time,y_smooth)
-    #plt.plot(time[start],y_smooth[start],'bo')
-    #plt.plot(time[stop],y_smooth[stop],'ro')
-    #plt.plot(time[stop],y[stop],'go')
-    #print(time[stop], y_smooth[stop],y[stop])
-    print(len(y),len(y_smooth),len(steps))
-    plt.show()
-    return (y_smooth)
-
 
 
 #This function takes one channelsignal aquired during a sweep with a lightsource across it and determines
@@ -129,6 +97,8 @@ def BoloDataWidths(i=1, save=False):
     if save==True:
         fig1.savefig(str(outfile)+"shot{n}/shot{n}_channel_{c}_raw_signal_and_widths_in_s.pdf".format(n=shotnumber, c=i), bbox_inches='tight')
 
+#This function does the same as BoloDataWidths() but for all channels at once
+#It then saves the widths of all signals and their heigths together in one file
 def BoloDataWholeSweep(save=False):
     plt.figure(figsize=(10,5))
     plt.suptitle ('All Bolometer Signals of shot n°{n} together. \n {e}'.format(n=shotnumber,  e=extratitle))
@@ -137,7 +107,7 @@ def BoloDataWholeSweep(save=False):
     width=[]
     height=[]
     position=[]
-    c=[1,2,3,4,5,6,7,8]
+    c=[6,7,8]
     color=['blue','red','green','orange','magenta','gold','darkcyan','blueviolet']
     def lin (x,a,b):
         return a*x + b
@@ -211,30 +181,40 @@ def PlotSingleTimeseries(i=1, save=False):
         fig1.savefig(str(outfile)+"shot{n}/shot{n}_channel_{c}_raw_signal.pdf".format(n=shotnumber, c=i), bbox_inches='tight')
     return time,y
 
-def MotorAndBoloData(i=1):
-    x,a,p =np.genfromtxt(motordata, unpack=True)    #x is the position data in mm, a is the "amplitude" data stored and processed by the software, p is the "Phase" data stored and processed by the software
-    x_=np.arange(x[0],x[-1],0.00001)
-    fit=pchip_interpolate(x,a,x_)
-    # amp=list(i+20 for i in fit)
-    y= LoadData(location)[cut:]["Bolo{}".format(i)]
-    time = LoadData(location)['Zeit [ms]'][cut:] / 1000
-    
-    print(len(time),len(x),len(x_))
-
+#This was a first attempt to plot all lines of sight measurements together
+#The next level would be to reconstruct their positions and plot them in 3D
+def VisualizeLinesOfSight():
+    y0,y1,y2,y3,y4,y5,y6,y7,y8=np.genfromtxt('/home/gediz/Results/Lines_of_sight/lines_of_sight_data_y.txt', unpack=True)
+    x0,x1,x2,x3,x4,x5,x6,x7,x8=np.genfromtxt('/home/gediz/Results/Lines_of_sight/lines_of_sight_data_x.txt', unpack=True)
+    x=[x2,x3,x4,x5,x6,x7,x8]
+    plt.plot(x0,list(h/2 for h in x1),'ro--',label='horizontal line of sight')
+    for i in x:
+        plt.plot(x0,list(h/2 for h in i),'ro--',alpha=0.5)
+        plt.plot(x0,list(-h/2 for h in i),'ro--',alpha=0.5)
+    y=[y2,y3,y4,y5,y6,y7,y8]
+    plt.plot(y0,list(h/2 for h in y1),'bo--',label='vertical line of sight')
+    for j in y:
+        plt.plot(y0,list(h/2 for h in j),'bo--',alpha=0.5)
+        plt.plot(y0,list(-h/2 for h in j),'bo--',alpha=0.5)
+    plt.xlabel('Distance from slit [cm]')
+    plt.ylabel('line of sight widht [mm]')
+    plt.legend()
+    plt.suptitle('Widhts of the lines of sight from all 8 channels, vertical and horizontal')
+    plt.show()
 
 #%%
-motordata='/home/gediz/Measurements/Lines_of_sight/motor_data/shot60071_y_scan_UV_Lamp_lines_of_sight.dat'
-motordatatitle='Motordata of shot60071 // Lines of Sight measurement //channel 1'
+motordata='/home/gediz/Measurements/Lines_of_sight/motor_data/shot60078_x_scan_UV_Lamp_lines_of_sight_channel_1.dat'
+motordatatitle='Motordata of shot60078 // Lines of Sight measurement //channel 1'
 motordataoutfile='/home/gediz/Results/Lines_of_sight/motor_data/'
 path,filename=os.path.split(motordata)
 
 #for the bolo_ratdiation functions:
 Datatype='Data'
-shotnumber=60071
+shotnumber=60080
 #location='/home/gediz/Measurements/Calibration/Calibration_Bolometer_September_2022/Bolometer_calibration_vacuum_and_air_different_sources_09_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
 location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot{}_cropped.dat'.format(shotnumber)
 outfile='/home/gediz/Results/Lines_of_sight/shot_data/'
-extratitle='Lines of sight // air // UV-Lamp y-scan//distance 12.7cm// amplif. x5, x100'
+extratitle='Lines of sight // air // UV-Lamp x-scan//distance~3.5cmcm// amplif. x5, x100'
 if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
@@ -242,10 +222,12 @@ if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
 #PlotSingleTimeseries(8, save=True)
 #MotorData(save=True)
 #MotorAndBoloData(1)
-#for i in (1,2,3,4,5,6,7,8):
+#for i in (6,7,8):
 #    BoloDataWidths(i)#,save=True)
 #BoloDataWidths(4)
 #BoloDataWholeSweep(save=True)
-#SmoothSignal(4)
-MotorData(save=True)
+#SmoothSignal(1)
+#MotorData(save=True)
+VisualizeLinesOfSight()
+
 # %%
