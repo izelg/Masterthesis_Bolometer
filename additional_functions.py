@@ -171,3 +171,39 @@ plt.legend()
 fig1= plt.gcf()
 plt.show()
 fig1.savefig("/home/gediz/Results/Goldfoil_Absorption/Golddata_and_Interpolation.pdf")
+
+
+#%%
+#used to test the smoothing with the savgol_filter
+#originaly from lines_of_sight.py
+def SmoothSignal(i=1):
+    cut=0
+    y= LoadData(location)["Bolo{}".format(i)][cut:]        #aprox. the first 10 seconds are ignored because due to the motormovement a second peak appeared there
+    time = LoadData(location)['Zeit [ms]'][cut:] 
+    title='Shot n° {s} // Channel "Bolo {n}" \n {e}'.format(s=shotnumber, n=i, e=extratitle)
+
+    y_smooth=savgol_filter(y,1000,3)
+
+    steps=[]
+    for j in np.arange(cut, len(y_smooth)-1000):
+        step= (y_smooth[j]-y_smooth[j+1000])
+        steps.append(abs(step))
+    #start=(np.argwhere(np.array([steps])>0.005)[0][1]+cut)
+    #stop=(np.argwhere(np.array([steps])>0.005)[-1][1]+cut)
+    #print(start,stop)
+    plt.plot(np.arange(0,len(steps)),steps,'bo')
+    plt.hlines(0.005,0,len(steps))
+    #plt.plot([start-cut,start-cut],[steps[start-cut],steps[start-cut]],'ro')
+    #plt.plot([stop-cut,stop-cut],[steps[stop-cut],steps[stop-cut]],'ro')
+    plt.show()
+
+    #print(start,stop)
+    plt.plot(time, y,color='red', alpha=0.5)
+    plt.plot(time,y_smooth)
+    #plt.plot(time[start],y_smooth[start],'bo')
+    #plt.plot(time[stop],y_smooth[stop],'ro')
+    #plt.plot(time[stop],y[stop],'go')
+    #print(time[stop], y_smooth[stop],y[stop])
+    print(len(y),len(y_smooth),len(steps))
+    plt.show()
+    return (y_smooth)
