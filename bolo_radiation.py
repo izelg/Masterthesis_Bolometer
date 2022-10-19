@@ -112,8 +112,8 @@ def PlotAllTimeseriesTogether (figheight=None, figwidth=None, save=False):
     for i in np.arange(1,9):
         bolo_raw_data = LoadData(location)["Bolo{}".format(i)]
         plt.plot(time,  bolo_raw_data, label="Bolo{}".format(i) )
-        #plt.plot([time [u],time[u]],[bolo_raw_data[u],bolo_raw_data[u]],'o')
-        #print(bolo_raw_data[u])
+        plt.plot([time [u],time[u]],[bolo_raw_data[u],bolo_raw_data[u]],'o')
+        print(bolo_raw_data[u])
     plt.xlabel('Time [s]')
     plt.ylabel('Signal [V]')
     plt.legend(loc=1, bbox_to_anchor=(1.2,1) )
@@ -478,12 +478,12 @@ def CompareBolometerProfiles(Type="",shot_number_1=1, shot_number_2=2, save=Fals
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=60080
+    shotnumber=60061
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
     extratitle='Lines of sight // air // UV-Lamp x-scan// distance~3.5cm// amplif. x5, x100'      #As a title for your plots specify what the measurement was about. If you don' use this type ''
 
     #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    location=  '/home/gediz/Measurements/Lines_of_sight/shot_data/shot{name}_cropped.dat'.format(name=shotnumber) #location of calibration measurement
+    location=  '/home/gediz/Measurements/Measurements_LOG/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = LoadData(location)['Zeit [ms]'] / 1000 # s
     
     #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
@@ -492,7 +492,7 @@ if __name__ == "__main__":
     sourcetitle='calibration with green laser in vacuum'
     sourcetitlesave='calibration_with_green_laser_vacuum'
     
-    outfile='/home/gediz/Results/Lines_of_sight/shot_data/'
+    outfile='/home/gediz/Results/Calibration/Wavelength_dependency_study/'
     
     
     z= LoadData(location)['2 GHz Richtk. forward']
@@ -511,7 +511,10 @@ if __name__ == "__main__":
     
     u=0
     #PlotSingleTimeseries(1, save=True)
-    PlotAllTimeseriesTogether()
+    #PlotAllTimeseriesTogether(save=True)
     #SignalHeight_max(8,Plot=True)
     #BolometerProfile('Bolo', save=True)
+    
+    
+
 # %%
