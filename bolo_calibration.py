@@ -229,7 +229,7 @@ def RelativeOpticalCalibration(Type='',save=False):
 
 #This function was used to plot all different experiments to calibrate the bolometer together
 #Since more  experiments were added all the time and each needed a descriptive title the function is not very elegant
-def CompareBolometerProfiles():
+def CompareBolometerProfiles(save=False):
     x=[1,2,3,4,5,6,7,8]
     y0=np.genfromtxt(boloprofile_0, unpack=True, usecols=1)
     y1=np.genfromtxt(boloprofile_1, unpack=True, usecols=1)
@@ -240,25 +240,66 @@ def CompareBolometerProfiles():
     y6=np.genfromtxt(boloprofile_6, unpack=True, usecols=1)
     y7=np.genfromtxt(boloprofile_7, unpack=True, usecols=1)
     y8=np.genfromtxt(boloprofile_8, unpack=True, usecols=1)
-    plt.plot(x,y0,label='by hand, batteries, after reassemblance', marker='o')
-    plt.plot(x,y1,label='with step motor, batteries, by hand, 1mm steps', marker='o')
-    plt.plot(x,y2, label='2D scan, 3VDC, angle upwards',  marker='o')
-    plt.plot(x,y3,label='2D scan, 3VDC, angle downwards', marker='o')
-    plt.plot(x,y4 ,label='by Hand, 3VDC, horizontal', marker='o')    
-    plt.plot(x,y5,label='by Hand, 3VDC, angle upwards',  marker='o')
-    plt.plot(x,y6 ,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
-    plt.plot(x,y7,label='by Hand, new batteries, angle downwards', marker='o')
-    plt.plot(x,y8 ,label='by Hand, new batteries, angle downwards', marker='o')
-    #plt.plot([1,8],[np.mean(y1),np.mean(y1)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y1):.3f}')), color='b', alpha=0.5)
-    #plt.plot([1,8],[np.mean(y2),np.mean(y2)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y2):.3f}')), color='g', alpha=0.5)
-    plt.suptitle('Bolometerprofiles // Green laser in vacuum')
+    # plt.plot(x,y0,label='by hand, batteries, after reassemblance', marker='o')
+    # plt.plot(x,y1,label='with step motor, batteries, by hand, 1mm steps', marker='o')
+    # plt.plot(x,y2, label='2D scan, 3VDC, angle upwards',  marker='o')
+    # plt.plot(x,y3,label='2D scan, 3VDC, angle downwards', marker='o')
+    # plt.plot(x,y4 ,label='by Hand, 3VDC, horizontal', marker='o')    
+    # plt.plot(x,y5,label='by Hand, 3VDC, angle upwards',  marker='o')
+    # plt.plot(x,y6 ,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
+    # plt.plot(x,y7,label='by Hand, new batteries, angle downwards', marker='o')
+    # plt.plot(x,y8 ,label='by Hand, new batteries, angle downwards', marker='o')
+    # #plt.plot([1,8],[np.mean(y1),np.mean(y1)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y1):.3f}')), color='b', alpha=0.5)
+    # #plt.plot([1,8],[np.mean(y2),np.mean(y2)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y2):.3f}')), color='g', alpha=0.5)
+    # plt.suptitle('Bolometerprofiles // Green laser in vacuum')
+    # plt.xlabel('Bolometerchannel')
+    # plt.ylabel('Signal [V]')
+    # plt.legend(loc=1,bbox_to_anchor=(1.9,1))
+    # fig1=plt.gcf()
+    # plt.show()
+    ch1=[]
+    ch2=[]
+    ch3=[]
+    ch4=[]
+    ch5=[]
+    ch6=[]
+    ch7=[]
+    ch8=[]
+    mean=[]
+    sd=[]
+    sem=[]
+    for i,j in zip([0,1,2,3,4,5,6,7],[ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8]):
+        j.extend([y0[i],y1[i],y2[i],y3[i],y4[i],y5[i],y6[i],y7[i],y8[i]])
+        sd.append(np.std(j,ddof=1))
+        sem.append(np.std(j,ddof=1)/np.sqrt(9))
+        mean.append(np.mean(j))
+    plt.plot(x,y0,alpha=0.15,label='by hand, batteries, after reassemblance', marker='o')
+    plt.plot(x,y1,alpha=0.15,label='with step motor, batteries, by hand, 1mm steps', marker='o')
+    plt.plot(x,y2,alpha=0.15, label='2D scan, 3VDC, angle upwards',  marker='o')
+    plt.plot(x,y3,alpha=0.15,label='2D scan, 3VDC, angle downwards', marker='o')
+    plt.plot(x,y4 ,alpha=0.15,label='by Hand, 3VDC, horizontal', marker='o')    
+    plt.plot(x,y5,alpha=0.15,label='by Hand, 3VDC, angle upwards',  marker='o')
+    plt.plot(x,y6 ,alpha=0.15,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
+    plt.plot(x,y7,alpha=0.15,label='by Hand, new batteries, angle downwards', marker='o')
+    plt.plot(x,y8 ,alpha=0.15,label='by Hand, new batteries, angle downwards', marker='o')
+    plt.plot(x,mean,'ro',label='mean value of all measurements')
+    plt.errorbar(x,mean,yerr=sem, ecolor='red',fmt='none',capsize=5,label='Standard error of the mean')
+    plt.suptitle('Relative correction constants // Green laser in vacuum')
     plt.xlabel('Bolometerchannel')
-    plt.ylabel('Signal [V]')
+    plt.ylabel('[arb]')
     plt.legend(loc=1,bbox_to_anchor=(1.9,1))
-    plt.show()
+    fig1=plt.gcf()
+    plt.show()  
+    if save ==True:
+        data = np.column_stack([np.array(x), np.array(mean), np.array(sd), np.array(sem)])
+        np.savetxt(str(outfile)+"calibration_green_laser_vacuum_original_signals_mean_sd_sem.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='From all Calibration measurements with the green laser in vacuum the mean value of the original signals for each channel and their sd and sem. \n channelnumber   mean[V]    sd  sem')
+        fig1.savefig(str(outfile)+"calibration_green_laser_all_bolometerprofiles_with_mean_and_error.pdf")
+
+
+
 
 #This function plots the resulting Relative Corrections derived with RelativeOpticalCAlibration()
-def CompareRelativeCorrections():
+def CompareRelativeCorrections(save=False):
     x=[1,2,3,4,5,6,7,8]
     y0=np.genfromtxt(relativecorrection_0, unpack=True, usecols=1)
     y1=np.genfromtxt(relativecorrection_1, unpack=True, usecols=1)
@@ -269,27 +310,48 @@ def CompareRelativeCorrections():
     y6=np.genfromtxt(relativecorrection_6, unpack=True, usecols=1)
     y7=np.genfromtxt(relativecorrection_7, unpack=True, usecols=1)
     y8=np.genfromtxt(relativecorrection_8, unpack=True, usecols=1)
-    plt.plot(x,y0,label='by hand, batteries, after reassemblance', marker='o')
-    plt.plot(x,y1,label='with step motor, batteries, by hand, 1mm steps', marker='o')
-    plt.plot(x,y2, label='2D scan, 3VDC, angle upwards',  marker='o')
-    plt.plot(x,y3,label='2D scan, 3VDC, angle downwards', marker='o')
-    plt.plot(x,y4 ,label='by Hand, 3VDC, horizontal', marker='o')    
-    plt.plot(x,y5,label='by Hand, 3VDC, angle upwards',  marker='o')
-    plt.plot(x,y6 ,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
-    plt.plot(x,y7,label='by Hand, new batteries, angle downwards', marker='o')
-    plt.plot(x,y8 ,label='by Hand, new batteries, angle downwards', marker='o')
-    #plt.plot([1,8],[np.mean(y1),np.mean(y1)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y1):.3f}')), color='b', alpha=0.5)
-    #plt.plot([1,8],[np.mean(y2),np.mean(y2)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y2):.3f}')), color='g', alpha=0.5)
+    ch1=[]
+    ch2=[]
+    ch3=[]
+    ch4=[]
+    ch5=[]
+    ch6=[]
+    ch7=[]
+    ch8=[]
+    mean=[]
+    sd=[]
+    sem=[]
+    for i,j in zip([0,1,2,3,4,5,6,7],[ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8]):
+        j.extend([y0[i],y1[i],y2[i],y3[i],y4[i],y5[i],y6[i],y7[i],y8[i]])
+        sd.append(np.std(j,ddof=1))
+        sem.append(np.std(j,ddof=1)/np.sqrt(9))
+        mean.append(np.mean(j))
+    plt.plot(x,y0,alpha=0.15,label='by hand, batteries, after reassemblance', marker='o')
+    plt.plot(x,y1,alpha=0.15,label='with step motor, batteries, by hand, 1mm steps', marker='o')
+    plt.plot(x,y2,alpha=0.15, label='2D scan, 3VDC, angle upwards',  marker='o')
+    plt.plot(x,y3,alpha=0.15,label='2D scan, 3VDC, angle downwards', marker='o')
+    plt.plot(x,y4 ,alpha=0.15,label='by Hand, 3VDC, horizontal', marker='o')    
+    plt.plot(x,y5,alpha=0.15,label='by Hand, 3VDC, angle upwards',  marker='o')
+    plt.plot(x,y6 ,alpha=0.15,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
+    plt.plot(x,y7,alpha=0.15,label='by Hand, new batteries, angle downwards', marker='o')
+    plt.plot(x,y8 ,alpha=0.15,label='by Hand, new batteries, angle downwards', marker='o')
+    plt.plot(x,mean,'ro',label='mean value of all measurements')
+    plt.errorbar(x,mean,yerr=sem, ecolor='red',fmt='none',capsize=5,label='Standard error of the mean')
     plt.suptitle('Relative correction constants // Green laser in vacuum')
     plt.xlabel('Bolometerchannel')
     plt.ylabel('[arb]')
     plt.legend(loc=1,bbox_to_anchor=(1.9,1))
-    plt.show()
+    fig1=plt.gcf()
+    plt.show()  
+    if save ==True:
+        data = np.column_stack([np.array(x), np.array(mean), np.array(sd), np.array(sem)])
+        np.savetxt(str(outfile)+"calibration_green_laser_vacuum_relative_corrections_mean_sd_sem.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='From all Calibration measurements with the green laser in vacuum the mean value of the relative correction constant for each channel and their sd and sem. \n channelnumber   mean[V]    sd  sem')
+        fig1.savefig(str(outfile)+"calibration_green_laser_all_relative_corrections_with_mean_and_error.pdf")
 
 # %%
 
 infile ='/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/'
-outfile='/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/'
+outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/'
 
 ##Bolometerprofile from which to calculate the relative correction constants:
 boloprofile_0='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum.txt'
@@ -316,12 +378,8 @@ relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_Sept
 relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_02_using_mean.txt'
 
 
-<<<<<<< HEAD
 #RelativeOpticalCalibration(Type='value')#,save=True)
-#CompareRelativeCorrections()
-#CompareBolometerProfiles()
-Get_Tau(1,Plot=True)
-=======
-CompareTauAndKappa()
->>>>>>> d19a5e3cbbfe77ea42b345035b7a8c307d480fd9
+CompareRelativeCorrections(save=True)
+CompareBolometerProfiles(save=True)
+#Get_Tau(1,Plot=True)
 # %%

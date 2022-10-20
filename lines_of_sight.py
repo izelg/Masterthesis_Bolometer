@@ -42,6 +42,7 @@ def MotorData(save=False):
     plt.legend(loc=1, bbox_to_anchor=(1.4,1))
     fig1= plt.gcf()
     plt.show()
+    print(fwhm1,fwhm2)
     if save==True:
         fig1.savefig(str(motordataoutfile)+str(filename[:-4])+".pdf", bbox_inches='tight')
 
@@ -107,7 +108,9 @@ def BoloDataWholeSweep(save=False):
     width=[]
     height=[]
     position=[]
-    c=[6,7,8]
+    fwhm1_list=[]
+    fwhm2_list=[]
+    c=[1,2,3,4,5,6,7,8]
     color=['blue','red','green','orange','magenta','gold','darkcyan','blueviolet']
     def lin (x,a,b):
         return a*x + b
@@ -138,6 +141,8 @@ def BoloDataWholeSweep(save=False):
         width.append(fwhm)
         position.append(time[int(np.argwhere(amp==max(amp))[0])+cut])
         height.append(max(amp_origin))
+        fwhm1_list.append(fwhm1)
+        fwhm2_list.append(fwhm2)
     print(height,width,position)
     plt.xlabel('Time [s]')
     plt.ylabel('Signal [V]/ Maximum')
@@ -146,8 +151,8 @@ def BoloDataWholeSweep(save=False):
     plt.show()
     if save==True:
         fig1.savefig(str(outfile)+"shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.pdf".format(n=shotnumber), bbox_inches='tight')
-        data = np.column_stack([np.array(c), np.array(position),np.array(height),np.array(width)])
-        np.savetxt(outfile+'shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shotnumber), data, delimiter='\t \t', fmt=['%d', '%10.4f', '%10.4f', '%10.4f'], header='Analysis of the Bolometersignals from shot°{s} \n Title for Boloprofileplot: \n shot n°{s}, {m}\n channelnumber \t Position [s] \t Height [V] \t Width [s]'.format(s=shotnumber,m=motordatatitle))
+        data = np.column_stack([np.array(c), np.array(position),np.array(height),np.array(width),np.array(fwhm1_list),np.array(fwhm2_list)])
+        np.savetxt(outfile+'shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shotnumber), data, delimiter='\t \t', fmt=['%d', '%10.4f', '%10.4f', '%10.4f', '%10.4f', '%10.4f'], header='Analysis of the Bolometersignals from shot°{s} \n Title for Boloprofileplot: \n shot n°{s}, {m}\n channelnumber \t Position Peak Max [s] \t Height [V] \t Width [s] \t Position left fwhm [s] \t Position right fwhm [s]'.format(s=shotnumber,m=motordatatitle))
 
 
 #importing and using functions from bolo_radiation.py doesn't work yet so I copied them here
@@ -202,32 +207,59 @@ def VisualizeLinesOfSight():
     plt.suptitle('Widhts of the lines of sight from all 8 channels, vertical and horizontal')
     plt.show()
 
+#For different scans that have the same conditions the standard derivation of the aquired values can be determiend
+#e.g. for different y-sweeps at the same distance one can find out how accurate the position heith and width of the Signals can be extracted
+def ErrorAnalysis(shot1,shot2,shot3):
+    x,p1,h1,w1=np.genfromtxt('/home/gediz/Results/Lines_of_sight/shot_data/shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shot1), unpack=True)
+    x,p2,h2,w2=np.genfromtxt('/home/gediz/Results/Lines_of_sight/shot_data/shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shot2), unpack=True)
+    x,p3,h3,w3=np.genfromtxt('/home/gediz/Results/Lines_of_sight/shot_data/shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shot3), unpack=True)
+    d1=[]
+    d2=[]
+    d3=[]
+    for i in [0,1,2,3,4,5,6]:       #extract peak distances from peak positions
+        d1.append(p1[i+1]-p1[i])
+        d2.append(p2[i+1]-p2[i])
+        d3.append(p3[i+1]-p3[i])
+    d=[d1,d2,d3]
+    h=[h1,h2,h3]
+    w=[w1,w2,w3]
+    sd_w=[]
+    for i in [0,1,2,3,4,5,6]:
+        sd_w.append(np.std([w[0][i],w[1][i],w[2][i]],ddof=1))
+    print(np.mean(sd_w))
+
+
 #%%
-motordata='/home/gediz/Measurements/Lines_of_sight/motor_data/shot60078_x_scan_UV_Lamp_lines_of_sight_channel_1.dat'
+motordata='/home/gediz/Measurements/Lines_of_sight/motor_data/shot60032_bolo3_y.dat'
 motordatatitle='Motordata of shot60078 // Lines of Sight measurement //channel 1'
 motordataoutfile='/home/gediz/Results/Lines_of_sight/motor_data/'
 path,filename=os.path.split(motordata)
 
 #for the bolo_ratdiation functions:
 Datatype='Data'
-shotnumber=60080
+shotnumber=60032
 #location='/home/gediz/Measurements/Calibration/Calibration_Bolometer_September_2022/Bolometer_calibration_vacuum_and_air_different_sources_09_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
-location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot{}_cropped.dat'.format(shotnumber)
+location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot{}.dat'.format(shotnumber)
 outfile='/home/gediz/Results/Lines_of_sight/shot_data/'
-extratitle='Lines of sight // air // UV-Lamp x-scan//distance~3.5cmcm// amplif. x5, x100'
+extratitle='Lines of sight // air // UV-Lamp y-scan//distance 2.2cmcm// amplif. x5, x100'
 if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
-
-#PlotSingleTimeseries(8, save=True)
-#MotorData(save=True)
-#MotorAndBoloData(1)
-#for i in (6,7,8):
-#    BoloDataWidths(i)#,save=True)
-#BoloDataWidths(4)
+#MotorData()
+#BoloDataWidths(3)
+#ErrorAnalysis('60067','60068','60069')
+#np.std([0.36,0.38],ddof=1)
+#VisualizeLinesOfSight()
 #BoloDataWholeSweep(save=True)
-#SmoothSignal(1)
-#MotorData(save=True)
-VisualizeLinesOfSight()
+val=[3.74,3.75,3.72,3.77,3.74,3.74,3.93,3.72,3.68,3.71,3.71,3.71,3.76,3.73,4.48,3.83,3.73,3.8,3.7,3.75,3.73,3.71,4.02,3.7,3.68,3.7,3.72,3.77,3.79,3.72,4.15,3.7]
+vol=list(1/i for i in val)
+print(np.mean(vol))
+print(np.std(vol,ddof=1))#/np.sqrt(len(val)))
+print(np.std(vol,ddof=1)/np.sqrt(len(val)))
+
+print(np.mean([0.36,0.38]))
+print(np.std([0.36,0.38],ddof=1))
+#np.std([3.74,3.75,3.72,3.77,3.74,3.74,3.93,3.72],ddof=1)
+
 
 # %%
