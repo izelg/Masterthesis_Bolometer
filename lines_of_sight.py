@@ -189,30 +189,51 @@ def PlotSingleTimeseries(i=1, save=False):
 #This was a first attempt to plot all lines of sight measurements together
 #The next level would be to reconstruct their positions and plot them in 3D
 def VisualizeLinesOfSight():
-    y0,y1,y2,y3,y4,y5,y6,y7,y8=np.genfromtxt('/home/gediz/Results/Lines_of_sight/lines_of_sight_data_y.txt', unpack=True)
-    x0,x1,x2,x3,x4,x5,x6,x7,x8=np.genfromtxt('/home/gediz/Results/Lines_of_sight/lines_of_sight_data_x.txt', unpack=True)
-    x=[x2,x3,x4,x5,x6,x7,x8]
-    plt.plot(x0,list(h/2 for h in x1),'ro--',label='horizontal line of sight')
-    for i in x:
-        plt.plot(x0,list(h/2 for h in i),'ro--',alpha=0.5)
-        plt.plot(x0,list(-h/2 for h in i),'ro--',alpha=0.5)
-    y=[y2,y3,y4,y5,y6,y7,y8]
-    plt.plot(y0,list(h/2 for h in y1),'bo--',label='vertical line of sight')
-    for j in y:
-        plt.plot(y0,list(h/2 for h in j),'bo--',alpha=0.5)
-        plt.plot(y0,list(-h/2 for h in j),'bo--',alpha=0.5)
+    # y0,y1,y2,y3,y4,y5,y6,y7,y8=np.genfromtxt('/home/gediz/Results/Lines_of_sight/lines_of_sight_data_y.txt', unpack=True)
+    # x0,x1,x2,x3,x4,x5,x6,x7,x8=np.genfromtxt('/home/gediz/Results/Lines_of_sight/lines_of_sight_data_x.txt', unpack=True)
+    # x=[x2,x3,x4,x5,x6,x7,x8]
+    # plt.plot(x0,list(h/2 for h in x1),'ro--',label='horizontal line of sight')
+    # for i in x:
+    #     plt.plot(x0,list(h/2 for h in i),'ro--',alpha=0.5)
+    #     plt.plot(x0,list(-h/2 for h in i),'ro--',alpha=0.5)
+    # y=[y2,y3,y4,y5,y6,y7,y8]
+    # plt.plot(y0,list(h/2 for h in y1),'bo--',label='vertical line of sight')
+    # for j in y:
+    #     plt.plot(y0,list(h/2 for h in j),'bo--',alpha=0.5)
+    #     plt.plot(y0,list(-h/2 for h in j),'bo--',alpha=0.5)
+    def lin(x,a,b):
+        return a*x+b
+    x=[(0,13.7,17.7)]
+    x_val=[(14,71.7,83.99)]
+    x_err=[(0,3.33,4.11)]
+    y=[(0,12.4,19.5,22.9)]
+    y_val=[(5,41.71,44.1,54.17)]
+    y_err=[(0,1.63,1.84,2.97)]
+    poptx,pcovx=curve_fit(lin,x[0],list(h/2 for h in x_val[0]))
+    print(poptx)
+    #popty,pcovy=curve_fit(lin,y[0],y_val[0])
+    for j,i,n in zip(x,x_val,x_err):
+        plt.errorbar(j,list(h/2 for h in i),yerr=n,xerr=0.3,marker='o', linestyle='None',capsize=5,color='red')
+        plt.errorbar(j,list(-h/2 for h in i),yerr=n,xerr=0.3,marker='o',linestyle='None', capsize=5,color='red')
+        plt.plot(np.arange(0,23,1),lin(np.arange(0,23,1),*poptx),color='red')
+        plt.plot(np.arange(0,23,1),lin(np.arange(0,23,1),-poptx[0],-poptx[1]),color='red')
+    for j,i,n in zip(y,y_val,y_err):
+        plt.errorbar(j,list(h/2 for h in i),yerr=n,xerr=0.3,marker='o', linestyle='None',capsize=5,color='blue')
+        plt.errorbar(j,list(-h/2 for h in i),yerr=n,xerr=0.3,marker='o', linestyle='None',capsize=5,color='blue')
+        #plt.plot(y,lin(y,*popty))
     plt.xlabel('Distance from slit [cm]')
     plt.ylabel('line of sight widht [mm]')
     plt.legend()
+    plt.grid(True)
     plt.suptitle('Widhts of the lines of sight from all 8 channels, vertical and horizontal')
     plt.show()
 
 #For different scans that have the same conditions the standard derivation of the aquired values can be determiend
 #e.g. for different y-sweeps at the same distance one can find out how accurate the position heith and width of the Signals can be extracted
 def ErrorAnalysis(shot1,shot2,shot3):
-    x,p1,h1,w1=np.genfromtxt('/home/gediz/Results/Lines_of_sight/shot_data/shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shot1), unpack=True)
-    x,p2,h2,w2=np.genfromtxt('/home/gediz/Results/Lines_of_sight/shot_data/shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shot2), unpack=True)
-    x,p3,h3,w3=np.genfromtxt('/home/gediz/Results/Lines_of_sight/shot_data/shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shot3), unpack=True)
+    x,p1,h1,w1=np.genfromtxt('/home/gediz/Results/Lines_of_sight/shot_data/shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shot1), unpack=True,usecols=(0,1,2,3))
+    x,p2,h2,w2=np.genfromtxt('/home/gediz/Results/Lines_of_sight/shot_data/shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shot2), unpack=True,usecols=(0,1,2,3))
+    x,p3,h3,w3=np.genfromtxt('/home/gediz/Results/Lines_of_sight/shot_data/shot{n}/shot{n}_all_bolo_channels_raw_signals_together_analyzed.txt'.format(n=shot3), unpack=True,usecols=(0,1,2,3))
     d1=[]
     d2=[]
     d3=[]
@@ -226,7 +247,7 @@ def ErrorAnalysis(shot1,shot2,shot3):
     sd_w=[]
     for i in [0,1,2,3,4,5,6]:
         sd_w.append(np.std([w[0][i],w[1][i],w[2][i]],ddof=1))
-    print(np.mean(sd_w))
+    #print(np.mean([0.38,1.17,3.9,.83,1.42,0.4,1.26,9.27]))
 
 
 #%%
@@ -249,17 +270,26 @@ if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
 #BoloDataWidths(3)
 #ErrorAnalysis('60067','60068','60069')
 #np.std([0.36,0.38],ddof=1)
-#VisualizeLinesOfSight()
+VisualizeLinesOfSight()
 #BoloDataWholeSweep(save=True)
-val=[3.74,3.75,3.72,3.77,3.74,3.74,3.93,3.72,3.68,3.71,3.71,3.71,3.76,3.73,4.48,3.83,3.73,3.8,3.7,3.75,3.73,3.71,4.02,3.7,3.68,3.7,3.72,3.77,3.79,3.72,4.15,3.7]
-vol=list(1/i for i in val)
-print(np.mean(vol))
-print(np.std(vol,ddof=1))#/np.sqrt(len(val)))
-print(np.std(vol,ddof=1)/np.sqrt(len(val)))
+#val=[3.74,3.75,3.72,3.77,3.74,3.93,3.72,3.68,3.71,3.71,3.71,3.76,3.73,4.48,3.83,3.68,3.7,3.72,3.77,3.79,3.72,4.15,3.7,3.7,4.02,3.71,3.73,3.75,3.7,3.8,3.73]
+#vol=list(x**(-1) for x in val)
+# vol=[117.6,114.7,123.9,110.9,107.9,107.6,108.4,128.2,116.4,118.8,117.9,116.8,103.8,108.9,110.7,96.4,116.5,116.6,110.4,116.5,108.2,107.8,112.7,108.8]
+# print(np.mean(vol))
+# print(np.std(vol,ddof=1))#/np.sqrt(len(val)))
+# print(np.std(vol,ddof=1)/np.sqrt(len(vol)))
 
-print(np.mean([0.36,0.38]))
-print(np.std([0.36,0.38],ddof=1))
-#np.std([3.74,3.75,3.72,3.77,3.74,3.74,3.93,3.72],ddof=1)
+# e,m,sd,sem=np.genfromtxt('/home/gediz/Measurements/Calibration/Amplifier_Values/amplification_factors_and_errors.txt',unpack=True,usecols=(1,2,3,4))
+# percentage=[]
+# sd_part=[]
+# sem_part=[]
+# for i in [0,1,2,3,4,5,6,7]:
+#     percentage.append(m[i]/e[i]*100)
+#     sd_part.append(sd[i]/m[i]*100)
+#     sem_part.append(sem[i]/m[i]*100)
+# print(percentage,sd_part,sem_part)
+    
+
 
 
 # %%

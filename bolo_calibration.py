@@ -19,6 +19,7 @@ from scipy.optimize import curve_fit
 import statistics
 import os
 from scipy.signal import savgol_filter
+import sympy as sp
 
 
 #%%----------------------------------------------------------------------------------------
@@ -57,8 +58,8 @@ def Analyze_U_sq(documentnumber, Plot=True):
 #For a ohmic calibration this function reproduces the Oscilloscope Picture
 #In this case the Oscilloscope used could only store the data of the two channels in two different documents
 def OscilloscopePicture(documentnumber_U_sq, documentnumber_U_b):
-    time, U_sq= np.genfromtxt(str(infile)+'TEK00{}.CSV'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(3,4))    #Square Signal to warm the Resistors
-    U_b= np.genfromtxt(str(infile)+'TEK00{}.CSV'.format(documentnumber_U_b),delimiter=',',unpack=True, usecols=(4))    #Square Signal to warm the Resistors
+    time, U_sq= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(0,1))    #Square Signal to warm the Resistors
+    U_b= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_b),delimiter=',',unpack=True, usecols=(1))    #Square Signal to warm the Resistors
     #U_b=savgol_filter(U_b0,10,3)
     fig,ax1=plt.subplots()
     ax2=ax1.twinx()
@@ -68,7 +69,7 @@ def OscilloscopePicture(documentnumber_U_sq, documentnumber_U_b):
     ax1.set(xlabel='Time [s]')
     ax1.tick_params(axis='y', labelcolor='blue')
     ax2.tick_params(axis='y', labelcolor='red')
-    ax2.set_ylim([0.53,0.55])
+    #ax2.set_ylim([0.53,0.55])
     leg = lns1 + lns2
     labs = [l.get_label() for l in leg]
     ax1.legend(leg, labs, loc=1,bbox_to_anchor=(1.6,1))
@@ -84,18 +85,20 @@ def OscilloscopePicture(documentnumber_U_sq, documentnumber_U_b):
 def Get_Tau(documentnumber_U_sq, documentnumber_U_b, Plot=False):
     def I_func(t,I_0, Delta_I, tau):
         return I_0+Delta_I*(1-np.exp(-t/tau))
-    time, U_sq= np.genfromtxt(str(infile)+'TEK00{}.CSV'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(3,4))    #Square Signal to warm the Resistors
-    U_b= np.genfromtxt(str(infile)+'TEK00{}.CSV'.format(documentnumber_U_b),delimiter=',',unpack=True, usecols=(4))    #Square Signal to warm the Resistors
+    #time, U_sq= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(0,1))    #Square Signal to warm the Resistors
+    time,U_b= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_b),delimiter=',',unpack=True, usecols=(0,1),skip_header=2)    #Square Signal to warm the Resistors
     I_b=U_b/100                                     #Response Current  through Test Resistor 100 Ohm
-    start= np.argmax(np.gradient(U_sq, time))+10    #Start of the Square Signal
-    stop= np.argmin(np.gradient(U_sq, time))-10     #End of the Square Signal
+    start= np.argmax(np.gradient(U_b))+2    #Start of the Square Signal
+    stop= np.argmin(np.gradient(U_b))-2     #End of the Square Signal
     time_cut=time[start:stop]-time[start]           #Time array, shortened to the periode during Square Signal on, and start set to 0 s
     I_b_cut= I_b[start:stop]*1000                   #Current array, shortened equally and Values in mA
-
+    print(start,stop)
     popt, pcov = curve_fit(I_func, time_cut, I_b_cut)
-    I_b_cut_sav=savgol_filter(I_b_cut,10,3)
+    #I_b_cut_sav=savgol_filter(I_b_cut,10,3)
     if Plot==True:
-        plt.plot(time_cut, I_b_cut_sav, color='red', alpha=0.5,label='Bolometer Response')
+        #plt.plot(time[start],np.gradient(U_b)[start],'ro')
+        plt.plot(time_cut, I_b_cut, color='red', alpha=0.5,label='Bolometer Response')
+        #plt.plot(time,np.gradient(U_b))
         plt.xlabel('Time [s]')
         plt.ylabel('I_b [mA]')
         plt.plot(time_cut, I_func(time_cut, *popt),color='darkred', label='Exponential Fit \n tau={}'.format(float(f'{popt[2]:.4f}')))
@@ -129,11 +132,12 @@ def GetAllOmicCalibration(save=False):
     tau=[]
     kappa=[]
     R_M=[]
-    for i,j in zip(['03','07','11','15','19','23','27','31'],['04','08','12','16','20','24','28','32']):
-        x=[1,2,3,4,5,6,7,8]
+    for i,j in zip(['01','06','10','13','18','22','26','30'],['02','05','09','13','17','21','25','29']):
+        x=[2,1,4,3,6,5,8,7]
         tau.append(Get_Tau(i,j, Plot=True)[2])
         kappa.append(abs(Get_Kappa(i,j)[0]))
         R_M.append(Get_Kappa(i,j)[1])
+    #print(tau)
     plt.plot(x,tau,'bo')
     plt.xlabel('Bolometerchannel')
     plt.ylabel('tau [s]')
@@ -146,14 +150,14 @@ def GetAllOmicCalibration(save=False):
     plt.show()
     if save ==True:
         data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
-        np.savetxt(str(outfile)+"ohmic_calibration_air_tau_and_kappa_second_measurement.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
-        fig1.savefig(str(outfile)+"ohmic_calibration_tau_second_measurement.pdf")
-        fig1.savefig(str(outfile)+"ohmic_calibration_kappa_second_measurement.pdf")
+        np.savetxt(str(outfile)+"ohmic_calibration_air_tau_and_kappa_first_measurement.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
+        fig1.savefig(str(outfile)+"ohmic_calibration_tau_first_measurement.pdf")
+        fig1.savefig(str(outfile)+"ohmic_calibration_kappa_first_measurement.pdf")
 
 
 #This function plots a comparison of different Ohmic calibration measurements
 def CompareTauAndKappa():
-    x,t1,k1=np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/ohmic_calibration_air_tau_and_kappa.txt', unpack=True, usecols=(0,1,2))
+    x,t1,k1=np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/ohmic_calibration_air_tau_and_kappa_first_measurement.txt', unpack=True, usecols=(0,1,2))
     x,t2,k2=np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/ohmic_calibration_air_tau_and_kappa_second_measurement.txt', unpack=True, usecols=(0,1,2))
     plt.plot(x,t1,'bo',label='First Measurement')
     plt.plot(x,t2,'bo',alpha=0.5,label='Second Measurement')
@@ -170,8 +174,38 @@ def CompareTauAndKappa():
     plt.suptitle('Ohmic calibration in air // Results for Kappa')
     plt.show()
 
+def DeriveResistances():
+    ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8=np.genfromtxt('/home/gediz/Measurements/Calibration/Channel_resistances_September_2022/All_resistor_values_bolometer_sensor_second_Measurement.txt',unpack=True,usecols=(1,2,3,4,5,6,7,8),skip_header=11)
+    ch1_cal=[]
+    ch2_cal=[]
+    ch3_cal=[]
+    ch4_cal=[]
+    ch5_cal=[]
+    ch6_cal=[]
+    ch7_cal=[]
+    ch8_cal=[]
+    for i,j in zip([ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8],[ch1_cal,ch2_cal,ch3_cal,ch4_cal,ch5_cal,ch6_cal,ch7_cal,ch8_cal]):
+        #print(i)
+        m1,m2,r1,r2=sp.symbols(list("abcd"))
+        m1_val=i[0]
+        m2_val=i[1]
+        r1_val=i[2]
+        r2_val=i[3]
+        eqns=[1/m1+1/(m2+r1+r2)-1/m1_val,1/m2+1/(m1+r1+r2)-1/m2_val,1/r1+1/(r2+m1+m2)-1/r1_val,1/r2+1/(r1+m1+m2)-1/r2_val]
+        #print(sp.solve(eqns,m1,m2,r1,r2)[3])
+        j.append(sp.solve(eqns,m1,m2,r1,r2)[3])
+        print(j)
 
-
+def CompareResistances():
+    rm1,rm2,rr1,rr2=np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_second_set.txt',unpack=True,delimiter=',',usecols=(1,2,3,4))
+    rm1_2,rm2_2,rr1_2,rr2_2=np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated.txt',unpack=True,delimiter=',',usecols=(1,2,3,4))
+    for x,y in zip([1,2,3,4,5,6,7,8],[2,1,4,3,6,5,8,7]):     
+        plt.plot(x,rm1[x-1],'bo')
+        plt.plot(x,rm1_2[x-1],'ro')
+    plt.xlabel('channels')
+    plt.ylabel('Resistance in Ohm')
+    plt.suptitle('Values for -Measurement Resistor 1- of different Measurements')
+    plt.show()      
 
 #This function was written to plot the results of the wavelength dependency investigation
 #A documentation and resulsts can be found here /home/gediz/Results/Calibration/Wavelength_dependency_study
@@ -192,7 +226,7 @@ def WavelengthDependency():
     plt.legend(loc=1,bbox_to_anchor=(1.6,1))
     plt.suptitle('Wavelength dependency investigation')
     plt.show()
-    
+ 
     
 #This function derives relative correction constants based on bolometerprofiles derived by raw data.
 #Use bolo_radiation.py to create such profiles from your bolometerdata
@@ -350,8 +384,8 @@ def CompareRelativeCorrections(save=False):
 
 # %%
 
-infile ='/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/'
-outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/'
+infile ='/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_Oktober/'
+outfile='/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/'
 
 ##Bolometerprofile from which to calculate the relative correction constants:
 boloprofile_0='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum.txt'
@@ -378,8 +412,6 @@ relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_Sept
 relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_02_using_mean.txt'
 
 
-#RelativeOpticalCalibration(Type='value')#,save=True)
-CompareRelativeCorrections(save=True)
-CompareBolometerProfiles(save=True)
-#Get_Tau(1,Plot=True)
+Get_Tau('6','3',Plot=True)
+OscilloscopePicture('5','5')
 # %%
