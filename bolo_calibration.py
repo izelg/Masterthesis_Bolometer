@@ -33,8 +33,8 @@ def LoadData(location):
 #This function analyzes the Square function used to heat the resistors for the ohmic calibration
 #It returns the duty cycle and height of the pulse
 def Analyze_U_sq(documentnumber, Plot=True):
-    location =str(infile)+'TEK00{}.CSV'.format(documentnumber)
-    time, U_sq= np.genfromtxt(location,delimiter=',',unpack=True, usecols=(3,4))
+    location =str(infile)+'NewFile{}.csv'.format(documentnumber)
+    time, U_sq= np.genfromtxt(location,delimiter=',',unpack=True, usecols=(0,1),skip_header=2)
     start= np.argmax(np.gradient(U_sq, time))    #Start of the Square Signal
     stop= np.argmin(np.gradient(U_sq, time))     #End of the Square Signal
     signal_high_time = time[start+10:stop-10]
@@ -114,8 +114,8 @@ def Get_Kappa(documentnumber_U_sq, documentnumber_U_b):
     def K_func():
         I_0=Get_Tau(documentnumber_U_sq, documentnumber_U_b, Plot=False)[0]/1000
         Delta_I=Get_Tau(documentnumber_U_sq, documentnumber_U_b, Plot=False)[1]/1000
-        U_sq= np.genfromtxt(str(infile)+'TEK00{}.CSV'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(4))    #Square Signal to warm the Resistors
-        U_cal=Analyze_U_sq(documentnumber_U_sq, Plot=False)[2]
+        #U_sq= np.genfromtxt(str(infile)+'TEK00{}.CSV'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(4))    #Square Signal to warm the Resistors
+        U_cal=Analyze_U_sq(documentnumber_U_sq, Plot=True)[2]
         R_M=2*((U_cal/I_0)-100)
         #print('I_0=', f'{I_0:.4f}', 'A','// Delta_I = ',f'{Delta_I:.4f}','A',' // U_cal = ', f'{U_cal:.4f}', 'V',' // R_M = ' ,f'{R_M:.4f}','O')
         return(R_M**2*I_0**4)/(4*U_cal*Delta_I), R_M
@@ -132,8 +132,8 @@ def GetAllOmicCalibration(save=False):
     tau=[]
     kappa=[]
     R_M=[]
-    for i,j in zip(['01','06','10','13','18','22','26','30'],['02','05','09','13','17','21','25','29']):
-        x=[2,1,4,3,6,5,8,7]
+    for i,j in zip(['6','6','6','6','6','6','6'],['3','7','15','21','30','27','22']):
+        x=[1,2,3,4,5,7,8]
         tau.append(Get_Tau(i,j, Plot=True)[2])
         kappa.append(abs(Get_Kappa(i,j)[0]))
         R_M.append(Get_Kappa(i,j)[1])
@@ -150,9 +150,9 @@ def GetAllOmicCalibration(save=False):
     plt.show()
     if save ==True:
         data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
-        np.savetxt(str(outfile)+"ohmic_calibration_air_tau_and_kappa_first_measurement.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
-        fig1.savefig(str(outfile)+"ohmic_calibration_tau_first_measurement.pdf")
-        fig1.savefig(str(outfile)+"ohmic_calibration_kappa_first_measurement.pdf")
+        np.savetxt(str(outfile)+"ohmic_calibration_vacuum_tau_and_kappa_first_measurement.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
+        fig1.savefig(str(outfile)+"ohmic_calibration_tau_vacuum_first_measurement.pdf")
+        fig1.savefig(str(outfile)+"ohmic_calibration_kappa_vacuum_first_measurement.pdf")
 
 
 #This function plots a comparison of different Ohmic calibration measurements
@@ -174,8 +174,9 @@ def CompareTauAndKappa():
     plt.suptitle('Ohmic calibration in air // Results for Kappa')
     plt.show()
 
+#This function derives the actual resistances using the measured values by solving a set of linear equations
 def DeriveResistances():
-    ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8=np.genfromtxt('/home/gediz/Measurements/Calibration/Channel_resistances_September_2022/All_resistor_values_bolometer_sensor_second_Measurement.txt',unpack=True,usecols=(1,2,3,4,5,6,7,8),skip_header=11)
+    ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8=np.genfromtxt('/home/gediz/Measurements/Calibration/Channel_resistances_September_2022/All_resistor_values_bolometer_sensor_third_Measurement.txt',unpack=True,usecols=(1,2,3,4,5,6,7,8),skip_header=6)
     ch1_cal=[]
     ch2_cal=[]
     ch3_cal=[]
@@ -196,12 +197,16 @@ def DeriveResistances():
         j.append(sp.solve(eqns,m1,m2,r1,r2)[3])
         print(j)
 
+#This funtion is comparing the results of the calculated resistances for different measurements using the value of RM1
 def CompareResistances():
-    rm1,rm2,rr1,rr2=np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_second_set.txt',unpack=True,delimiter=',',usecols=(1,2,3,4))
-    rm1_2,rm2_2,rr1_2,rr2_2=np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated.txt',unpack=True,delimiter=',',usecols=(1,2,3,4))
+    rm1,rm2,rr1,rr2=np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated.txt',unpack=True,delimiter=',',usecols=(1,2,3,4))
+    rm1_2,rm2_2,rr1_2,rr2_2=np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_second_set.txt',unpack=True,delimiter=',',usecols=(1,2,3,4))
+    rm1_3,rm2_3,rr1_3,rr2_3=np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_third_set.txt',unpack=True,delimiter=',',usecols=(1,2,3,4))
     for x,y in zip([1,2,3,4,5,6,7,8],[2,1,4,3,6,5,8,7]):     
-        plt.plot(x,rm1[x-1],'bo')
-        plt.plot(x,rm1_2[x-1],'ro')
+        plt.plot(x,rm1[x-1],'bo',label='First Definite Measurement')
+        plt.plot(x,rm1_2[x-1],'ro',label='Second Measurement to compare')
+        plt.plot(x,rm1_3[x-1],'go',label='Third Measurement to compare')
+
     plt.xlabel('channels')
     plt.ylabel('Resistance in Ohm')
     plt.suptitle('Values for -Measurement Resistor 1- of different Measurements')
@@ -384,8 +389,8 @@ def CompareRelativeCorrections(save=False):
 
 # %%
 
-infile ='/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_Oktober/'
-outfile='/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/'
+infile ='/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_October/'
+outfile='/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_October/'
 
 ##Bolometerprofile from which to calculate the relative correction constants:
 boloprofile_0='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum.txt'
@@ -412,6 +417,5 @@ relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_Sept
 relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_02_using_mean.txt'
 
 
-Get_Tau('6','3',Plot=True)
-OscilloscopePicture('5','5')
+CompareRelativeCorrections()
 # %%

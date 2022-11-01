@@ -110,7 +110,7 @@ def BoloDataWholeSweep(save=False):
     position=[]
     fwhm1_list=[]
     fwhm2_list=[]
-    c=[1,2,3,4,5,6,7,8]
+    c=[6,7,8]
     color=['blue','red','green','orange','magenta','gold','darkcyan','blueviolet']
     def lin (x,a,b):
         return a*x + b
@@ -143,7 +143,7 @@ def BoloDataWholeSweep(save=False):
         height.append(max(amp_origin))
         fwhm1_list.append(fwhm1)
         fwhm2_list.append(fwhm2)
-    print(height,width,position)
+    print(fwhm1_list,fwhm2_list)
     plt.xlabel('Time [s]')
     plt.ylabel('Signal [V]/ Maximum')
     plt.legend(loc=1, bbox_to_anchor=(1.3,1) )
@@ -189,18 +189,7 @@ def PlotSingleTimeseries(i=1, save=False):
 #This was a first attempt to plot all lines of sight measurements together
 #The next level would be to reconstruct their positions and plot them in 3D
 def VisualizeLinesOfSight():
-    # y0,y1,y2,y3,y4,y5,y6,y7,y8=np.genfromtxt('/home/gediz/Results/Lines_of_sight/lines_of_sight_data_y.txt', unpack=True)
-    # x0,x1,x2,x3,x4,x5,x6,x7,x8=np.genfromtxt('/home/gediz/Results/Lines_of_sight/lines_of_sight_data_x.txt', unpack=True)
-    # x=[x2,x3,x4,x5,x6,x7,x8]
-    # plt.plot(x0,list(h/2 for h in x1),'ro--',label='horizontal line of sight')
-    # for i in x:
-    #     plt.plot(x0,list(h/2 for h in i),'ro--',alpha=0.5)
-    #     plt.plot(x0,list(-h/2 for h in i),'ro--',alpha=0.5)
-    # y=[y2,y3,y4,y5,y6,y7,y8]
-    # plt.plot(y0,list(h/2 for h in y1),'bo--',label='vertical line of sight')
-    # for j in y:
-    #     plt.plot(y0,list(h/2 for h in j),'bo--',alpha=0.5)
-    #     plt.plot(y0,list(-h/2 for h in j),'bo--',alpha=0.5)
+
     def lin(x,a,b):
         return a*x+b
     x=[(0,13.7,17.7)]
@@ -210,23 +199,68 @@ def VisualizeLinesOfSight():
     y_val=[(5,41.71,44.1,54.17)]
     y_err=[(0,1.63,1.84,2.97)]
     poptx,pcovx=curve_fit(lin,x[0],list(h/2 for h in x_val[0]))
-    print(poptx)
-    #popty,pcovy=curve_fit(lin,y[0],y_val[0])
+    popty,pcovy=curve_fit(lin,y[0],list(h/2 for h in y_val[0]))
+    range=np.arange(0,25,1)
     for j,i,n in zip(x,x_val,x_err):
-        plt.errorbar(j,list(h/2 for h in i),yerr=n,xerr=0.3,marker='o', linestyle='None',capsize=5,color='red')
-        plt.errorbar(j,list(-h/2 for h in i),yerr=n,xerr=0.3,marker='o',linestyle='None', capsize=5,color='red')
-        plt.plot(np.arange(0,23,1),lin(np.arange(0,23,1),*poptx),color='red')
-        plt.plot(np.arange(0,23,1),lin(np.arange(0,23,1),-poptx[0],-poptx[1]),color='red')
+        plt.errorbar(j,list(h/2 for h in i),yerr=n,xerr=0.4,marker='o', linestyle='None',capsize=5,color='red')
+        plt.errorbar(j,list(-h/2 for h in i),yerr=n,xerr=0.4,marker='o',linestyle='None', capsize=5,color='red')
+        plt.plot(range,lin(range,*poptx),color='red')
+        #plt.plot(range,lin(range,2.010,7),color='green')
+        plt.plot(range,lin(range,-poptx[0],-poptx[1]),color='red')
     for j,i,n in zip(y,y_val,y_err):
-        plt.errorbar(j,list(h/2 for h in i),yerr=n,xerr=0.3,marker='o', linestyle='None',capsize=5,color='blue')
-        plt.errorbar(j,list(-h/2 for h in i),yerr=n,xerr=0.3,marker='o', linestyle='None',capsize=5,color='blue')
-        #plt.plot(y,lin(y,*popty))
+        plt.errorbar(j,list(h/2 for h in i),yerr=n,xerr=0.4,marker='o', linestyle='None',capsize=5,color='blue')
+        plt.errorbar(j,list(-h/2 for h in i),yerr=n,xerr=0.4,marker='o', linestyle='None',capsize=5,color='blue')
+        plt.plot(range,lin(range,*popty),color='blue')
+        #plt.plot(range,lin(range,1.15,2.5),color='green')
+        plt.plot(range,lin(range,-popty[0],-popty[1]),color='blue')
     plt.xlabel('Distance from slit [cm]')
     plt.ylabel('line of sight widht [mm]')
     plt.legend()
     plt.grid(True)
     plt.suptitle('Widhts of the lines of sight from all 8 channels, vertical and horizontal')
     plt.show()
+    print(poptx,popty)
+
+def TwoDimensional_LinesofSight():
+    def lin(x,a,b):
+        return a*x+b
+    range=np.arange(0,25,0.1)
+
+    plt.grid(True)
+    #plt.plot(range,lin(range,2.01,7),color='red')
+    #plt.plot(range,lin(range,-2.01,-7),color='red')
+    #plt.plot(range,lin(range,1.15,2.5),color='blue')
+    #plt.plot(range,lin(range,-1.15,-2.5),color='blue')
+    plt.plot([0,22.9],[-2.5,82.45],color='gold')
+    plt.plot([0,22.9],[2.5,136.65],color='gold')
+    
+    plt.plot([0,22.9],[-2.5,51.15],color='darkcyan')
+    plt.plot([0,22.9],[2.5,105.35],color='darkcyan')
+    
+    plt.plot([0,22.9],[-2.5,19.85],color='blueviolet')
+    plt.plot([0,22.9],[2.5,74.05],color='blueviolet')
+    
+    plt.plot([0,22.9],[-2.5,-11.45],color='blue')
+    plt.plot([0,22.9],[2.5,42.75],color='blue')
+    
+    plt.plot([0,22.9],[2.5,11.45],color='red')
+    plt.plot([0,22.9],[-2.5,-42.75],color='red')
+    
+    plt.plot([0,22.9],[2.5,-19.85],color='green')
+    plt.plot([0,22.9],[-2.5,-74.05],color='green')
+    
+    plt.plot([0,22.9],[2.5,-51.15],color='orange')
+    plt.plot([0,22.9],[-2.5,-105.35],color='orange')
+    
+    plt.plot([0,22.9],[2.5,-82.45],color='magenta')
+    plt.plot([0,22.9],[-2.5,-136.65],color='magenta')
+    
+    plt.plot([12.4,12.4],[72.3,72.3],'ro')
+    plt.plot([19.5,19.5],[101,101],'ro')
+    plt.plot([22.9,22.9],[136.7,136.7],'ro')
+
+    plt.show()
+    #print(lin(12.4,1.15,2.5)-lin(12.4,-1.15,2.5))
 
 #For different scans that have the same conditions the standard derivation of the aquired values can be determiend
 #e.g. for different y-sweeps at the same distance one can find out how accurate the position heith and width of the Signals can be extracted
@@ -258,38 +292,31 @@ path,filename=os.path.split(motordata)
 
 #for the bolo_ratdiation functions:
 Datatype='Data'
-shotnumber=60032
+shotnumber=60080
 #location='/home/gediz/Measurements/Calibration/Calibration_Bolometer_September_2022/Bolometer_calibration_vacuum_and_air_different_sources_09_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
-location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot{}.dat'.format(shotnumber)
+location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot{}_cropped.dat'.format(shotnumber)
 outfile='/home/gediz/Results/Lines_of_sight/shot_data/'
 extratitle='Lines of sight // air // UV-Lamp y-scan//distance 2.2cmcm// amplif. x5, x100'
 if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
-#MotorData()
-#BoloDataWidths(3)
-#ErrorAnalysis('60067','60068','60069')
-#np.std([0.36,0.38],ddof=1)
-VisualizeLinesOfSight()
-#BoloDataWholeSweep(save=True)
+#VisualizeLinesOfSight()
+#BoloDataWholeSweep()
+TwoDimensional_LinesofSight()
 #val=[3.74,3.75,3.72,3.77,3.74,3.93,3.72,3.68,3.71,3.71,3.71,3.76,3.73,4.48,3.83,3.68,3.7,3.72,3.77,3.79,3.72,4.15,3.7,3.7,4.02,3.71,3.73,3.75,3.7,3.8,3.73]
 #vol=list(x**(-1) for x in val)
 # vol=[117.6,114.7,123.9,110.9,107.9,107.6,108.4,128.2,116.4,118.8,117.9,116.8,103.8,108.9,110.7,96.4,116.5,116.6,110.4,116.5,108.2,107.8,112.7,108.8]
+# vol=[4.7,1.7,2.05,1.33,2.2,0.98,4.6,4.5,1.7,1.3,1.6,3.7,3.72,0.85]
 # print(np.mean(vol))
 # print(np.std(vol,ddof=1))#/np.sqrt(len(val)))
 # print(np.std(vol,ddof=1)/np.sqrt(len(vol)))
-
-# e,m,sd,sem=np.genfromtxt('/home/gediz/Measurements/Calibration/Amplifier_Values/amplification_factors_and_errors.txt',unpack=True,usecols=(1,2,3,4))
-# percentage=[]
-# sd_part=[]
-# sem_part=[]
-# for i in [0,1,2,3,4,5,6,7]:
-#     percentage.append(m[i]/e[i]*100)
-#     sd_part.append(sd[i]/m[i]*100)
-#     sem_part.append(sem[i]/m[i]*100)
-# print(percentage,sd_part,sem_part)
-    
-
+# print(((np.std(vol,ddof=1)/np.sqrt(len(vol)))/np.mean(vol))*100)
+# ov1,ov2,ov3,ov4,ov5,ov6,ov7=np.genfromtxt('/home/gediz/Results/Lines_of_sight/overlap_y_scans.txt', usecols=(1,2,3,4,5,6,7),unpack=True,delimiter=',',skip_header=11)
+# for j,i in zip([1,2,3,4,5,6,7],[ov1,ov2,ov3,ov4,ov5,ov6,ov7]):
+#     plt.plot(j,i[0],'ro--')
+#     plt.plot(j,i[1],'bo--')
+#     plt.plot(j,i[2],'go--')
+# plt.show()
 
 
 # %%
