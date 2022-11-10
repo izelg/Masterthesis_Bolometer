@@ -47,6 +47,16 @@ def LoadData(location):
     data = pd.read_csv(location, skiprows=4, sep="\t\t", names=cols, engine='python')
     return data
 
+def Pressure():
+    y= LoadData(location)["Pressure"]
+    time = LoadData(location)['Zeit [ms]'] / 1000
+    pressure= np.mean(y[0:500])
+    #plt.plot(time,y)
+    #plt.plot(time[500],y[500],'ro')
+    #plt.show()
+    #print(pressure)
+    return pressure
+    
 #This Function plots a timeseries of your choosing
 #-->use these channelnames: Zeit [ms]		8 GHz power		2 GHz Richtk. forward	I_Bh			U_B			Pressure		2 GHz Richtk. backward	slot1			I_v			Interferometer (Mueller)	Interferometer digital	8 GHz refl. power	Interferometer (Zander)	Bolo_sum		Bolo1			Bolo2			Bolo3			Bolo4			Bolo5			Bolo6			Bolo7			Bolo8			optDiode		r_vh			Coil Temperature
 def PlotSingleTimeseries(i=1, save=False):
@@ -354,17 +364,20 @@ def SignalHeight(Type="", i=1,  Plot=False, save=False):
 #--> i is the number of the Bolometerchannel
 def PowerTimeSeries(i=1, Plot=False, save=False):
     def power(g,k,U_ac, t, U_Li):
-        return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li)
-    kappa =  [ 4.2813209E-01,  4.3431544E-01,  4.2536712E-01,  4.5481977E-01, 4.5481977E-01*1.4397, 4.2536712E-01*1.2147, 4.3431544E-01*1.2493, 4.2813209E-01*1.17938]
-    #kappa =  [ 4.2813209E-01,  4.3431544E-01,  4.2536712E-01,  4.5481977E-01, 4.5481977E-01, 4.2536712E-01, 4.3431544E-01, 4.2813209E-01]
-    tau = [0.102900,     0.111500,     0.114500,     0.115400,    0.0736000,  0.0814000,    0.0704000,    0.0709000]
+        return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li)*c
+    kappa =  [0.460,0.465,0.466,0.469,0.649,0.649,0.637,0.638]
+    tau = [0.1204,0.1195,0.1204,0.1214,0.0801,0.0792,0.0779,0.0822]
+    corr=[0.621,0.836,0.965,0.635,1.669,1.307,1.748,4]
     g1= (10,30,50)
-    g2= (20,100,250)
-    g3= (1,2,5)
-    g=2*g1[1]*g2[1]*g3[1]
+    #g2= (20,100,250)
+    #g3= (1,2,5)
+    g2=(20,50,78.5)
+    g3=(1,2.04,4.88)
+    g=2*g1[1]*g2[1]*g3[0]
     U_ac=8
     k= kappa[i-1]
     t = tau[i-1]
+    c=corr[i-1]
     if Datatype=='Data':
         U_Li= LoadData(location)["Bolo{}".format(i)]
         time = LoadData(location)['Zeit [ms]'] / 1000
@@ -405,10 +418,10 @@ def BolometerProfile(Type="", save=False):
     for i in [1,2,3,4,5,6,7,8]:
         x.append(i)
         if MW == 'none':
-            y.append(abs(SignalHeight_max(i,Plot=True)[0])) 
-            #y.append(abs(SignalHeight_rough(Type,i,Plot=True)[0]))  
+            #y.append(abs(SignalHeight_max(i,Plot=True)[0])) 
+            y.append(abs(SignalHeight_rough(Type,i,Plot=True)[0]))  
         else:
-            y.append(abs(SignalHeight(Type, i, Plot=False)[2])) #--><--
+            y.append(abs(SignalHeight(Type, i, Plot=True)[2])) #--><--
     if Type == 'Bolo':
         ylabel1= 'Signal [V]'
         name='raw data'
@@ -422,13 +435,17 @@ def BolometerProfile(Type="", save=False):
         title= 'Signals of the Bolometerchannels from {n} of shot n°{s} \n MW used: {m} \n {e}'.format(n=name, s= shotnumber, m=MW, e=extratitle)
     if Datatype=='Source':
         title='Signals of the Bolometerchannels from {n} \n of {e}'.format(n=name,e=extratitle)
-    
+    z=[]
+    for i,j in zip([0.621,0.836,0.965,0.635,1.669,1.307,1.748,1.657],[0,1,2,3,4,5,6,7]):
+        z.append(y[j]*i)
     plt.figure(figsize=(10,5))
-    plt.plot(x,y, marker='o', linestyle='dashed')
+    plt.plot(x,y, marker='o', linestyle='dashed', label="Original Bolometerprofile")
+    plt.plot(x,z, marker='o', linestyle='dashed',label="Corrected Bolometerprofile")
     plt.ylabel(ylabel1)
     plt.xlabel('Bolometerchannel')
+    #plt.ylim(50,400)
     plt.suptitle(title, y=1.05)
-    plt.legend()
+    plt.legend(loc=1, bbox_to_anchor=(1.3,1))
     fig1 = plt.gcf()
     plt.show()
     if save == True:
@@ -438,8 +455,8 @@ def BolometerProfile(Type="", save=False):
             np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. MW Power was {m} \n Label for plot \n shot n°{s}, {n}, MW power: {m}, {e}\n channeln° \t {u}'.format(n=name, s= shotnumber, m=MW, u =ylabel1,e=extratitle))
             fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.pdf".format(n=shotnumber, t=name_), bbox_inches='tight')
         if Datatype=='Source':
-            np.savetxt(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n  Label for plot \nshot n°{s}, {n}, MW power: {m}, {e}\nchanneln° // {l}'.format(n=name, s= sourcetitle,m=MW,e=extratitle,l=ylabel1))
-            fig1.savefig(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.pdf'.format(t=name_,n=sourcetitlesave), bbox_inches='tight')
+            np.savetxt(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}_with_correction.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n  Label for plot \nshot n°{s}, {n}, MW power: {m}, {e}\nchanneln° // {l}'.format(n=name, s= sourcetitle,m=MW,e=extratitle,l=ylabel1))
+            fig1.savefig(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}_with_correction.pdf'.format(t=name_,n=sourcetitlesave), bbox_inches='tight')
 
     return x, y#, z, y-z
 
@@ -478,12 +495,13 @@ def CompareBolometerProfiles(Type="",shot_number_1=1, shot_number_2=2, save=Fals
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=60061
+    shotnumber=13037
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
-    extratitle='Lines of sight // air // UV-Lamp x-scan// distance~3.5cm// amplif. x5, x100'      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+   
+    extratitle='Helium // x1 x100 // P={}mPa'.format(float(f'{Pressure():.2f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
 
-    #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    location=  '/home/gediz/Measurements/Measurements_LOG/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
+    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+    #location=  '/home/gediz/Measurements/Measurements_LOG/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = LoadData(location)['Zeit [ms]'] / 1000 # s
     
     #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
@@ -511,10 +529,9 @@ if __name__ == "__main__":
     
     u=0
     #PlotSingleTimeseries(1, save=True)
-    #PlotAllTimeseriesTogether(save=True)
+    #PlotAllTimeseriesTogether()
     #SignalHeight_max(8,Plot=True)
-    #BolometerProfile('Bolo', save=True)
-    
-    
+    BolometerProfile('Power')
+
 
 # %%

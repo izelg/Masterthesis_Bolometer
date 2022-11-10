@@ -32,7 +32,7 @@ def LoadData(location):
 
 #This function analyzes the Square function used to heat the resistors for the ohmic calibration
 #It returns the duty cycle and height of the pulse
-def Analyze_U_sq(documentnumber, Plot=True):
+def Analyze_U_sq(documentnumber, Plot=False):
     location =str(infile)+'NewFile{}.csv'.format(documentnumber)
     time, U_sq= np.genfromtxt(location,delimiter=',',unpack=True, usecols=(0,1),skip_header=2)
     start= np.argmax(np.gradient(U_sq, time))    #Start of the Square Signal
@@ -57,22 +57,25 @@ def Analyze_U_sq(documentnumber, Plot=True):
 
 #For a ohmic calibration this function reproduces the Oscilloscope Picture
 #In this case the Oscilloscope used could only store the data of the two channels in two different documents
-def OscilloscopePicture(documentnumber_U_sq, documentnumber_U_b):
-    time, U_sq= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(0,1))    #Square Signal to warm the Resistors
-    U_b= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_b),delimiter=',',unpack=True, usecols=(1))    #Square Signal to warm the Resistors
+def OscilloscopePicture(documentnumber):
+    #time, U_sq= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(0,1))    #Square Signal to warm the Resistors
+    time,U_sq,U_b,U_b_n= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber),delimiter=',',unpack=True, usecols=(0,1,2,3))    #Square Signal to warm the Resistors
     #U_b=savgol_filter(U_b0,10,3)
     fig,ax1=plt.subplots()
     ax2=ax1.twinx()
+    ax3=ax1.twinx()
     lns1=ax1.plot(time, U_sq,color='blue',label='Square Pulse')
-    lns2=ax2.plot(time,U_b,color='red',label='Bolometer Response')
+    lns3=ax3.plot(time,U_b_n,color='red',label='Bolometer Response',alpha=0.5)
+    lns2=ax2.plot(time,U_b,color='red',label='Bolometer Response with Filter')
     ax1.set(ylabel='Voltage [V]')
     ax1.set(xlabel='Time [s]')
     ax1.tick_params(axis='y', labelcolor='blue')
     ax2.tick_params(axis='y', labelcolor='red')
+    ax3.set_yticks([], [])
     #ax2.set_ylim([0.53,0.55])
-    leg = lns1 + lns2
+    leg = lns1 + lns2 +lns3
     labs = [l.get_label() for l in leg]
-    ax1.legend(leg, labs, loc=1,bbox_to_anchor=(1.6,1))
+    ax1.legend(leg, labs, loc=1,bbox_to_anchor=(1.7,1))
 
     plt.suptitle('Oscilloscope Signal for a square pulse heating Bolometerchannel 1 \n and the Channels Response Signal')
     plt.show()
@@ -82,23 +85,23 @@ def OscilloscopePicture(documentnumber_U_sq, documentnumber_U_b):
 #This function fits to the calibration Data a function of the form of Equation
 #4.31 of Anne Zilchs Diploma Thesis 'Untersuchung von Strahlungsverlusten mittels Bolometrie an einem toroidalen Niedertemperaturplasma' from 2011 
 # to determine the constant TAU for a given Bolometerchannel 
-def Get_Tau(documentnumber_U_sq, documentnumber_U_b, Plot=False):
+def Get_Tau( documentnumber, Plot=False):
     def I_func(t,I_0, Delta_I, tau):
         return I_0+Delta_I*(1-np.exp(-t/tau))
     #time, U_sq= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(0,1))    #Square Signal to warm the Resistors
-    time,U_b= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_b),delimiter=',',unpack=True, usecols=(0,1),skip_header=2)    #Square Signal to warm the Resistors
+    time,U_sq,U_b= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber),delimiter=',',unpack=True, usecols=(0,1,2),skip_header=2)    #Square Signal to warm the Resistors
     I_b=U_b/100                                     #Response Current  through Test Resistor 100 Ohm
-    start= np.argmax(np.gradient(U_b))+2    #Start of the Square Signal
-    stop= np.argmin(np.gradient(U_b))-2     #End of the Square Signal
+    start= np.argmax(np.gradient(U_sq, time))+2    #Start of the Square Signal
+    stop= np.argmin(np.gradient(U_sq, time)) -2   #End of the Square Signal
     time_cut=time[start:stop]-time[start]           #Time array, shortened to the periode during Square Signal on, and start set to 0 s
     I_b_cut= I_b[start:stop]*1000                   #Current array, shortened equally and Values in mA
     print(start,stop)
-    popt, pcov = curve_fit(I_func, time_cut, I_b_cut)
+    print(len(I_b_cut))
+    popt, pcov = curve_fit(I_func, time_cut,I_b_cut)
     #I_b_cut_sav=savgol_filter(I_b_cut,10,3)
     if Plot==True:
         #plt.plot(time[start],np.gradient(U_b)[start],'ro')
         plt.plot(time_cut, I_b_cut, color='red', alpha=0.5,label='Bolometer Response')
-        #plt.plot(time,np.gradient(U_b))
         plt.xlabel('Time [s]')
         plt.ylabel('I_b [mA]')
         plt.plot(time_cut, I_func(time_cut, *popt),color='darkred', label='Exponential Fit \n tau={}'.format(float(f'{popt[2]:.4f}')))
@@ -110,12 +113,12 @@ def Get_Tau(documentnumber_U_sq, documentnumber_U_b, Plot=False):
 #This function fits to the calibration Data a function of the form of Equation
 #4.32 and 4.23 of Anne Zilchs Diploma Thesis 'Untersuchung von Strahlungsverlusten mittels Bolometrie an einem toroidalen Niedertemperaturplasma' from 2011 
 # to determine the constant KAPPA for a given Bolometerchannel 
-def Get_Kappa(documentnumber_U_sq, documentnumber_U_b):
+def Get_Kappa(documentnumber):
     def K_func():
-        I_0=Get_Tau(documentnumber_U_sq, documentnumber_U_b, Plot=False)[0]/1000
-        Delta_I=Get_Tau(documentnumber_U_sq, documentnumber_U_b, Plot=False)[1]/1000
+        I_0=Get_Tau(documentnumber, Plot=False)[0]/1000
+        Delta_I=Get_Tau(documentnumber, Plot=False)[1]/1000
         #U_sq= np.genfromtxt(str(infile)+'TEK00{}.CSV'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(4))    #Square Signal to warm the Resistors
-        U_cal=Analyze_U_sq(documentnumber_U_sq, Plot=True)[2]
+        U_cal=Analyze_U_sq(documentnumber)[2]
         R_M=2*((U_cal/I_0)-100)
         #print('I_0=', f'{I_0:.4f}', 'A','// Delta_I = ',f'{Delta_I:.4f}','A',' // U_cal = ', f'{U_cal:.4f}', 'V',' // R_M = ' ,f'{R_M:.4f}','O')
         return(R_M**2*I_0**4)/(4*U_cal*Delta_I), R_M
@@ -132,11 +135,12 @@ def GetAllOmicCalibration(save=False):
     tau=[]
     kappa=[]
     R_M=[]
-    for i,j in zip(['6','6','6','6','6','6','6'],['3','7','15','21','30','27','22']):
-        x=[1,2,3,4,5,7,8]
-        tau.append(Get_Tau(i,j, Plot=True)[2])
-        kappa.append(abs(Get_Kappa(i,j)[0]))
-        R_M.append(Get_Kappa(i,j)[1])
+    n=9
+    for i in [str(n),'1'+str(n),'2'+str(n),'3'+str(n),'4'+str(n),'5'+str(n),'6'+str(n),'7'+str(n)]:
+        x=[1,2,3,4,5,6,7,8]
+        tau.append(Get_Tau(i, Plot=True)[2])
+        kappa.append(abs(Get_Kappa(i)[0]))
+        R_M.append(Get_Kappa(i)[1])
     #print(tau)
     plt.plot(x,tau,'bo')
     plt.xlabel('Bolometerchannel')
@@ -150,29 +154,47 @@ def GetAllOmicCalibration(save=False):
     plt.show()
     if save ==True:
         data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
-        np.savetxt(str(outfile)+"ohmic_calibration_vacuum_tau_and_kappa_first_measurement.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
-        fig1.savefig(str(outfile)+"ohmic_calibration_tau_vacuum_first_measurement.pdf")
-        fig1.savefig(str(outfile)+"ohmic_calibration_kappa_vacuum_first_measurement.pdf")
+        np.savetxt(str(outfile)+"ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt".format(n) , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
+        fig1.savefig(str(outfile)+"ohmic_calibration_tau_vacuum_tjk_reduced_noise_measurement_0{}.pdf".format(n))
+        fig1.savefig(str(outfile)+"ohmic_calibration_kappa_vacuum_tjk_reduced_noise_measurement_0{}.pdf".format(n))
 
 
 #This function plots a comparison of different Ohmic calibration measurements
 def CompareTauAndKappa():
-    x,t1,k1=np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/ohmic_calibration_air_tau_and_kappa_first_measurement.txt', unpack=True, usecols=(0,1,2))
-    x,t2,k2=np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_September/ohmic_calibration_air_tau_and_kappa_second_measurement.txt', unpack=True, usecols=(0,1,2))
-    plt.plot(x,t1,'bo',label='First Measurement')
-    plt.plot(x,t2,'bo',alpha=0.5,label='Second Measurement')
+    x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,k1,k2,k3,k4,k5,k6,k7,k8,k9,k10 = ([] for i in range(30))
+    for i,j,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10],[k1,k2,k3,k4,k5,k6,k7,k8,k9,k10],[0,1,2,3,4,5,6,7,8,9]):
+        i.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(0)))
+        j.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(1)))
+        k.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(2))) 
+    mean_t=[]
+    sem_t=[]
+    for i,j,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10],['red','blue','orange','green','darkcyan','gold','blueviolet','magenta','grey','yellow'],[0,1,2,3,4,5,6,7,8,9]):
+        plt.plot(i,j,label='Measurement {} TJ-K'.format(n),marker='o',color=k,alpha=0.3)
+    for m in [0,1,2,3,4,5,6,7]:
+        val=[t1[0][m],t2[0][m],t3[0][m],t4[0][m],t5[0][m],t6[0][m],t7[0][m],t8[0][m],t9[0][m],t10[0][m]]
+        mean_t.append(np.mean(val))
+        sem_t.append(np.std(val,ddof=1)/np.sqrt(len(val)))
+        plt.errorbar(m+1,mean_t[m],yerr=sem_t[m],marker='o',linestyle='None', capsize=5,color='red')
     plt.xlabel('Bolometerchannel')
     plt.ylabel('tau [s]')
-    plt.legend(loc=1,bbox_to_anchor=(1.5,1))
-    plt.suptitle('Ohmic calibration in air // Results for Tau')
+    #plt.legend(loc=1,bbox_to_anchor=(1.5,1))
+    plt.suptitle('Ohmic calibration in vacuum on TJ-K// Results for Tau')
     plt.show()
-    plt.plot(x,k1,'ro',label='First Measurement')
-    plt.plot(x,k2,'ro',alpha=0.5,label='Second Measurement')
+    mean_k=[]
+    sem_k=[]
+    for i,j,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],['red','blue','orange','green','darkcyan','gold','blueviolet','magenta','grey','yellow'],[k1,k2,k3,k4,k5,k6,k7,k8,k9,k10],[0,1,2,3,4,5,6,7,8,9]):
+        plt.plot(i,k,label='Measurement {} TJ-K'.format(n),marker='o',color=j,alpha=0.3)
+    for m in [0,1,2,3,4,5,6,7]:
+        val=[k1[0][m],k2[0][m],k3[0][m],k4[0][m],k5[0][m],k6[0][m],k7[0][m],k8[0][m],k9[0][m],k10[0][m]]
+        mean_k.append(np.mean(val))
+        sem_k.append(np.std(val,ddof=1)/np.sqrt(len(val)))
+        plt.errorbar(m+1,mean_k[m],yerr=sem_k[m],marker='o',linestyle='None', capsize=5,color='red')
     plt.xlabel('Bolometerchannel')
     plt.ylabel('kappa [A^2]')
-    plt.legend(loc=1,bbox_to_anchor=(1.5,1))
-    plt.suptitle('Ohmic calibration in air // Results for Kappa')
+    #plt.legend(loc=1,bbox_to_anchor=(1.5,1))
+    plt.suptitle('Ohmic calibration vacuum on TJ-K// Results for Kappa')
     plt.show()
+    print(mean_t,sem_t,mean_k,sem_k)
 
 #This function derives the actual resistances using the measured values by solving a set of linear equations
 def DeriveResistances():
@@ -239,6 +261,8 @@ def WavelengthDependency():
 #Type=value uses the measured value of 0.419 mW (old batteries) or 0.487 mW (new batteries) to calculate the correction constants and can consequently only be used when Powerprofiles created with the green laser are investigated
 def RelativeOpticalCalibration(Type='',save=False):
     x,y=np.genfromtxt(boloprofile, unpack=True, usecols=(0,1))
+    y[-1]=y[-1]*2.6
+    print(y)
     if Type=='mean':
         mean=np.mean(y)
     if Type=='value':
@@ -279,23 +303,11 @@ def CompareBolometerProfiles(save=False):
     y6=np.genfromtxt(boloprofile_6, unpack=True, usecols=1)
     y7=np.genfromtxt(boloprofile_7, unpack=True, usecols=1)
     y8=np.genfromtxt(boloprofile_8, unpack=True, usecols=1)
-    # plt.plot(x,y0,label='by hand, batteries, after reassemblance', marker='o')
-    # plt.plot(x,y1,label='with step motor, batteries, by hand, 1mm steps', marker='o')
-    # plt.plot(x,y2, label='2D scan, 3VDC, angle upwards',  marker='o')
-    # plt.plot(x,y3,label='2D scan, 3VDC, angle downwards', marker='o')
-    # plt.plot(x,y4 ,label='by Hand, 3VDC, horizontal', marker='o')    
-    # plt.plot(x,y5,label='by Hand, 3VDC, angle upwards',  marker='o')
-    # plt.plot(x,y6 ,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
-    # plt.plot(x,y7,label='by Hand, new batteries, angle downwards', marker='o')
-    # plt.plot(x,y8 ,label='by Hand, new batteries, angle downwards', marker='o')
-    # #plt.plot([1,8],[np.mean(y1),np.mean(y1)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y1):.3f}')), color='b', alpha=0.5)
-    # #plt.plot([1,8],[np.mean(y2),np.mean(y2)], label='Mean value: {m} V'.format(m=float(f'{np.mean(y2):.3f}')), color='g', alpha=0.5)
-    # plt.suptitle('Bolometerprofiles // Green laser in vacuum')
-    # plt.xlabel('Bolometerchannel')
-    # plt.ylabel('Signal [V]')
-    # plt.legend(loc=1,bbox_to_anchor=(1.9,1))
-    # fig1=plt.gcf()
-    # plt.show()
+    for i in [y0,y1,y2,y3,y4,y5,y6,y7,y8]:
+        i[-1]=i[-1]*2.6
+    for k in [y0,y1,y2,y3,y4,y5,y6,y7,y8]:
+        for i,j in zip([0,1,2,3,4,5,6,7],[0.621,0.836,0.965,0.635,1.669,1.307,1.748,1.657]):
+            k[i]=k[i]*j
     ch1=[]
     ch2=[]
     ch3=[]
@@ -307,11 +319,14 @@ def CompareBolometerProfiles(save=False):
     mean=[]
     sd=[]
     sem=[]
-    for i,j in zip([0,1,2,3,4,5,6,7],[ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8]):
+    mean_err=[]
+    for i,j,k,p in zip([0,1,2,3,4,5,6,7],[ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8],[0.016,0.019,0.024,0.015,0.043,0.029,0.045,0.050],[0.132*0.621,0.076*0.836,0.076*0.965,0.069*0.635,0.041*1.669,0.051*1.307,0.052*1.748,0.05*1.647]):
         j.extend([y0[i],y1[i],y2[i],y3[i],y4[i],y5[i],y6[i],y7[i],y8[i]])
         sd.append(np.std(j,ddof=1))
         sem.append(np.std(j,ddof=1)/np.sqrt(9))
         mean.append(np.mean(j))
+        mean_err.append(np.mean(j)*k+p)
+    plt.ylim(0,5)
     plt.plot(x,y0,alpha=0.15,label='by hand, batteries, after reassemblance', marker='o')
     plt.plot(x,y1,alpha=0.15,label='with step motor, batteries, by hand, 1mm steps', marker='o')
     plt.plot(x,y2,alpha=0.15, label='2D scan, 3VDC, angle upwards',  marker='o')
@@ -322,17 +337,18 @@ def CompareBolometerProfiles(save=False):
     plt.plot(x,y7,alpha=0.15,label='by Hand, new batteries, angle downwards', marker='o')
     plt.plot(x,y8 ,alpha=0.15,label='by Hand, new batteries, angle downwards', marker='o')
     plt.plot(x,mean,'ro',label='mean value of all measurements')
-    plt.errorbar(x,mean,yerr=sem, ecolor='red',fmt='none',capsize=5,label='Standard error of the mean')
-    plt.suptitle('Relative correction constants // Green laser in vacuum')
+    plt.errorbar(x,mean,yerr=mean_err, ecolor='red',fmt='none',capsize=5,label='Error due to correction constant')
+    plt.suptitle('Raw Bolometersignals // Green laser in vacuum')
     plt.xlabel('Bolometerchannel')
     plt.ylabel('[arb]')
     plt.legend(loc=1,bbox_to_anchor=(1.9,1))
     fig1=plt.gcf()
     plt.show()  
+    print(mean,mean_err)
     if save ==True:
         data = np.column_stack([np.array(x), np.array(mean), np.array(sd), np.array(sem)])
-        np.savetxt(str(outfile)+"calibration_green_laser_vacuum_original_signals_mean_sd_sem.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='From all Calibration measurements with the green laser in vacuum the mean value of the original signals for each channel and their sd and sem. \n channelnumber   mean[V]    sd  sem')
-        fig1.savefig(str(outfile)+"calibration_green_laser_all_bolometerprofiles_with_mean_and_error.pdf")
+        np.savetxt(str(outfile)+"calibration_green_laser_vacuum_original_signals_corrected_by_mean_correction_constants_mean_sd_sem.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='From all Calibration measurements with the green laser in vacuum the mean value of the original signals for each channel and their sd and sem. \n channelnumber   mean[V]    sd  sem')
+        fig1.savefig(str(outfile)+"calibration_green_laser_all_bolometerprofiles_corrected_with_mean_and_error.pdf",bbox_inches='tight')
 
 
 
@@ -385,12 +401,12 @@ def CompareRelativeCorrections(save=False):
     if save ==True:
         data = np.column_stack([np.array(x), np.array(mean), np.array(sd), np.array(sem)])
         np.savetxt(str(outfile)+"calibration_green_laser_vacuum_relative_corrections_mean_sd_sem.txt" , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='From all Calibration measurements with the green laser in vacuum the mean value of the relative correction constant for each channel and their sd and sem. \n channelnumber   mean[V]    sd  sem')
-        fig1.savefig(str(outfile)+"calibration_green_laser_all_relative_corrections_with_mean_and_error.pdf")
+        fig1.savefig(str(outfile)+"calibration_green_laser_all_relative_corrections_with_mean_and_error.pdf",bbox_inches='tight')
 
 # %%
 
-infile ='/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_October/'
-outfile='/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_October/'
+infile ='/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/10_11_2022/'
+outfile='/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/'
 
 ##Bolometerprofile from which to calculate the relative correction constants:
 boloprofile_0='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum.txt'
@@ -416,6 +432,8 @@ relativecorrection_6='/home/gediz/Results/Calibration/Calibration_Bolometer_Sept
 relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_using_mean.txt'
 relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants/relative_calibration_constants_from_bolometerprofile_from_raw_data_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_02_using_mean.txt'
 
-
-CompareRelativeCorrections()
+#OscilloscopePicture('9')
+#Get_Tau('9',Plot=True)
+#GetAllOmicCalibration(save=True)
+CompareTauAndKappa()
 # %%

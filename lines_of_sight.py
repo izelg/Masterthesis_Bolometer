@@ -213,13 +213,15 @@ def VisualizeLinesOfSight():
         plt.plot(range,lin(range,*popty),color='blue')
         #plt.plot(range,lin(range,1.15,2.5),color='green')
         plt.plot(range,lin(range,-popty[0],-popty[1]),color='blue')
+    #plt.plot([0,22.9],[2.5,27.05],color='blue')
+    #plt.plot([0,22.9],[-2.5,-27.05],color='blue')
     plt.xlabel('Distance from slit [cm]')
     plt.ylabel('line of sight widht [mm]')
     plt.legend()
     plt.grid(True)
     plt.suptitle('Widhts of the lines of sight from all 8 channels, vertical and horizontal')
     plt.show()
-    print(poptx,popty)
+    print(lin(0,*popty),lin(12.4,*popty),lin(19.5,*popty),lin(22.9,*popty))
 
 def TwoDimensional_LinesofSight():
     def lin(x,a,b):
@@ -262,6 +264,43 @@ def TwoDimensional_LinesofSight():
     plt.show()
     #print(lin(12.4,1.15,2.5)-lin(12.4,-1.15,2.5))
 
+def DeriveLinesofSight():
+    alpha=14    #Angle of Bolometerhead
+    b=2         #Height of bolometerhead
+    a=4         #Distance to slit
+    c=0.5       #height of slit
+    d=10.2      #distance to Torsatron
+    x=20        #distance to plasma
+    h=[-1.72,-1.59,-1.29,-1.16,-0.86,-0.73,-0.43,-0.3,0.3,0.43,0.73,0.86,1.16,1.29,1.59,1.72]
+    def lin(x,a,b):
+        return a*x+b
+    range=np.arange(0,30,0.1)
+    x_b=[]
+    y_b=[]
+    for i in h:
+        x_b.append(abs(np.cos((90-alpha)*np.pi/180)*i))
+        y_b.append(np.sin((90-alpha)*np.pi/180)*i)
+    print(x_b,y_b)
+    plt.figure(figsize=(10,10))
+    #plt.xlim(0,5)
+    #plt.ylim(-2,2)
+    plt.vlines([(0,4,14.2,16.4,23.5,26.9)],-10,10,linestyle='dotted',alpha=0.5)
+    y_exp=[13.665,8.245,10.535,5.115,7.405,1.985,4.275,-1.145,1.145,-4.275,-1.985,-7.405,-5.115,-10.535,-8.245,-13.665]
+    for i,j in zip([0,2,4,6,8,10,12,14],['red','blue','green','gold','magenta','darkcyan','blueviolet','orange']):
+        popt1,pcov1=curve_fit(lin,[x_b[i],4],[y_b[i],-0.25])
+        popt2,pcov2=curve_fit(lin,[x_b[i+1],4],[y_b[i+1],0.25])
+        plt.plot([x_b[i],x_b[i+1]],[y_b[i],y_b[i+1]],color='red')
+        plt.plot(range,lin(range,*popt1),color=j,alpha=0.5,linestyle='dashed')
+        plt.plot(range,lin(range,*popt2),color=j,alpha=0.5,linestyle='dashed')
+        popt3,pcov3=curve_fit(lin,[4,26.9],[0.25,y_exp[i]])
+        popt4,pcov4=curve_fit(lin,[4,26.9],[-0.25,y_exp[i+1]])
+        plt.plot(range,lin(range,*popt3),color=j)
+        plt.plot(range,lin(range,*popt4),color=j)
+    plt.xlabel('Distance to Bolometerhead [cm]')
+    plt.ylabel('Distance from middle of slit [cm]')
+    plt.show()   
+    
+    
 #For different scans that have the same conditions the standard derivation of the aquired values can be determiend
 #e.g. for different y-sweeps at the same distance one can find out how accurate the position heith and width of the Signals can be extracted
 def ErrorAnalysis(shot1,shot2,shot3):
@@ -300,9 +339,10 @@ extratitle='Lines of sight // air // UV-Lamp y-scan//distance 2.2cmcm// amplif. 
 if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
+DeriveLinesofSight()
 #VisualizeLinesOfSight()
 #BoloDataWholeSweep()
-TwoDimensional_LinesofSight()
+#TwoDimensional_LinesofSight()
 #val=[3.74,3.75,3.72,3.77,3.74,3.93,3.72,3.68,3.71,3.71,3.71,3.76,3.73,4.48,3.83,3.68,3.7,3.72,3.77,3.79,3.72,4.15,3.7,3.7,4.02,3.71,3.73,3.75,3.7,3.8,3.73]
 #vol=list(x**(-1) for x in val)
 # vol=[117.6,114.7,123.9,110.9,107.9,107.6,108.4,128.2,116.4,118.8,117.9,116.8,103.8,108.9,110.7,96.4,116.5,116.6,110.4,116.5,108.2,107.8,112.7,108.8]
