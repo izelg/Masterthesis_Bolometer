@@ -15,28 +15,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 from scipy.signal import savgol_filter
+from scipy.interpolate import interp1d
 import statistics
 import os
 import itertools
 from matplotlib import cm
 from mpl_toolkits.mplot3d import axes3d
-
+import csv
 
 #%%
-res=0.2
-y=np.arange(-10,10,res)
-x=np.arange(-10,10,res)
+res=0.5
+y=np.arange(-15,15,res)
+x=np.arange(50,75,res)
 fig=plt.figure(figsize=(10,10))
 ax=fig.add_subplot(111)
-plt.hlines(y,-10,10,alpha=0.2)
-plt.vlines(x,-10,10,alpha=0.2)
+plt.hlines(y,50,75,alpha=0.2)
+plt.vlines(x,-15,15,alpha=0.2)
 def lin(z,a,c,b):
     return a*(z-c)+b
-angle1=45
-angle2=45
+angle1=15
+angle2=15
 y0=0
-x0=-10
+x0=50
 plt.plot(x,lin(x,np.tan(np.radians(angle1)),x0,y0),x,lin(x,-np.tan(np.radians(angle2)),x0,y0),color='red')
+p_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position.csv',sep=',',engine='python'),dtype=np.float64)
+r_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii.csv',sep=',',engine='python')
+for i in [0,1,2,3,4,5,6,7,8]:
+    p=p_.iloc[i]
+    r=r_.iloc[i]
+    plt.plot(p,r,'r.--')
+    f=interp1d(p,r)
+    plt.plot(p,f(p))
 over=[]
 for h in x:
     for i in y:
@@ -59,9 +68,9 @@ def c1(r,theta):
     return r*np.cos(theta)
 def c2(r,theta):
     return r*np.sin(theta)
-plt.plot(c1(r,theta),c2(r,theta))
+#plt.plot(c1(r,theta),c2(r,theta))
 r2=np.sqrt(7)
-plt.plot(c1(r2,theta),c2(r2,theta))
+#plt.plot(c1(r2,theta),c2(r2,theta))
 outside=[]
 d=0.05
 for t in theta:
@@ -83,8 +92,8 @@ for t in theta:
 print((np.pi*r**2)-np.pi*r2**2)
 print((len(outside)*res**2+len(inside)*res**2)/2)
 #print(outside)
-plt.xlim(-10,10)
-plt.ylim(-10,10)
+#plt.xlim(-10,10)
+#plt.ylim(-10,10)
 plt.show()
 
 
@@ -114,4 +123,16 @@ ax.plot_surface(X, Y, Z)
 fig.tight_layout()
 plt.show()
 
+# %%
+
+
+x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position.csv',sep=',',engine='python'),dtype=np.float64)
+y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii.csv',sep=',',engine='python')
+for i in [0,1,2,3,4,5,6,7,8]:
+    x=x_.iloc[i]
+    y=y_.iloc[i]
+    plt.plot(x,y,'r.--')
+    f=interp1d(x,y)
+    plt.plot(x,f(x))
+plt.show()
 # %%

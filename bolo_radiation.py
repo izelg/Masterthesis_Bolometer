@@ -56,7 +56,7 @@ def Pressure():
     #plt.plot(time,y)
     #plt.plot(time[500],y[500],'ro')
     #plt.show()
-    print(pressure)
+    #print(pressure)
     return pressure
     
 #This Function plots a timeseries of your choosing
@@ -123,8 +123,8 @@ def PlotAllTimeseriesTogether (figheight=None, figwidth=None, save=False):
     for i in np.arange(1,9):
         bolo_raw_data = LoadData(location)["Bolo{}".format(i)]
         plt.plot(time,  bolo_raw_data, label="Bolo{}".format(i) )
-        plt.plot([time [u],time[u]],[bolo_raw_data[u],bolo_raw_data[u]],'o')
-        print(bolo_raw_data[u])
+        #plt.plot([time [u],time[u]],[bolo_raw_data[u],bolo_raw_data[u]],'o')
+        #print(bolo_raw_data[u])
     plt.xlabel('Time [s]')
     plt.ylabel('Signal [V]')
     plt.legend(loc=1, bbox_to_anchor=(1.2,1) )
@@ -293,7 +293,7 @@ def SignalHeight_rough(Type='', i=1, Plot=False, save=False):
     stop=np.argwhere(np.array([steps])>jump)[-1][1]
     #print(jump, start, stop)
     signal_off=np.mean(list(y[-100:-1]))
-    signal_on=np.mean(list(y[stop-900:stop-700]))
+    signal_on=np.mean(list(y[stop-200:stop-50]))
     div=signal_off-signal_on
     print(div)
     print(y[-1:])
@@ -305,8 +305,8 @@ def SignalHeight_rough(Type='', i=1, Plot=False, save=False):
         plt.plot(time[stop], y[stop], 'bo')
         plt.plot(time[-100:-99], y[-100:-99], marker='o', color='green')
         plt.plot(time[-1:], y[-1:], marker='o', color='green')
-        plt.plot(time[stop-700], y[stop-700], marker='o', color='red')
-        plt.plot(time[stop-900], y[stop-900], marker='o', color='red')
+        plt.plot(time[stop-50], y[stop-50], marker='o', color='red')
+        plt.plot(time[stop-200], y[stop-200], marker='o', color='red')
         plt.suptitle('Bolometerdata channel {} with markers for the signal height data'.format(i))
         plt.xlabel('Time [s]')
         plt.ylabel(ylabel)
@@ -389,7 +389,7 @@ def PowerTimeSeries(i=1, Plot=False, save=False):
         return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li)
     kappa =  [0.460,0.465,0.466,0.469,0.649,0.649,0.637,0.638]
     tau = [0.1204,0.1195,0.1204,0.1214,0.0801,0.0792,0.0779,0.0822]
-    corr=[0.621,0.836,0.965,0.635,1.669,1.307,1.748,1.647]
+    corr=[0.703,0.930,1.104,0.728,1.325,1.042,1.438,1.313]
     g1= (10,30,50)
     #g2= (20,100,250)
     #g3= (1,2,5)
@@ -443,26 +443,31 @@ def BolometerProfile(Type="", save=False):
             #y.append(abs(SignalHeight_max(Type,i,Plot=True)[0])) 
             y.append(abs(SignalHeight_rough(Type,i,Plot=True)[0]))  
         else:
-            y.append(abs(SignalHeight(Type, i, Plot=True)[2])) #--><--
+            y.append(abs(SignalHeight(Type, i,Plot=True)[2])) #--><--
     if Type == 'Bolo':
         ylabel1= 'Signal [V]'
         name='raw data'
         name_='raw_data'
-
+        corr=[0.621,0.836,0.965,0.635,1.669,1.307,1.748,1.647]
+        sem_corr=[0.016,0.019,0.024,0.015,0.043,0.029,0.045,0.05]
     if Type == 'Power':
         ylabel1= 'Power [\u03bcW]'
         name= 'radiation powers'
         name_='radiation_powers'
+        corr=[0.703,0.930,1.104,0.728,1.325,1.042,1.438,1.313]
+        sem_corr=[0.021,0.033,0.024,0.023,0.033,0.023,0.044,0.033]
     if Datatype=='Data':
         title= 'Signals of the Bolometerchannels from {n} of shot n°{s} \n MW used: {m} \n {e}'.format(n=name, s= shotnumber, m=MW, e=extratitle)
     if Datatype=='Source':
         title='Signals of the Bolometerchannels from {n} \n of {e}'.format(n=name,e=extratitle)
     z=[]
-    for i,j in zip([0.621,0.836,0.965,0.635,1.669,1.307,1.748,1.647],[0,1,2,3,4,5,6,7]):
+    zerr=[]
+    for i,j,k in zip(corr,[0,1,2,3,4,5,6,7],sem_corr):
         z.append(y[j]*i)
+        zerr.append(y[j]*k)
     plt.figure(figsize=(10,5))
     plt.plot(x,y, marker='o', linestyle='dashed', label="Original Bolometerprofile")
-    #plt.plot(x,z, marker='o', linestyle='dashed',label="Corrected Bolometerprofile \n with rel. corr. from raw signal calibration")
+    plt.errorbar(x,z,yerr=zerr, marker='o',capsize=5, linestyle='dashed',label="Corrected Bolometerprofile \n with relative correction")
     plt.ylabel(ylabel1)
     plt.xlabel('Bolometerchannel')
     #plt.ylim(50,400)
@@ -484,31 +489,25 @@ def BolometerProfile(Type="", save=False):
 
 #This function can compare the Bolometerprofiles of 4 different shots
 #There must already be a .txt file with the Signals for each channel as created with the function BolometerProfile()
-def CompareBolometerProfiles(Type="",shot_number_1=1, shot_number_2=2, save=False): #, shot_number_3, shot_number_4, save=False)
+def CompareBolometerProfiles(Type="" ,save=False): 
     x=[1,2,3,4,5,6,7,8]
     #z=[8,7,6,5,4,3,2,1]
     if Type=='Bolo':
         type='raw_data'
     if Type=='Power':
         type='radiation_powers'
-    shot1=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shot_number_1, t=type),usecols=1)
-    shot2=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shot_number_2, t=type),usecols=1)
-    #shot3=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shot_number_1, t=type),usecols=1)
-    #shot4=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shot_number_1, t=type),usecols=1)
-    #shot4=np.loadtxt("/home/gediz/Results/Calibration/Calibration_Bolometer_August_2022/combined_shots/calibration_with_green_laser_signal_heights.txt",usecols=1)
-    plt.plot(x,shot1, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shot_number_1, t=type), 'r').readlines()[2][3:-1])
-    plt.plot(x,shot2, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shot_number_2, t=type), 'r').readlines()[2][3:-1])
-    #plt.plot(x,shot3, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shot_number_1, t=type), 'r').readlines()[2][3:-1])
-    #plt.plot(x,shot4, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shot_number_1, t=type), 'r').readlines()[2][3:-1])
+    for i in shotnumbers:
+        shot1=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type),usecols=1)
+        plt.plot(x,shot1, marker='o', linestyle='dashed', label=open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type), 'r').readlines()[2][3:-1])
     plt.xlabel('Bolometerchannel')
     plt.ylabel('Signal [V]')
     #plt.ylabel('Power [\u03bcW]')
-    plt.suptitle('Comparison of the Bolometerprofiles from Shots \n {a} and {b}'.format(a=shot_number_1, b=shot_number_2))#, c=shot_number_3, d=shot_number_4))
-    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.4))
+    plt.suptitle('Comparison of the Bolometerprofiles from Shots \n {a} '.format(a=shotnumbers))#, c=shot_number_3, d=shot_number_4))
+    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.7))
     fig1= plt.gcf()
     plt.show()
     if save==True:
-        fig1.savefig(str(outfile)+"comparisons_of_shots/comparison_{a}_{b}_{t}.pdf".format(a=shot_number_1, b=shot_number_2, t=type), bbox_inches='tight')
+        fig1.savefig(str(outfile)+"comparisons_of_shots/comparison_{a}.pdf".format(a=shotnumbers, t=type), bbox_inches='tight')
    
     
 #%% -------------------------------------------------------------------------------------------------------- 
@@ -517,23 +516,25 @@ def CompareBolometerProfiles(Type="",shot_number_1=1, shot_number_2=2, save=Fals
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=60056
+    shotnumber=13072  
+    shotnumbers=(13064,13065,13058,13068,13059,13060,13062,13063) 
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
-   
-    #extratitle='Helium // x1 x100 // P={}mPa'.format(float(f'{Pressure():.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
-    extratitle='Green laser // P=4.3E-3mbar//Amplf. x1'
-    
-    #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    location=  '/home/gediz/Measurements/Measurements_LOG/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
+       
+    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+    #location=  '/home/gediz/Measurements/Measurements_LOG/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = LoadData(location)['Zeit [ms]'] / 1000 # s
     
+    extratitle='Helium // x1 x100 // 100ms // P={}mPa'.format(float(f'{Pressure():.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+    #extratitle='Green laser // P=4.3E-3mbar//Amplf. x1'
+
+
     #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
     sourcefolder= '/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/'   #the folder where the combined shots data should be stored
     sourcefile='All_channels_from_shots_60004_to_60011.txt'     #the name of the combined shots file
     sourcetitle='calibration with green laser in vacuum'
     sourcetitlesave='calibration_with_green_laser_vacuum'
     
-    outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/'
+    outfile='/home/gediz/Results/Bolometer_Profiles/'
     
     
     z= LoadData(location)['2 GHz Richtk. forward']
@@ -551,10 +552,9 @@ if __name__ == "__main__":
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
     
     u=0
-    #PlotSingleTimeseries(5)
-    #PlotAllTimeseriesTogether()
-    SignalHeight_rough('Power',6,Plot=True)
-    #BolometerProfile('Power')
-    #Pressure()
-    #PowerTimeSeries(5,Plot=True)
+    #PlotSingleTimeseries(1)
+    #PlotAllTimeseriesTogether(save=True)
+    #BolometerProfile('Bolo',save=True)
+    #BolometerProfile('Power',save=True)
+    CompareBolometerProfiles('Power',save=True)
 # %%
