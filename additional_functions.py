@@ -207,3 +207,37 @@ def SmoothSignal(i=1):
     print(len(y),len(y_smooth),len(steps))
     plt.show()
     return (y_smooth)
+
+
+
+#Plot a circle instead of the fluxlines to practice the pixelmethod
+#theta=np.linspace(0,2*np.pi,100)
+
+
+# r=np.sqrt(30)
+# def c1(r,theta):
+#     return r*np.cos(theta)
+# def c2(r,theta):
+#     return r*np.sin(theta)
+# plt.plot(c1(r,theta)+65,c2(r,theta))
+# r2=np.sqrt(20)
+# plt.plot(c1(r2,theta)+65,c2(r2,theta))
+# outside=[]
+# d=0.05
+# for t in theta:
+#     for (h,i) in over:
+#         if abs(i)<=abs(r*np.sin(t)) and abs(h)<=abs(r*np.cos(t)+65):# and abs(i)>=abs(r2*np.sin(t)+65) and abs(h)>=abs(r2*np.cos(t)+65):
+#             if (h,i) not in outside:
+#                 outside.append((h,i))
+#                 ax.add_patch(mpl.patches.Rectangle((h-res/2,i),res,res,color='blue',linewidth=0))
+#             #over=[]
+# inside=[]
+# e=0.01
+# for t in theta:
+#     for (h,i) in under:
+#         if abs(i)+0.01<=abs(r*np.sin(t)) and abs(h)+0.011<=abs(r*np.cos(t)) and abs(i)-0.012>=abs(r2*np.sin(t)) and abs(h)-0.013>=abs(r2*np.cos(t)):
+#             if (h,i) not in inside:
+#                 inside.append((h,i))
+#                 ax.add_patch(mpl.patches.Rectangle((h-res/2,i),res,res,color='red',linewidth=0,alpha=0.5))
+#             over=[]
+#print((np.pi*r**2)-np.pi*r2**2)

@@ -221,8 +221,9 @@ def VisualizeLinesOfSight():
     plt.grid(True)
     plt.suptitle('Widhts of the lines of sight from all 8 channels, vertical and horizontal')
     plt.show()
-    print(lin(0,*popty),lin(12.4,*popty),lin(19.5,*popty),lin(22.9,*popty))
-
+    #print(lin(0,*popty),lin(12.4,*popty),lin(19.5,*popty),lin(22.9,*popty))
+    print(poptx)
+    
 def TwoDimensional_LinesofSight():
     def lin(x,a,b):
         return a*x+b
@@ -340,7 +341,7 @@ if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
 DeriveLinesofSight()
-#VisualizeLinesOfSight()
+VisualizeLinesOfSight()
 #BoloDataWholeSweep()
 #TwoDimensional_LinesofSight()
 #val=[3.74,3.75,3.72,3.77,3.74,3.93,3.72,3.68,3.71,3.71,3.71,3.76,3.73,4.48,3.83,3.68,3.7,3.72,3.77,3.79,3.72,4.15,3.7,3.7,4.02,3.71,3.73,3.75,3.7,3.8,3.73]
