@@ -22,6 +22,7 @@ import itertools
 from matplotlib import cm
 from mpl_toolkits.mplot3d import axes3d
 import csv
+from scipy.interpolate import pchip_interpolate
 plt.rc('font',size=14)
 plt.rc('figure', titlesize=15)
 
@@ -71,8 +72,8 @@ for i,j in zip([0,2,4,6,8,10,12,14],['red','blue','green','gold','magenta','dark
     #plt.plot(x,lin(x,*popt2),color=j,linestyle='dashed',alpha=0.5)
     popt3,pcov3=curve_fit(lin,[60+a-b,60+a-26.9],[-s_h/2,y_exp[i]])
     popt4,pcov4=curve_fit(lin,[60+a-b,60+a-26.9],[s_h/2,y_exp[i+1]])
-    #plt.plot(x,lin(x,*popt3),color=j)
-    #plt.plot(x,lin(x,*popt4),color=j)
+    plt.plot(x,lin(x,*popt3),color=j)
+    plt.plot(x,lin(x,*popt4),color=j)
 
 plt.plot([60+a-b,60+a-b],[s_h/2,-s_h/2],color='blue')
 
@@ -85,16 +86,16 @@ for i in [0,1,2,3,4,5,6,7,8]:
     plt.plot(np.array(p)[:,None],np.array(r)[:,None],'r.--')
     f=interp1d(p,r)
     plt.plot(np.array(p)[:,None],np.array(f(p))[:,None])
-# over=[]
-# for h in x:
-#     for i in y:
-#         for j,k in zip([8],['blue']):
-#             popt3,pcov3=curve_fit(lin,[60+a-b,60+a-26.9],[-s_h/2,y_exp[j]])
-#             popt4,pcov4=curve_fit(lin,[60+a-b,60+a-26.9],[s_h/2,y_exp[j+1]])
-#             if i< lin(h,*popt4) and i>=(lin(h,*popt3)-res):
-#                 if (h,i) not in over:
-#                     over.append((h,i))
-#                 ax.add_patch(mpl.patches.Rectangle((h,i),res,res,color=k,alpha=0.1,linewidth=0))
+over=[]
+for h in x:
+    for i in y:
+        for j,k in zip([8],['blue']):
+            popt3,pcov3=curve_fit(lin,[60+a-b,60+a-26.9],[-s_h/2,y_exp[j]])
+            popt4,pcov4=curve_fit(lin,[60+a-b,60+a-26.9],[s_h/2,y_exp[j+1]])
+            if i< lin(h,*popt4) and i>=(lin(h,*popt3)-res):
+                if (h,i) not in over:
+                    over.append((h,i))
+                ax.add_patch(mpl.patches.Rectangle((h,i),res,res,color=k,alpha=0.1,linewidth=0))
 # # under=[]
 # # for h in x:
 # #     for i in y:
@@ -103,19 +104,20 @@ for i in [0,1,2,3,4,5,6,7,8]:
 # #                 under.append((h,i))
 # #                 ax.add_patch(mpl.patches.Rectangle((h,i),res,res,color='red',alpha=0.1,linewidth=0))
 
-# d=0.01
-# o=3
-# outside=[]
-# for i in [o]:
-#     f=interp1d(p_.iloc[i],r_.iloc[i])
-#     g=interp1d(p_.iloc[i-1],r_.iloc[i-1])
-#     for p,p2 in zip(p_.iloc[i],p_.iloc[i-1]):
-#         for (h,i) in over:
-#             if abs(i)-d< abs(f(p)) and abs(h-m)-d< abs(p-m) and abs(i)>abs(g(p2)) and abs(h-m)>abs(p2-m):
-#                 if (h,i) not in outside:
-#                     outside.append((h,i))
-#                     ax.add_patch(mpl.patches.Rectangle((h,i),res,res,color='blue',linewidth=0,alpha=0.5))
-#                     over=[]
+d=0.01
+o=3
+outside=[]
+for i in [o]:
+    f=interp1d(p_.iloc[i],r_.iloc[i])
+    g=interp1d(p_.iloc[i-1],r_.iloc[i-1])
+    for p,p2 in zip(p_.iloc[i],p_.iloc[i-1]):
+        for (h,i) in over:
+            if abs(h-m)-d< abs(p-m) and abs(h-m)>abs(p2-m):
+            #if abs(i)-d< abs(f(p)) and abs(h-m)-d< abs(p-m) and abs(i)>abs(g(p2)) and abs(h-m)>abs(p2-m):
+                if (h,i) not in outside:
+                    outside.append((h,i))
+                    ax.add_patch(mpl.patches.Rectangle((h,i),res,res,color='blue',linewidth=0,alpha=0.5))
+
 # inside=[]
 # for i in [o]:
  #       m=np.mean(p_.iloc[i])
@@ -129,60 +131,62 @@ for i in [0,1,2,3,4,5,6,7,8]:
 #                     inside.append((h,i))
 #                     ax.add_patch(mpl.patches.Rectangle((h-res/2,i),res,res,color='red',linewidth=0,alpha=0.5))
         
-p=p_.iloc[3]
-r=r_.iloc[3]    
-popt_m,pcov_m=curve_fit(lin,[60,m],[0.5,0])
-#range=np.arange(min(p_.iloc[3]),max(p_.iloc[3]),0.001)
-f=interp1d(p,r)
-intersect=np.argwhere(np.diff(np.sign(f(p)-lin(p,*popt_m)))).flatten()
-print(p[intersect[0]],f(p[intersect[0]]))
-plt.plot(p,lin(p,*popt_m),color='red')
-plt.plot(60,0.5,'ro')
-plt.plot(m,0,'ro')
-plt.plot(p[intersect[1]],f(p[intersect[1]]),'bo')
-#print((len(outside)*res**2))#+len(inside)*res**2)/2)
-#!!!!!!!!!!!!!!!!Die Gereade die durch 0 geht und ein Viereck muss die flussfläche Schneiden
-plt.xlim(min(p_.iloc[3])-1,max(p_.iloc[3])+1)
-plt.ylim(-5,5)
+# p=np.array(p_.iloc[3])
+# r=np.array(r_.iloc[3])
+
+# popt_m,pcov_m=curve_fit(lin,[60,m],[0.5,0])
+# range=np.arange(min(p_.iloc[3]),max(p_.iloc[3]),0.001)
+# f=interp1d(p,r,)
+# intersect=np.argwhere(np.diff(np.sign(f(p)-lin(p,*popt_m)))).flatten()
+# plt.plot(range,lin(range,*popt_m),color='red')
+# plt.plot(60,0.5,'ro')
+# plt.plot(m,0,'ro')
+
+# plt.plot(p[intersect[0]],f(p[intersect[0]]),'bo')
+print((len(outside)*res**2))#+len(inside)*res**2)/2)
+plt.xlim(50,80)
+plt.ylim(-15,15)
 plt.show()
 
 
-#%%
 
-fig = plt.figure(num=1, clear=True)
-ax = fig.add_subplot(1, 1, 1, projection='3d')
-
-(theta, phi) = np.meshgrid(np.linspace(0, 2 * np.pi, 41),
-                           np.linspace(0, 2 * np.pi, 41))
-
-# x = (3 + np.cos(phi)) * np.cos(theta)
-# y = (3 + np.cos(phi)) * np.sin(theta)
-# z = np.sin(phi)
-# ax.plot_surface(x, y, z,alpha=0.4)#, facecolors=cm.jet(fun(theta, phi)))
-
-
-
-x = np.linspace(0, 1, 10)  # [0, 2,..,10] : 6 distinct values
-y = np.linspace(1, 2, 10)  # [0, 5,..,20] : 5 distinct values
-z = np.linspace(0, 10, 100)  # 6 * 5 = 30 values, 1 for each possible combination of (x,y)
-
-X, Y = np.meshgrid(x, y)
-Z = np.reshape(z, X.shape)
-ax.plot_surface(X, Y, Z)
-
-fig.tight_layout()
-plt.show()
 
 # %%
 
-
+plt.figure(figsize=(10,10))
 x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position.csv',sep=',',engine='python'),dtype=np.float64)
 y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii.csv',sep=',',engine='python')
-for i in [0,1,2,3,4,5,6,7,8]:
-    x=x_.iloc[i]
-    y=y_.iloc[i]
-    plt.plot(x,y,'r.--')
-    f=interp1d(x,y)
-    plt.plot(x,f(x))
+m=61
+n=-0.1
+print(len(x))
+for i in [3]:
+    x=np.array(x_.iloc[i])
+    y=np.array(y_.iloc[i])
+    plt.plot(x,y,marker='.',linestyle='None')
+def lin(x,a,b):
+    return a*x+b
+if n<0:
+    half=np.concatenate((np.arange(-1,0),np.arange(32,63)))
+else:
+    half=np.arange(0,32)
+for i in half:
+    popt,pcov=curve_fit(lin,[x[i],x[i+1]],[y[i],y[i+1]])
+    plt.plot(x[i],y[i],'ro')
+    plt.plot(x[i+1],y[i+1],'ro')
+    range=np.arange(np.sort([x[i],x[i+1]])[0],np.sort([x[i],x[i+1]])[1],0.0001)
+    plt.plot(range,lin(range,*popt))
+
+    poptm,pcovm=curve_fit(lin,[63.55,m],[0,n])
+    plt.plot(m,n,'go')
+    diff=abs(lin(range,*popt)-lin(range,*poptm))
+    intersect=np.argmin(diff)
+    intersections=[]
+    if abs(lin(range[intersect],*popt)-lin(range[intersect],*poptm))<1e-2:
+        plt.plot(range,lin(range,*poptm),color='green')    
+        plt.plot(range[intersect],lin(range,*poptm)[intersect],'bo')
+        intersections.append((range[intersect],lin(range,*poptm)[intersect]))
+        print(intersections)
+plt.grid(True)
 plt.show()
+
 # %%

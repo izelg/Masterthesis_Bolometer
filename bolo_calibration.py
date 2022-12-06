@@ -261,8 +261,8 @@ def WavelengthDependency():
 #Type=value uses the measured value of 0.419 mW (old batteries) or 0.487 mW (new batteries) to calculate the correction constants and can consequently only be used when Powerprofiles created with the green laser are investigated
 def RelativeOpticalCalibration(Type='',save=False):
     x,y=np.genfromtxt(boloprofile, unpack=True, usecols=(0,1))
-    y[-1]=y[-1]*2.6
-    print(y)
+    #y[-1]=y[-1]*2.6
+    #print(y)
     if Type=='mean':
         mean=np.mean(y)
     if Type=='value':
@@ -434,7 +434,8 @@ relativecorrection_6='/home/gediz/Results/Calibration/Calibration_Bolometer_Sept
 relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_using_mean.txt'
 relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_02_using_mean.txt'
 
-CompareBolometerProfiles()
+boloprofile='/home/gediz/Results/Bolometer_Profiles/shot70001/shot70001_bolometerprofile_from_radiation_powers.txt'
+RelativeOpticalCalibration(Type='mean')
 
 
 
