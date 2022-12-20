@@ -59,7 +59,7 @@ def Analyze_U_sq(documentnumber, Plot=False):
 #In this case the Oscilloscope used could only store the data of the two channels in two different documents
 def OscilloscopePicture(documentnumber):
     #time, U_sq= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(0,1))    #Square Signal to warm the Resistors
-    time,U_sq,U_b,U_b_n= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber),delimiter=',',unpack=True, usecols=(0,1,2,3))    #Square Signal to warm the Resistors
+    time,U_sq,U_b_n,U_b= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber),delimiter=',',unpack=True, usecols=(0,1,2,3))    #Square Signal to warm the Resistors
     #U_b=savgol_filter(U_b0,10,3)
     fig,ax1=plt.subplots()
     ax2=ax1.twinx()
@@ -89,10 +89,10 @@ def Get_Tau( documentnumber, Plot=False):
     def I_func(t,I_0, Delta_I, tau):
         return I_0+Delta_I*(1-np.exp(-t/tau))
     #time, U_sq= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber_U_sq),delimiter=',',unpack=True, usecols=(0,1))    #Square Signal to warm the Resistors
-    time,U_sq,U_b= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber),delimiter=',',unpack=True, usecols=(0,1,2),skip_header=2)    #Square Signal to warm the Resistors
+    time,U_sq,U_b= np.genfromtxt(str(infile)+'NewFile{}.csv'.format(documentnumber),delimiter=',',unpack=True, usecols=(0,1,3),skip_header=2)    #Square Signal to warm the Resistors
     I_b=U_b/100                                     #Response Current  through Test Resistor 100 Ohm
-    start= np.argmax(np.gradient(U_sq, time))+2    #Start of the Square Signal
-    stop= np.argmin(np.gradient(U_sq, time)) -2   #End of the Square Signal
+    start= np.argmax(np.gradient(U_sq, time))+3    #Start of the Square Signal
+    stop= np.argmin(np.gradient(U_sq, time))-3   #End of the Square Signal
     time_cut=time[start:stop]-time[start]           #Time array, shortened to the periode during Square Signal on, and start set to 0 s
     I_b_cut= I_b[start:stop]*1000                   #Current array, shortened equally and Values in mA
     print(start,stop)
@@ -129,43 +129,41 @@ def Get_Kappa(documentnumber):
 
 #This function derives all kappas and taus from a measurement series and saves their plots and values.
 def GetAllOmicCalibration(save=False):
-    #infile ='/scratch.mv3/koehn/backup_Anne/zilch/measurements/Cal/Bolo_cal_vak/Messwerte_2010_10_08/'
-    #outfile='/home/gediz/Results/Calibration/old_calibration/'
-    x=[]
-    tau=[]
-    kappa=[]
-    R_M=[]
-    n=9
-    for i in [str(n),'1'+str(n),'2'+str(n),'3'+str(n),'4'+str(n),'5'+str(n),'6'+str(n),'7'+str(n)]:
-        x=[1,2,3,4,5,6,7,8]
-        tau.append(Get_Tau(i, Plot=True)[2])
-        kappa.append(abs(Get_Kappa(i)[0]))
-        R_M.append(Get_Kappa(i)[1])
-    #print(tau)
-    plt.plot(x,tau,'bo')
-    plt.xlabel('Bolometerchannel')
-    plt.ylabel('tau [s]')
-    fig1=plt.gcf()
-    plt.show()
-    plt.plot(x,kappa,'ro')
-    plt.xlabel('Bolometerchannel')
-    plt.ylabel('kappa [10^-4 A^2]')
-    fig2=plt.gcf()
-    plt.show()
-    if save ==True:
-        data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
-        np.savetxt(str(outfile)+"ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt".format(n) , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
-        fig1.savefig(str(outfile)+"ohmic_calibration_tau_vacuum_tjk_reduced_noise_measurement_0{}.pdf".format(n))
-        fig1.savefig(str(outfile)+"ohmic_calibration_kappa_vacuum_tjk_reduced_noise_measurement_0{}.pdf".format(n))
+    for n in [0,1,2,3,4,5,6,7,8,9]:
+        x=[]
+        tau=[]
+        kappa=[]
+        R_M=[]
+        for i in [str(n),'1'+str(n),'2'+str(n),'3'+str(n),'4'+str(n),'5'+str(n),'6'+str(n),'7'+str(n)]:
+            x=[1,2,3,4,5,6,7,8]
+            tau.append(Get_Tau(i, Plot=True)[2])
+            kappa.append(abs(Get_Kappa(i)[0]))
+            R_M.append(Get_Kappa(i)[1])
+        #print(tau)
+        plt.plot(x,tau,'bo')
+        plt.xlabel('Bolometerchannel')
+        plt.ylabel('tau [s]')
+        fig1=plt.gcf()
+        plt.show()
+        plt.plot(x,kappa,'ro')
+        plt.xlabel('Bolometerchannel')
+        plt.ylabel('kappa [10^-4 A^2]')
+        fig2=plt.gcf()
+        plt.show()
+        if save ==True:
+            data = np.column_stack([np.array(x), np.array(tau), np.array(kappa), np.array(R_M)])
+            np.savetxt(str(outfile)+"ohmic_calibration_air_tau_and_kappa_reduced_noise_measurement_0{}.txt".format(n) , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f', '%10.3f'], header='Values for tau \t kappa \t \R_M (derived Resistance of each channel in Ohm)')
+            fig1.savefig(str(outfile)+"ohmic_calibration_tau_air_reduced_noise_measurement_0{}.pdf".format(n))
+            fig1.savefig(str(outfile)+"ohmic_calibration_kappa_air_reduced_noise_measurement_0{}.pdf".format(n))
 
 
 #This function plots a comparison of different Ohmic calibration measurements
-def CompareTauAndKappa():
+def CompareTauAndKappa(save=False):
     x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,k1,k2,k3,k4,k5,k6,k7,k8,k9,k10 = ([] for i in range(30))
     for i,j,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10],[k1,k2,k3,k4,k5,k6,k7,k8,k9,k10],[0,1,2,3,4,5,6,7,8,9]):
-        i.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(0)))
-        j.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(1)))
-        k.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(2))) 
+        i.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_December/07_12_2022/ohmic_calibration_air_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(0)))
+        j.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_December/07_12_2022/ohmic_calibration_air_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(1)))
+        k.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_December/07_12_2022/ohmic_calibration_air_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(2))) 
     mean_t=[]
     sem_t=[]
     for i,j,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10],['red','blue','orange','green','darkcyan','gold','blueviolet','magenta','grey','yellow'],[0,1,2,3,4,5,6,7,8,9]):
@@ -178,7 +176,8 @@ def CompareTauAndKappa():
     plt.xlabel('Bolometerchannel')
     plt.ylabel('tau [s]')
     #plt.legend(loc=1,bbox_to_anchor=(1.5,1))
-    plt.suptitle('Ohmic calibration in vacuum on TJ-K// Results for Tau')
+    plt.suptitle('Ohmic calibration in air// Results for Tau')
+    fig1=plt.gcf()
     plt.show()
     mean_k=[]
     sem_k=[]
@@ -192,9 +191,16 @@ def CompareTauAndKappa():
     plt.xlabel('Bolometerchannel')
     plt.ylabel('kappa [A^2]')
     #plt.legend(loc=1,bbox_to_anchor=(1.5,1))
-    plt.suptitle('Ohmic calibration vacuum on TJ-K// Results for Kappa')
+    plt.suptitle('Ohmic calibration in air// Results for Kappa')
+    fig2=plt.gcf()
     plt.show()
-    print(mean_t,sem_t,mean_k,sem_k)
+    if save==True:
+        data = np.column_stack([np.array([1,2,3,4,5,6,7,8]),np.array(mean_t), np.array(sem_t), np.array(mean_k), np.array(sem_k)])
+        np.savetxt(str(outfile)+"ohmic_calibration_air_tau_and_kappa_mean_and_sem.txt" , data, delimiter='\t \t', fmt=['%d', '%10.5f', '%10.5f', '%10.5f', '%10.5f'], header='Values for tau \t sem sau \t kappa \t sem kappa')
+        fig1.savefig(str(outfile)+"ohmic_calibration_tau_air_mean_and_sem.pdf")
+        fig2.savefig(str(outfile)+"ohmic_calibration_kappa_air_mean_and_sem.pdf")
+
+        
 
 #This function derives the actual resistances using the measured values by solving a set of linear equations
 def DeriveResistances():
@@ -407,8 +413,8 @@ def CompareRelativeCorrections(save=False):
 # %%
 
 infile ='/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/10_11_2022/'
-outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/'
-#boloprofile='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shot60039/shot60039_bolometerprofile_from_radiation_powers.txt'
+outfile='/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_December/07_12_2022/'
+boloprofile='/home/gediz/Results/Bolometer_Profiles/shot70032/shot70032_bolometerprofile_from_radiation_powers.txt'
 
 ##Bolometerprofile from which to calculate the relative correction constants:
 boloprofile_0='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/combined_shots/shots_60004_to_60011/bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum.txt'
@@ -421,22 +427,18 @@ boloprofile_6='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2
 boloprofile_7='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shot60055/bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries.txt'
 boloprofile_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/bolometerprofiles/shot60056/bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_02.txt'
 
-#path,filename=os.path.split(boloprofile)
+path,filename=os.path.split(boloprofile)
 
 ##Path of the derived correction constants to compare with each other:
-relativecorrection_0='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_using_mean.txt'
-relativecorrection_1='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot60039_bolometerprofile_from_radiation_powers_using_mean.txt'
-relativecorrection_2='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_2D_scan_upwards_angle_using_mean.txt'
-relativecorrection_3='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_2D_scan_downwards_angle_using_mean.txt'
-relativecorrection_4='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_by hand_horizontal_beam_3VDC_using_mean.txt'
-relativecorrection_5='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_by hand_upwards_beam_3VDC_using_mean.txt'
-relativecorrection_6='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_3VDC_using_mean.txt'
-relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_using_mean.txt'
-relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_bolometerprofile_from_radiation_powers_of_calibration_with_green_laser_vacuum_by hand_downwards_beam_new_batteries_02_using_mean.txt'
+relativecorrection_0='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70024_bolometerprofile_from_radiation_powers_using_mean.txt'
+relativecorrection_1='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70025_bolometerprofile_from_radiation_powers_using_mean.txt'
+relativecorrection_2='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70026_bolometerprofile_from_radiation_powers_using_mean.txt'
+relativecorrection_3='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70027_bolometerprofile_from_radiation_powers_using_mean.txt'
+relativecorrection_4='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70028_bolometerprofile_from_radiation_powers_using_mean.txt'
+relativecorrection_5='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70029_bolometerprofile_from_radiation_powers_using_mean.txt'
+relativecorrection_6='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70030_bolometerprofile_from_radiation_powers_using_mean.txt'
+relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70031_bolometerprofile_from_radiation_powers_using_mean.txt'
+relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70032_bolometerprofile_from_radiation_powers_using_mean.txt'
 
-boloprofile='/home/gediz/Results/Bolometer_Profiles/shot70001/shot70001_bolometerprofile_from_radiation_powers.txt'
-RelativeOpticalCalibration(Type='mean')
-
-
-
+CompareTauAndKappa(save=True)
 # %%

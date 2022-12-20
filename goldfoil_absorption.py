@@ -22,12 +22,58 @@ import os
 import collections
 from scipy import integrate
 from scipy.interpolate import pchip_interpolate
+from scipy.signal import find_peaks
 
 #%%------------------------------------------------------------------------------------------------------
-plt.rc('font',family='serif')
 plt.rc('figure', titlesize=15)
 plt.rc('figure', figsize=(10,5))
 
+def LoadData(location):
+    with open(location, "r") as f:
+        cols = f.readlines()[3]
+        cols = re.sub(r"\t+", ';', cols)[:-2].split(';')
+    data = pd.read_csv(location, skiprows=4, sep="\t\t", names=cols, engine='python')
+    return data
+
+def Pressure(shotnumber):
+    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+    y= LoadData(location)["Pressure"]
+    time = LoadData(location)['Zeit [ms]'] / 1000
+    pressure= np.mean(y[0:100])
+    d = 9.33                # according to PKR261 manual
+    pressure = 10.**(1.667*pressure-d)*1000
+    if gas == 'H':
+        corr = 2.4
+    elif gas == 'D':
+        print( '    you have choosen deuterium as gas, no calibration factor exists for this gas' )
+        print( '    the same factor as for hydrogen will be used' )
+        corr = 2.4
+    elif gas == 'He':
+        corr =5.9
+    elif gas == 'Ne':
+        corr =4.1
+    elif gas == 'Ar':
+        corr =.8
+    elif gas == 'Kr':
+        corr =.5
+    elif gas == 'Xe':
+        corr =.4
+    return pressure*corr
+
+def GetMicrowavePower(shotnumber):
+    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+    U_in=LoadData(location)['2 GHz Richtk. forward']
+    U_in[U_in>0]    = -1e-6
+    signal_dBm  = 42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in / (-0.5508373840567) )**0.4255365582241 )
+    signal_dBm  += 60.49 #for foreward signal
+    #signal_dBm  += 60.11 #for backward signal
+    signalinwatt   = 10**(signal_dBm/10.) * 1e-3
+    start=np.argmax(np.gradient(signalinwatt))
+    stop=np.argmin(np.gradient(signalinwatt))
+    # plt.plot(start,signalinwatt[start],'ro')
+    # plt.plot(stop,signalinwatt[stop],'ro')
+    # plt.show()
+    return (np.mean(signalinwatt[start:stop]))
 
 def Gold_Abs():
     location =str(golddata)
@@ -66,10 +112,10 @@ def GoldAbsorptionPlot(save=False):
 #Use this function to fuse the data of the three spectrometerchannels, plot them and save the plot as well as the new fused datafile
 #They should be saved with names similar to those in this folder
 #/home/gediz/Measurements/Spectrometer/Spectra_of_lamps_17_08_2022
-def Spectrometer_Data(lightsource='', save=False):
-    x1,y1=np.genfromtxt(str(spectrumdata)+lightsource+'_linkes_Spektrum.txt', skip_header=17, skip_footer=1,unpack='true')    
-    x2,y2=np.genfromtxt(str(spectrumdata)+lightsource+'_mittleres_Spektrum.txt', skip_header=17, skip_footer=1,unpack='true')    
-    x3,y3=np.genfromtxt(str(spectrumdata)+lightsource+'_rechtes_Spektrum.txt', skip_header=17, skip_footer=1,unpack='true')    
+def Spectrometer_Data(lightsource='', save=False,analyze=False):
+    x1,y1=np.genfromtxt(str(spectrumdata)+lightsource+'_linkes_spektrum.txt', skip_header=17, skip_footer=1,unpack='true')    
+    x2,y2=np.genfromtxt(str(spectrumdata)+lightsource+'_mittleres_spektrum.txt', skip_header=17, skip_footer=1,unpack='true')    
+    x3,y3=np.genfromtxt(str(spectrumdata)+lightsource+'_rechtes_spektrum.txt', skip_header=17, skip_footer=1,unpack='true')    
     y2=y2[int(np.argwhere(x2<x1[-1])[-1]+1):-1]
     y3=y3[int(np.argwhere(x3<x2[-1])[-1]+1):-1]
     x2=x2[int(np.argwhere(x2<x1[-1])[-1]+1):-1]
@@ -79,13 +125,18 @@ def Spectrometer_Data(lightsource='', save=False):
     plt.plot(x,y)
     plt.xlabel('wavelength [nm]')
     plt.ylabel('Counts')
-    plt.suptitle('Spectrometer Data of Lightsource {}'.format(lightsource))
+    plt.suptitle('Spectrometer Data of {l} \n {e}'.format(l=lightsource,e=extratitle))
+    if analyze==True:
+        peaks=find_peaks(y,300,10)
+        for i in peaks[0]:
+            plt.plot(x[i],y[i],'ro')
+            plt.annotate(str(x[i])+'nm',(x[i]+5,y[i]),color='red')
     fig1= plt.gcf()
     plt.show()
     if save==True:
         fig1.savefig(str(outfile)+"spectrometer_data_of_lightsource_{}.pdf".format(lightsource))
         data = np.column_stack([np.array(x), np.array(y)])#, np.array(z), np.array(abs(y-z))])
-        np.savetxt(str(outfile)+"spectrometer_data_of_lightsource_{}.txt".format(lightsource), data, delimiter='\t \t', header='Data of all three Spectrometer-channels for the lightsource {} \n wavelength [nm] \t counts'.format(lightsource))
+        np.savetxt(str(outfile)+"spectrometer_data_of_lightsource_{}.txt".format(lightsource), data, delimiter='\t \t', header='Data of all three Spectrometer-channels for the lightsource {l} \n {e} \nwavelength [nm] \t counts'.format(l=lightsource,e=extratitle))
     return x,y
 
 #This function creates an interpolated curve of the golddata with the same x(wavelength)-data
@@ -144,18 +195,31 @@ def Reduced_Spectrum(lightsource='', save=False):
     if save==True:
         fig1.savefig("/home/gediz/Results/Goldfoil_Absorption/Lightsources_Gold_Absorption/reduced_spectrum_absorbed_by_gold_of_lightsource_{}.pdf".format(lightsource))
     
-    
-
+def CompareSpectra():
+    z=0
+    for i in lightsources: 
+        x,y=np.genfromtxt(str(outfile)+'spectrometer_data_of_lightsource_'+str(i)+'.txt',unpack=True,skip_header=3)
+        title=label=open(str(outfile)+'spectrometer_data_of_lightsource_'+str(i)+'.txt', 'r').readlines()[1]
+        plt.plot(x+z,y,label=title)
+        z=z+5
+    plt.ylabel('Counts')
+    plt.xlabel('wavelength [nm]')
+    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.7))
+    plt.show()
 #%%
 #Down here insert the data you want to analyze and one or several of the above functions and run the script
 
 if __name__ == "__main__":
     infile ='/scratch.mv3/koehn/backup_Anne/zilch/Bolo/Absorption_AU/'
     #outfile='/home/gediz/Results/Goldfoil_Absorption/'
-    outfile='/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/'
-    spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/'
+    outfile='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
+    spectrumdata='/home/gediz/Measurements/Spectrometer/Spectra_of_Helium_Plasma_15_12_2022/'
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
-
-    print(Gold_Fit('Weißlichtquelle_Wellenlängenmessung')[1],Gold_Fit('Weißlichtquelle_Wellenlängenmessung')[2], Gold_Fit('Weißlichtquelle_Wellenlängenmessung')[3])
-    #Reduced_Spectrum('Weißlichtquelle_Wellenlängenmessung_grüne_folie', save=True)
+    shotnumber=13120
+    gas='He' 
+    extratitle='{g} // p={p} mPa// MW={m} W'.format(g=gas,m=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))
+    lightsources=('shot13120','shot13120_sonde_raus')
+    
+    #CompareSpectra()
+    Spectrometer_Data('shot13120',analyze=True)
 # %%
