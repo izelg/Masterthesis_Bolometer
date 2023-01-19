@@ -266,7 +266,9 @@ def WavelengthDependency():
 #Type=mean uses the mean value of all signals as reference, so by multiplying each channel with the resulting correction constant you equalize all signals to the mean signal
 #Type=value uses the measured value of 0.419 mW (old batteries) or 0.487 mW (new batteries) to calculate the correction constants and can consequently only be used when Powerprofiles created with the green laser are investigated
 def RelativeOpticalCalibration(Type='',save=False):
-    x,y=np.genfromtxt(boloprofile, unpack=True, usecols=(0,1))
+    #x,y=np.genfromtxt(boloprofile, unpack=True, usecols=(0,1))
+    x=[1,2,3,4,5,6,7,8]
+    y=boloprofile
     #y[-1]=y[-1]*2.6
     #print(y)
     if Type=='mean':
@@ -282,19 +284,20 @@ def RelativeOpticalCalibration(Type='',save=False):
     corr_y=[]
     for a,b in zip(y, corr_rel):
         corr_y.append(a*b)
-    plt.suptitle(open(boloprofile, 'r').readlines()[2][3:-1])
+    #plt.suptitle(open(boloprofile, 'r').readlines()[2][3:-1])
+    plt.suptitle(t)
     plt.plot(x,y,'bo--')
     plt.plot(x,corr_y,'ro--', label='Relative to {t}: {m}'.format(t=Type,m=float(f'{mean:.3f}')))
     #plt.plot([1,8],[mean,mean], label='Relative to {t}: {m}'.format(t=Type,m=float(f'{mean:.3f}')), color='r')
-    plt.ylabel(open(boloprofile, 'r').readlines()[3][14:-1])
+    #plt.ylabel(open(boloprofile, 'r').readlines()[3][14:-1])
     plt.xlabel('Bolometerchannel')
     plt.legend(loc=1,bbox_to_anchor=(1.7,1))
     fig1 = plt.gcf()
     plt.show()
     if save==True:
         data = np.column_stack([np.array(x), np.array(corr_rel)])#, np.array(z), np.array(abs(y-z))])
-        np.savetxt(outfile+'relative_calibration_constants_from_'+filename[:-4]+'_using_{}.txt'.format(Type), data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Correction constants to be multiplied with each channel signal to equalize to {v} V\n relative correction constants from {f}\nchanneln° \t relative correction'.format(v=float(f'{mean:.3f}'), f=filename[:-4]))
-        fig1.savefig(outfile+'relative_calibration_constants_from_'+filename[:-4]+'_using_{}.pdf'.format(Type), bbox_inches='tight')
+        np.savetxt(outfile+'relative_calibration_constants_from_'+t+'_using_{}.txt'.format(Type), data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Correction constants to be multiplied with each channel signal to equalize to {v} V\n relative correction constants from {f}\nchanneln° \t relative correction'.format(v=float(f'{mean:.3f}'), f=filename[:-4]))
+        fig1.savefig(outfile+'relative_calibration_constants_from_'+t+'_using_{}.pdf'.format(Type), bbox_inches='tight')
 
 #This function was used to plot all different experiments to calibrate the bolometer together
 #Since more  experiments were added all the time and each needed a descriptive title the function is not very elegant
@@ -334,15 +337,15 @@ def CompareBolometerProfiles(save=False):
         mean.append(np.mean(j))
         mean_err.append(np.mean(j)*k+p)
     plt.ylim(200,425)
-    plt.plot(x,y0,alpha=0.15,label='by hand, batteries, after reassemblance', marker='o')
-    plt.plot(x,y1,alpha=0.15,label='with step motor, batteries, by hand, 1mm steps', marker='o')
-    plt.plot(x,y2,alpha=0.15, label='2D scan, 3VDC, angle upwards',  marker='o')
-    plt.plot(x,y3,alpha=0.15,label='2D scan, 3VDC, angle downwards', marker='o')
-    plt.plot(x,y4 ,alpha=0.15,label='by Hand, 3VDC, horizontal', marker='o')    
-    plt.plot(x,y5,alpha=0.15,label='by Hand, 3VDC, angle upwards',  marker='o')
-    plt.plot(x,y6 ,alpha=0.15,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
-    plt.plot(x,y7,alpha=0.15,label='by Hand, new batteries, angle downwards', marker='o')
-    plt.plot(x,y8 ,alpha=0.15,label='by Hand, new batteries, angle downwards', marker='o')
+    plt.plot(x,y0,alpha=al,label='by hand, batteries, after reassemblance', marker='o')
+    plt.plot(x,y1,alpha=al,label='with step motor, batteries, by hand, 1mm steps', marker='o')
+    plt.plot(x,y2,alpha=al, label='2D scan, 3VDC, angle upwards',  marker='o')
+    plt.plot(x,y3,alpha=al,label='2D scan, 3VDC, angle downwards', marker='o')
+    plt.plot(x,y4 ,alpha=al,label='by Hand, 3VDC, horizontal', marker='o')    
+    plt.plot(x,y5,alpha=al,label='by Hand, 3VDC, angle upwards',  marker='o')
+    plt.plot(x,y6 ,alpha=al,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
+    plt.plot(x,y7,alpha=al,label='by Hand, new batteries, angle downwards', marker='o')
+    plt.plot(x,y8 ,alpha=al,label='by Hand, new batteries, angle downwards', marker='o')
     plt.plot(x,mean,'ro',label='mean value of all measurements')
     plt.errorbar(x,mean,yerr=mean_err, ecolor='red',fmt='none',capsize=5,label='Error due to correction constant')
     plt.suptitle('Radiation Powers // Green laser in vacuum')
@@ -372,6 +375,9 @@ def CompareRelativeCorrections(save=False):
     y6=np.genfromtxt(relativecorrection_6, unpack=True, usecols=1)
     y7=np.genfromtxt(relativecorrection_7, unpack=True, usecols=1)
     y8=np.genfromtxt(relativecorrection_8, unpack=True, usecols=1)
+    y9=np.genfromtxt(relativecorrection_9, unpack=True, usecols=1)
+    y10=np.genfromtxt(relativecorrection_10, unpack=True, usecols=1)
+    y11=np.genfromtxt(relativecorrection_11, unpack=True, usecols=1)
     ch1=[]
     ch2=[]
     ch3=[]
@@ -388,21 +394,25 @@ def CompareRelativeCorrections(save=False):
         sd.append(np.std(j,ddof=1))
         sem.append(np.std(j,ddof=1)/np.sqrt(9))
         mean.append(np.mean(j))
-    plt.plot(x,y0,alpha=0.15,label='by hand, batteries, after reassemblance', marker='o')
-    plt.plot(x,y1,alpha=0.15,label='with step motor, batteries, by hand, 1mm steps', marker='o')
-    plt.plot(x,y2,alpha=0.15, label='2D scan, 3VDC, angle upwards',  marker='o')
-    plt.plot(x,y3,alpha=0.15,label='2D scan, 3VDC, angle downwards', marker='o')
-    plt.plot(x,y4 ,alpha=0.15,label='by Hand, 3VDC, horizontal', marker='o')    
-    plt.plot(x,y5,alpha=0.15,label='by Hand, 3VDC, angle upwards',  marker='o')
-    plt.plot(x,y6 ,alpha=0.15,label='by Hand, 3VDC, angle downwards (breakdown)', marker='o')
-    plt.plot(x,y7,alpha=0.15,label='by Hand, new batteries, angle downwards', marker='o')
-    plt.plot(x,y8 ,alpha=0.15,label='by Hand, new batteries, angle downwards', marker='o')
-    plt.plot(x,mean,'ro',label='mean value of all measurements')
-    plt.errorbar(x,mean,yerr=sem, ecolor='red',fmt='none',capsize=5,label='Standard error of the mean')
+    al=1
+    #plt.plot(x,y0,alpha=al,label='air,  1k$\Omega$, sine, simulated wheatstone', marker='o')
+    plt.plot(x,y1,alpha=al,label='Air, 1k$\Omega$', marker='o')
+    plt.plot(x,y2,alpha=al, label='air, 1k$\Omega$, changed V2,V3',  marker='o')
+    plt.plot(x,y3,alpha=al,label='UV air 254', marker='o')
+    plt.plot(x,y4 ,alpha=al,label='UV air 350', marker='o')    
+    plt.plot(x,y5,alpha=al,label='UV air klein',  marker='o')
+    #plt.plot(x,y6 ,alpha=al,label='vac,  1k$\Omega$', marker='o')
+    #plt.plot(x,y7,alpha=al,label='vac,  100$\Omega$', marker='o')
+    #plt.plot(x,y8 ,alpha=al,label='vac, sine 1k$\Omega$', marker='o')
+    plt.plot(x,y9,alpha=al,label='Res 1', marker='o')
+    plt.plot(x,y10,alpha=al,label='Res 2', marker='o')
+    plt.plot(x,y11,alpha=al,label='Res 3', marker='o')
+    #plt.plot(x,mean,'ro',label='mean value of all measurements')
+    #plt.errorbar(x,mean,yerr=sem, ecolor='red',fmt='none',capsize=5,label='Standard error of the mean')
     plt.suptitle('Relative correction constants for Radiation Powers // Green laser in vacuum')
     plt.xlabel('Bolometerchannel')
     plt.ylabel('[arb]')
-    plt.legend(loc=1,bbox_to_anchor=(1.9,1))
+    plt.legend(loc=1,bbox_to_anchor=(2,1))
     fig1=plt.gcf()
     plt.show()  
     if save ==True:
@@ -430,15 +440,72 @@ boloprofile_8='/home/gediz/Results/Calibration/Calibration_Bolometer_September_2
 path,filename=os.path.split(boloprofile)
 
 ##Path of the derived correction constants to compare with each other:
-relativecorrection_0='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70024_bolometerprofile_from_radiation_powers_using_mean.txt'
-relativecorrection_1='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70025_bolometerprofile_from_radiation_powers_using_mean.txt'
-relativecorrection_2='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70026_bolometerprofile_from_radiation_powers_using_mean.txt'
-relativecorrection_3='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70027_bolometerprofile_from_radiation_powers_using_mean.txt'
-relativecorrection_4='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70028_bolometerprofile_from_radiation_powers_using_mean.txt'
-relativecorrection_5='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70029_bolometerprofile_from_radiation_powers_using_mean.txt'
-relativecorrection_6='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70030_bolometerprofile_from_radiation_powers_using_mean.txt'
-relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70031_bolometerprofile_from_radiation_powers_using_mean.txt'
-relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70032_bolometerprofile_from_radiation_powers_using_mean.txt'
+# relativecorrection_0='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70024_bolometerprofile_from_radiation_powers_using_mean.txt'
+# relativecorrection_1='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70025_bolometerprofile_from_radiation_powers_using_mean.txt'
+# relativecorrection_2='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70026_bolometerprofile_from_radiation_powers_using_mean.txt'
+# relativecorrection_3='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70027_bolometerprofile_from_radiation_powers_using_mean.txt'
+# relativecorrection_4='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70028_bolometerprofile_from_radiation_powers_using_mean.txt'
+# relativecorrection_5='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70029_bolometerprofile_from_radiation_powers_using_mean.txt'
+# relativecorrection_6='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70030_bolometerprofile_from_radiation_powers_using_mean.txt'
+# relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70031_bolometerprofile_from_radiation_powers_using_mean.txt'
+# relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/relative_correction_constants_for_power_signals/relative_calibration_constants_from_shot70032_bolometerprofile_from_radiation_powers_using_mean.txt'
+relativecorrection_0='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_air,  1k$\Omega$, sine, simulated wheatstone_using_mean.txt'
+relativecorrection_1='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_Air, 1k$\Omega$_using_mean.txt'
+relativecorrection_2='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_air, 1k$\Omega$, changed V2,V3_using_mean.txt'
+relativecorrection_3='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_UV air 254_using_mean.txt'
+relativecorrection_4='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_UV air 350_using_mean.txt'
+relativecorrection_5='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_UV air klein_using_mean.txt'
+relativecorrection_6='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_vac,  1k$\Omega$_using_mean.txt'
+relativecorrection_7='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_vac, 100$\Omega$_using_mean.txt'
+relativecorrection_8='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_vac, sine,1k$\Omega$_using_mean.txt'
+relativecorrection_9='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_Res 1_using_mean.txt'
+relativecorrection_10='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_Res 2_using_mean.txt'
+relativecorrection_11='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_Res 3_using_mean.txt'
 
-CompareTauAndKappa(save=True)
+CompareRelativeCorrections()
+# %%
+outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/'
+plt.rc('font',size=14)
+b,a1,a2,v1,v2,v3,a3=np.genfromtxt('/home/gediz/Measurements/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistor_additional_to_AC_in.txt',unpack=True,skip_header=5)
+uv1=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot70025/shot70025_bolometerprofile_from_raw_data.txt',usecols=1)
+uv2=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot70034/shot70034_bolometerprofile_from_raw_data.txt',usecols=1)
+uv3=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot70035/shot70035_bolometerprofile_from_raw_data.txt',usecols=1)
+res1=[x*(-1) for x in np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated.txt',usecols=3,delimiter=',')]
+res2=[x*(-1) for x in np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_second_set.txt',usecols=3,delimiter=',')]
+res3=[x*(-1) for x in np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_third_set.txt',usecols=3,delimiter=',')]
+
+
+fig,ax1=plt.subplots()
+fig.set_figheight(7)
+fig.set_figwidth(10)
+ax2=ax1.twinx()
+ax3=ax1.twinx()
+ax4=ax1.twinx()
+ax5=ax1.twinx()
+ax6=ax1.twinx()
+ax7=ax1.twinx()
+ax8=ax1.twinx()
+ax9=ax1.twinx()
+ax10=ax1.twinx()
+ax11=ax1.twinx()
+ax12=ax1.twinx()
+values=[a1,a2,a3,v1,v2,v3,uv1,uv2,uv3,res1,res2,res3]
+colors=['red','darkred','orange','blue','darkblue','lightblue','green','darkgreen','lightgreen','pink','violet','magenta']
+labels=[r'Air, 1k$\Omega$',r'air, 1k$\Omega$, changed V2,V3',r'air,  1k$\Omega$, sine, simulated wheatstone',r'vac,  1k$\Omega$',r'vac, 100$\Omega$',r'vac, sine,1k$\Omega$','UV air klein','UV air 350','UV air 254','Res 1','Res 2', 'Res 3']
+axes=[ax1,ax2,ax3,ax4,ax5,ax6,ax7,ax8,ax9,ax10,ax11,ax12]
+n=1
+for p in [0,1,3,4,6,7,8,9,10,11]:
+    for i,k,t,a in zip([values[p]],[colors[p]],[labels[p]],[axes[p]]):
+        j=[x-np.mean(i) for x in i]
+        leg=a.plot(b,j,marker='o',color=k,label=t)
+        a.set_yticks([], [])
+        labs =[l.get_label() for l in leg] 
+        a.legend(leg, labs, loc=1,bbox_to_anchor=(1.7,n))
+        n=n-0.1
+        #RelativeOpticalCalibration('mean')
+ax1.set(ylabel='Bolometerchannel')
+ax1.set(xlabel='Signal  normalized')
+# leg = l1+l2+l3+l4+l5+l6+l7+l8+l9+l10+l11+l12
+
+plt.show()
 # %%

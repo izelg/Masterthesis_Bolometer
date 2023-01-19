@@ -58,7 +58,7 @@ def Pressure(shotnumber):
         corr = 2.4
     elif gas == 'D':
         print( '    you have choosen deuterium as gas, no calibration factor exists for this gas' )
-        print( '    the same factor as for hydrogren will be used' )
+        print( '    the same factor as for hydrogen will be used' )
         corr = 2.4
     elif gas == 'He':
         corr =5.9
@@ -500,7 +500,7 @@ def BolometerProfile(Type="", save=False):
         zerr.append(y[j]*k)
     plt.figure(figsize=(10,5))
     plt.plot(x,y, marker='o', linestyle='dashed', label="Original Bolometerprofile")
-    plt.errorbar(x,z,yerr=zerr, marker='o',capsize=5, linestyle='dashed',label="Corrected Bolometerprofile \n with relative correction")
+    #plt.errorbar(x,z,yerr=zerr, marker='o',capsize=5, linestyle='dashed',label="Corrected Bolometerprofile \n with relative correction")
     plt.ylabel(ylabel1)
     plt.xlabel('Bolometerchannel')
     #plt.ylim(50,400)
@@ -509,11 +509,11 @@ def BolometerProfile(Type="", save=False):
     fig1 = plt.gcf()
     plt.show()
     if save == True:
-        data = np.column_stack([np.array(x), np.array(z)])#, np.array(z), np.array(abs(y-z))])
+        data = np.column_stack([np.array(x), np.array(y)])#, np.array(z), np.array(abs(y-z))])
         if Datatype=='Data':
-            datafile_path = str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}_corrected_with_air_uv_lamp.txt".format(n=shotnumber, t=name_)
-            np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. \n Label for plot \n shot n°{s} corrected by air uv measurement// {e}\n channeln° \t {u}'.format(n=name, s= shotnumber, m=MW, u =ylabel1,e=extratitle))
-            fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}_corrected_with_air_uv_lamp.pdf".format(n=shotnumber, t=name_), bbox_inches='tight')
+            datafile_path = str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shotnumber, t=name_)
+            np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. \n Label for plot \n shot n°{s}// {e}\n channeln° \t {u}'.format(n=name, s= shotnumber, m=MW, u =ylabel1,e=extratitle))
+            fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.pdf".format(n=shotnumber, t=name_), bbox_inches='tight')
         if Datatype=='Source':
             np.savetxt(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n  Label for plot \nshot n°{s}, {n}, MW power: {m}, {e}\nchanneln° // {l}'.format(n=name, s= sourcetitle,m=MW,e=extratitle,l=ylabel1))
             fig1.savefig(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.pdf'.format(t=name_,n=sourcetitlesave), bbox_inches='tight')
@@ -560,19 +560,19 @@ def CompareBolometerProfiles(Type="" ,save=False,normalize=False):
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=13116
-    shotnumbers=(70006,70025) 
+    shotnumber=13043
+    shotnumbers=(13012,13037,13043) 
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
        
     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     #location=  '/data6/Bolo_Calibration_December/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None] # s
-    gas='He'
+    gas='None'
     Bolometer_amplification_1=100
     Bolometer_amplification_2=1
     Bolometer_timeresolution=100
-    extratitle='{g} // Bolometer: x{a}, x{b}, {c}ms // MW: {mw}Watt // P={p}mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
-    #extratitle=''
+    #extratitle='{g} // Bolometer: x{a}, x{b}, {c}ms // MW: {mw}Watt // P={p}mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+    extratitle=''
 
     #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
     sourcefolder= '/home/gediz/Results/Bolometer_Profiles/combined_shots/shots_50025_to_50018/'   #the folder where the combined shots data should be stored
@@ -606,10 +606,10 @@ if __name__ == "__main__":
     #     PlotAllTimeseriesTogether(save=True)
     #     BolometerProfile('Bolo',save=True)
     #     BolometerProfile('Power',save=True)
-    #CompareBolometerProfiles('Bolo',save=True)
+    CompareBolometerProfiles('Bolo',normalize=True)
     #CompareBolometerProfiles('Bolo')
     #CombinedTimeSeries('50025','50024','50023','50022','50021','50020','50019','50018',Plot=True,save=True)
-    #BolometerProfile('Bolo',save=True)
-    #BolometerProfile('Power',save=True)
-    PlotAllTimeseries(save=True)
+    #BolometerProfile('Bolo')
+    #BolometerProfile('Power')
+    PlotAllTimeseriesTogether()
 # %%

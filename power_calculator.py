@@ -30,31 +30,43 @@ from datetime import datetime
 
 plt.rc('font',size=14)
 plt.rc('figure', titlesize=15)
-
-
-# %%
 #The important distances are defined
-start=datetime.now()
-a=32.11 #Distance of Bolometerhead Middle to Torsatron center [cm]
+a=60+32.11+3.45 #Position of Bolometerheadmiddle [cm]
 b=3.45 #Distance of Bolometerhead Middle to  Slit [cm]
 s_w=1.4 #Width of the slit [cm]
 s_h=0.5 #Height of the slit [cm]
 alpha=14 #Angle of the Bolometerhead to plane [°]
 c_w=0.38 #Channelwidth of Goldsensor [cm]
-c_h=0.17 #HChannelheight of Goldsensor [cm]
+c_h=0.13 #HChannelheight of Goldsensor [cm]
+c_d=0.225 #depth of Goldsensor [cm]
 h=2 #height of Bolometerhead [cm]
 z_0=63.9    #middle of flux surfaces
-
+r_ves=17.5 #radius of vessel [cm]
+#err=0.4     #error of lines of sight in x and y direction [cm]
+# %% Pixelmethod
+start=datetime.now()
 #-----------------------------------------------------#-
 #!!! Enter here which channels lines of sight you want to have analyzed(1 to 8), what pixel-resolution you need (in cm) and  which flux surfaces (0 to 7) should be modeled. 
 #note that more channels, a smaller resolution and more fluxsurfaces result in longer computation times
-bolo_channel=[5] #1 to 8
+bolo_channel=[4] #1 to 8
+bolo_power=[0,0,0,3.4E-6,3.4E-6,0,0,0]
 res=0.5
 fluxsurfaces=[0,1,2,3,4,5,6,7] #0 to 7
+err='Max'
 #-----------------------------------------------------#-
+if err=='None':
+    x_err=0
+    y_err=0
+if err=='Min':
+    x_err=-0.2
+    y_err=-0.2
+if err=='Max':
+    x_err=0.2
+    y_err=0.2
+    
+    
 
-
-for b in bolo_channel:
+for bol in bolo_channel:
     fig=plt.figure(figsize=(10,10))
     ax=fig.add_subplot(111)
     x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position.csv',sep=',',engine='python'),dtype=np.float64)
@@ -67,19 +79,21 @@ for b in bolo_channel:
     #Derive the exact positions of the bolometerchannels
     #I derive the x and y positions of the four upper channels lower and upper edge
     #I consider the 8 Bolometerchannels distributed over the 4cm with equal distance resulting in a distance of 0.33cm
-    f=0.33
-    h=[-2+f/2,-2+f/2+c_h,-2+f/2+c_h+f,-2+f*1.5+c_h*2,-2+f*2.5+c_h*2,-2+f*2.5+c_h*3,-2+f*3.5+c_h*3,-2+f*3.5+c_h*4,f*0.5,f*0.5+c_h,f*1.5+c_h,f*1.5+c_h*+2,f*2.5+c_h*2,f*2.5+c_h*3,f*3.5+c_h*3,f*3.5+c_h*4]
-    #h=[-1.6-c_h/2,-1.6+c_h/2,-1.2-c_h/2,-1.2+c_h/2,-0.8-c_h/2,-0.8+c_h/2,-0.4-c_h/2,-0.4+c_h/2,0.4-c_h/2,0.4+c_h/2,0.8-c_h/2,0.8+c_h/2,1.2-c_h/2,1.2+c_h/2,1.6-c_h/2,1.6+c_h/2]
+    f1=0.123 #Distance first channel to edge [cm]
+    f2=0.35 #Distance between channels [cm]
+    h=[-2+f1,-2+f1+c_h,-2+f1+c_h+f2,-2+f1+c_h*2+f2,-2+f1+c_h*2+f2*2,-2+f1+c_h*3+f2*2,-2+f1+c_h*3+f2*3,-2+f1+c_h*4+f2*3,f1,f1+c_h,f1+c_h+f2,f1+c_h*2+f2,f1+c_h*2+f2*2,f1+c_h*3+f2*2,f1+c_h*3+f2*3,f1+c_h*4+f2*3,f1*2+c_h*4+f2*3]
     x_b=[]
     y_b=[]
     for i in h:
-        x_b.append(-abs(np.cos((90-alpha)*np.pi/180)*i)+60+a)
-        y_b.append(-np.sin((90-alpha)*np.pi/180)*i)
+        x_b.append(-abs(np.sin((alpha)*np.pi/180)*i)+a+c_d)
+        y_b.append(-np.cos((alpha)*np.pi/180)*i)
 
     def lin(x,d,e):
         return d*x+e
-    y_exp=np.flip((13.665,8.245,10.535,5.115,7.405,1.985,4.275,-1.145,1.145,-4.275,-1.985,-7.405,-5.115,-10.535,-8.245,-13.665))
-    
+    ex_1=[-7.23, -3.0600000000000005, -5.760000000000001, -1.5900000000000007, -4.290000000000001, -0.120000000000001, -2.820000000000002, 1.3499999999999979, -1.3500000000000014, 2.8200000000000003, 0.120000000000001, 4.289999999999999, 1.5899999999999963, 5.7599999999999945, 3.059999999999995, 7.229999999999997]
+    ex_2=[-10.115, -5.705, -7.855, -3.445, -5.595, -1.1849999999999996, -3.334999999999999, 1.075000000000001, -1.0749999999999993, 3.335000000000001, 1.1850000000000005, 5.594999999999999, 3.4450000000000003, 7.855000000000004, 5.705000000000004, 10.115]
+    ex_3=[-13.65, -8.23, -10.52, -5.1000000000000005, -7.390000000000001, -1.9700000000000024, -4.2600000000000025, 1.1599999999999993, -1.1300000000000008, 4.290000000000001, 2.0000000000000018, 7.419999999999998, 5.129999999999997, 10.549999999999999, 8.259999999999998, 13.68]
+
     #this function fits a linear fit to the space between two points of a flux surface thereby estimating the function describing a surface
     #It then draws a line from the center of the fluxsurface to the point you want to analyze
     #It finds the intersection of that line with the fluxsurface by calculating the difference of this line and each of the 64 lines connecting the surfacepoints and determines the minimal value
@@ -96,32 +110,28 @@ for b in bolo_channel:
         
     x=np.arange(54,94,1)
     m_=list(p+0.01 for p in (np.arange(int(min(x_.iloc[8])),int(max(x_.iloc[8]))+1,res)))
-    n_=list(b+0.01 for b in (np.arange(int(min(y_.iloc[8])),int(max(y_.iloc[8]))+1,res)))
+    n_=list(o+0.01 for o in (np.arange(int(min(y_.iloc[8])),int(max(y_.iloc[8]))+1,res)))
     inside_line=[[],[],[],[],[],[],[],[]]
     lines=[0,2,4,6,8,10,12,14]
-    colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange']
-    channels=[0,1,2,3,4,5,6,7]
-
+    colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue']
     #here the desired line of sight is plotted from the experimental data. To see the calculate lines of sight activate the dashed lines plot
     #now the points of interest(the ones in a square of the rough size of the outer most fluxsurface) are tested for their position relative to the line of sight
     #If the point lies inside the two lines describing the line of sight of that channel, its coordinates are added to "inside_line"
-    for i,j,k in zip([lines[b-1]],[colors[b-1]],[channels[b-1]]):
-        plt.plot([x_b[i],x_b[i+1]],[y_b[i],y_b[i+1]],color='red')
-        popt1,pcov1=curve_fit(lin,[x_b[i],60+a-b],[y_b[i],-s_h/2])
-        popt2,pcov2=curve_fit(lin,[x_b[i+1],60+a-b],[y_b[i+1],s_h/2])
-        #plt.plot(x,lin(x,*popt1),color=j,linestyle='dashed',alpha=0.4)
-        #plt.plot(x,lin(x,*popt2),color=j,linestyle='dashed',alpha=0.5)
-        popt3,pcov3=curve_fit(lin,[60+a-b,60+a-26.9],[-s_h/2,y_exp[i]])
-        popt4,pcov4=curve_fit(lin,[60+a-b,60+a-26.9],[s_h/2,y_exp[i+1]])
-        plt.plot(x,lin(x,*popt3),color=j)
-        plt.plot(x,lin(x,*popt4),color=j)
-        for m in m_:
-            for n in n_:
-                popt3,pcov3=curve_fit(lin,[60+a-b,60+a-26.9],[-s_h/2,y_exp[i]])
-                popt4,pcov4=curve_fit(lin,[60+a-b,60+a-26.9],[s_h/2,y_exp[i+1]])
-                if n< lin(m,*popt4) and n>(lin(m,*popt3)):
-                    #ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=j,alpha=0.4,linewidth=0))
-                    inside_line[k].append((m,n))
+    plt.plot([x_b[lines[bol-1]],x_b[lines[bol-1]+1]],[y_b[lines[bol-1]],y_b[lines[bol-1]+1]],color='red')
+    #popt3,pcov3=curve_fit(lin,[a-b+x_err,a-b-12.4+x_err,a-b-19.5+x_err,a-b-22.9+x_err],[-s_h/2,ex_1[lines[bol-1]]-y_err,ex_2[lines[bol-1]]-y_err,ex_3[lines[bol-1]]-y_err])
+    #popt4,pcov4=curve_fit(lin,[a-b+x_err,a-b-12.4+x_err,a-b-19.5+x_err,a-b-22.9+x_err],[s_h/2,ex_1[lines[bol-1]+1]+y_err,ex_2[lines[bol-1]+1]+y_err,ex_3[lines[bol-1]+1]+y_err])
+    popt3,pcov3=curve_fit(lin,[a-b+x_err,a-b-22.9+x_err],[-s_h/2,ex_3[lines[bol-1]]-y_err])
+    popt4,pcov4=curve_fit(lin,[a-b+x_err,a-b-22.9+x_err],[s_h/2,ex_3[lines[bol-1]+1]+y_err])
+    plt.plot(x,lin(x,*popt3),color=colors[bol-1])
+    plt.plot(x,lin(x,*popt4),color=colors[bol-1])
+    plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[lines[bol-1]],ex_2[lines[bol-1]],ex_3[lines[bol-1]]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=colors[bol-1])
+    plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[lines[bol-1]+1],ex_2[lines[bol-1]+1],ex_3[lines[bol-1]+1]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=colors[bol-1])
+
+    for m in m_:
+        for n in n_:
+            if n< lin(m,*popt4) and n>(lin(m,*popt3)):
+                #ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=colors[bol-1],alpha=0.4,linewidth=0))
+                inside_line[bol-1].append((m,n))
     plt.plot([60+a-b,60+a-b],[s_h/2,-s_h/2],color='blue')
 
     #Now starting from the points in "inside-line" it is tested weather the point also lies between two fluxsurfaces
@@ -135,80 +145,131 @@ for b in bolo_channel:
     #Note that the code only uses points that are not already marked as 'inside two smaller flux surfaces' to be faster.
     inside=[[],[],[],[],[],[],[],[],[]]
     inside_=[]
+    vol=[[],[],[],[],[],[],[],[],[]]
+    v_i=[[0],[0],[0],[0],[0],[0],[0],[0],[0]]
     for f in fluxsurfaces:
     #m_=list(p+0.01 for p in (np.arange(int(min(x_.iloc[i+1])),int(max(x_.iloc[i+1]))+1,res)))
     #n_=list(b+0.01 for b in (np.arange(int(min(y_.iloc[i+1])),int(max(y_.iloc[i+1]))+1,res)))
-        for i,j in zip([fluxsurfaces[f]],[colors[f]]):
-            inside_.extend(inside[i]) 
-            #for m in m_:
-                #for n in n_:
-            for (m,n) in inside_line[b-1]:
-                if (m,n) not in inside_:
-                    plt.plot(m,n,marker='o',color=j)
-                    if n<0:
-                        half=np.concatenate((np.arange(-1,0),np.arange(32,63)))
-                    else:
-                        half=np.arange(0,32)
-                    x=np.array(x_.iloc[i])
-                    y=np.array(y_.iloc[i])
-                    plt.plot(x,y,marker='.')
-                    ideal=intersections(half)[0]
-                    x_inner=intersections([ideal])[2][intersections([ideal])[1]]
-                    y_inner=lin(x_inner,*(intersections([ideal])[4]))
-                    x=np.array(x_.iloc[i+1])
-                    y=np.array(y_.iloc[i+1])
-                    plt.plot(x,y,marker='.')
-                    ideal=intersections(half)[0]
-                    x_outer=intersections([ideal])[2][intersections([ideal])[1]]
-                    y_outer=lin(x_outer,*(intersections([ideal])[4]))
-                    if i==0:
-                        if abs(y_inner)>=abs(n) and abs(x_inner-z_0)>=abs(m-z_0):
-                            ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color='grey',alpha=0.4,linewidth=0))
-                            inside[i].append((m,n))
-                        if abs(y_outer)>=abs(n) and abs(x_outer-z_0)>=abs(m-z_0) and abs(y_inner)<=abs(n) and abs(x_inner-z_0)<=abs(m-z_0):
-                            ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=j,alpha=0.4,linewidth=0))
-                            inside[i+1].append((m,n))
-                    else:
-                        if abs(y_outer)>=abs(n) and abs(x_outer-z_0)>=abs(m-z_0) and abs(y_inner)<=abs(n) and abs(x_inner-z_0)<=abs(m-z_0):
-                            ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=j,alpha=0.4,linewidth=0))
-                            inside[i+1].append((m,n))
-        print("The {n} Fluxsurface covers a space of ~ {s} cm\u00b2 in channel {c} line of sight.".format(n=i,s=len(inside[i])*res**2,c=b))
-    plt.ylim(min(y_.iloc[i+1])-res,max(y_.iloc[i+1])+res)
-    plt.xlim(z_0+min(y_.iloc[i+1])-res,z_0+max(y_.iloc[i+1])+res)
+        for (m,n) in inside_line[bol-1]:
+            if (m,n) not in inside_:
+                plt.plot(m,n,marker='o',color=colors[f])
+                if n<0:
+                    half=np.concatenate((np.arange(-1,0),np.arange(32,63)))
+                else:
+                    half=np.arange(0,32)
+                x=np.array(x_.iloc[f])
+                y=np.array(y_.iloc[f])
+                plt.plot(x,y,marker='.',color=colors[f])
+                ideal=intersections(half)[0]
+                x_inner=intersections([ideal])[2][intersections([ideal])[1]]
+                y_inner=lin(x_inner,*(intersections([ideal])[4]))
+                x=np.array(x_.iloc[f+1])
+                y=np.array(y_.iloc[f+1])
+                plt.plot(x,y,marker='.',color=colors[f+1])
+                ideal=intersections(half)[0]
+                x_outer=intersections([ideal])[2][intersections([ideal])[1]]
+                y_outer=lin(x_outer,*(intersections([ideal])[4]))
+                if f==0:
+                    if abs(y_inner)>=abs(n) and abs(x_inner-z_0)>=abs(m-z_0):
+                        ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color='grey',alpha=0.4,linewidth=0))
+                        inside[f].append((m,n))
+                        plt.plot(m,n,marker='o',color='Grey')
+                    if abs(y_outer)>=abs(n) and abs(x_outer-z_0)>=abs(m-z_0) and abs(y_inner)<=abs(n) and abs(x_inner-z_0)<=abs(m-z_0):
+                         ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=colors[f],alpha=0.4,linewidth=0))
+                         inside[f+1].append((m,n))
+                else:
+                    if abs(y_outer)>=abs(n) and abs(x_outer-z_0)>=abs(m-z_0) and abs(y_inner)<=abs(n) and abs(x_inner-z_0)<=abs(m-z_0):
+                        ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=colors[f],alpha=0.4,linewidth=0))
+                        inside[f+1].append((m,n))
+            inside_.extend(inside[f])
+    
+    for v in [0,1,2,3,4,5,6,7,8]:  
+        #derive the volume in each fluxsurface the channel occupies with the horizontal line of sight       
+        x_horiz=[a-b,a-b-13.7,a-b-17.7]
+        y_horiz=[s_w,7.165,8.399]
+        popt5,pcov5=curve_fit(lin,[x+x_err for x in x_horiz],[x/2+y_err for x in y_horiz])
+        popt6,pcov6=curve_fit(lin,[x+x_err for x in x_horiz],[-x/2-y_err for x in y_horiz])
+        
+        len_=[]
+        for g in np.arange(0,len(inside[v])):
+            x_test=inside[v][g][0]
+            len_.append(lin(x_test,*popt5)-lin(x_test,*popt6))
+            v_i[v]+=(len_[g]*res**2)/(a-inside[v][g][0])**2
+     
+        vol[v]=np.sum(len_)*res**2
+        print("The {n} Fluxsurface covers a space of ~ {s} cm\u00b3 in channel {c} line of sight.".format(n=v,s=float(f'{vol[v]:.2f}'),c=bol))
+        
+    plt.ylim(min(y_.iloc[f+1])-res,max(y_.iloc[f+1])+res)
+    plt.xlim(z_0+min(y_.iloc[f+1])-res,z_0+max(y_.iloc[f+1])+res)
     plt.show()
+    vol_ges=((vol[0]+vol[1]+vol[2]+vol[3]+vol[4]+vol[5]+vol[6]+vol[7]+vol[8])/1000000)
+    v_i_ges=((v_i[0]+v_i[1]+v_i[2]+v_i[3]+v_i[4]+v_i[5]+v_i[6]+v_i[7]+v_i[8])/100)[0]
+    P_ges=((4*np.pi*bolo_power[bol-1])/(((c_w*c_h)/10000)*v_i_ges))*0.1198
+    print('Volume Observed by channel {c}: {v}m\u00b3'.format(c=bol,v=float(f'{vol_ges:.5f}')))
+    print('Total Plasmaradiationpower: {p} Watt'.format(p=float(f'{P_ges:.2f}')))
 print(datetime.now()-start)
-# %%
+#%% Total Power of Channel 4
+bolo_p=3.4E-6
+v_i_ges_middle=0.01476
+v_i_ges_min=0.012895
+v_i_ges_max=0.016405
+P_ges_middle=((4*np.pi*bolo_p)/(((c_w*c_h)/10000)*v_i_ges_middle))*0.1198
+P_ges_min=((4*np.pi*bolo_p)/(((c_w*c_h)/10000)*v_i_ges_min))*0.1198
+P_ges_max=((4*np.pi*bolo_p)/(((c_w*c_h)/10000)*v_i_ges_max))*0.1198
+print('Total Plasmaradiationpower: {p} Watt'.format(p=float(f'{P_ges_middle:.2f}')))
+print('Total Plasmaradiationpower min: {p} Watt'.format(p=float(f'{P_ges_min:.2f}')))
+print('Total Plasmaradiationpower max: {p} Watt'.format(p=float(f'{P_ges_max:.2f}')))
+
+
+
+
+# %% The Top View Calculations
+r_ves_min=60-r_ves
+r_ves_max=60+r_ves
+rad_min=54.16       #Minimum radius of outer most fluxsurface
+rad_max=72.32       #Maximum radius of outer most fluxsurface
+
+theta=np.linspace(0,2*np.pi,100)
+
+def c1(r,theta):
+    return r*np.cos(theta)
+def c2(r,theta):
+    return r*np.sin(theta)
 plt.figure(figsize=(10,10))
-x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position.csv',sep=',',engine='python'),dtype=np.float64)
-y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii.csv',sep=',',engine='python')
-m=63
-n=-1
-diff_=[]
+plt.plot(c1(rad_min,theta),c2(rad_min,theta),color='blue')
+plt.plot(c1(rad_max,theta),c2(rad_max,theta),color='blue')
+plt.plot(c1(r_ves_min,theta),c2(r_ves_min,theta),color='grey')
+plt.plot(c1(r_ves_max,theta),c2(r_ves_max,theta),color='grey')
+
+
+#horizontal lines of sight
 def lin(x,d,e):
     return d*x+e
-if n<0:
-    half=np.concatenate((np.arange(-1,0),np.arange(32,63)))
-else:
-    half=np.arange(0,32)
-x=np.array(x_.iloc[2])
-y=np.array(y_.iloc[2])
-plt.plot(x,y,marker='.',linestyle='None')
-plt.plot(m,n,'go')
+x_horiz=[a-b,a-b-13.7,a-b-17.7]
+y_horiz=[s_w,7.165,8.399]
 
-for i in half:
-    popt,pcov=curve_fit(lin,[x[i],x[i+1]],[y[i],y[i+1]])
-    range=np.arange(np.sort([x[i],x[i+1]])[0],np.sort([x[i],x[i+1]])[1],0.0001)
-    plt.plot(range,lin(range,*popt))
-    poptm,pcovm=curve_fit(lin,[z_0,m],[0,n])
-    plt.plot(range,lin(range,*poptm))
-    diff=abs(lin(range,*popt)-lin(range,*poptm))
-    diff_.append(min(diff))
-    plt.plot(range[np.argmin(diff)],min(diff))
-    #return (g[np.argmin(diff_)],np.argmin(diff),range,popt,poptm)
-plt.grid(True)
+# popt1,pcov1=curve_fit(lin,[a,a-b],[-c_w/2,-s_w/2])
+# popt2,pcov2=curve_fit(lin,[a,a-b],[c_w/2,s_w/2])
+# plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt1),color='red',linestyle='dashed')
+# plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt2),color='red',linestyle='dashed')
+popt3,pcov3=curve_fit(lin,[x-0.4 for x in x_horiz],[(x/2)+0.4 for x in y_horiz])
+popt4,pcov4=curve_fit(lin,[x-0.4 for x in x_horiz],[(-x/2)-0.4 for x in y_horiz])
+plt.errorbar(x_horiz,[x/2 for x in y_horiz],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color='red')
+plt.errorbar(x_horiz,[-x/2 for x in y_horiz],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color='red')
+plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt3),color='red')
+plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt4),color='red')
 
-#x_inner=intersections([ideal])[2][intersections([ideal])[1]]
-#y_inner=lin(x_inner,*(intersections([ideal])[4]))
-#plt.plot(x_inner,y_inner,'ro')
-plt.show()
+
+# x_test=rad_min
+# plt.plot(x_test,0,'go')
+# plt.plot([x_test,x_test],[lin(x_test,*popt3),lin(x_test,*popt4)],color='green')
+# plt.annotate(str(float(f'{lin(x_test,*popt3)-lin(x_test,*popt4):.2f}'))+'cm',[x_test+1,0],color='green')
+# print(rad_max-rad_min)
+
+
+plt.xlim(70,80)
+plt.ylim(-5,5)
+plt.grid('True')
+plt.show() 
+
 # %%

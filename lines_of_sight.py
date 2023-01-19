@@ -110,7 +110,7 @@ def BoloDataWholeSweep(save=False):
     position=[]
     fwhm1_list=[]
     fwhm2_list=[]
-    c=[6,7,8]
+    c=[1,2,3,4,5,6,7,8]
     color=['blue','red','green','orange','magenta','gold','darkcyan','blueviolet']
     def lin (x,a,b):
         return a*x + b
@@ -332,7 +332,7 @@ path,filename=os.path.split(motordata)
 
 #for the bolo_ratdiation functions:
 Datatype='Data'
-shotnumber=60080
+shotnumber=60071
 #location='/home/gediz/Measurements/Calibration/Calibration_Bolometer_September_2022/Bolometer_calibration_vacuum_and_air_different_sources_09_2022/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
 location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot{}_cropped.dat'.format(shotnumber)
 outfile='/home/gediz/Results/Lines_of_sight/shot_data/'
@@ -340,9 +340,9 @@ extratitle='Lines of sight // air // UV-Lamp y-scan//distance 2.2cmcm// amplif. 
 if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
-DeriveLinesofSight()
-VisualizeLinesOfSight()
-#BoloDataWholeSweep()
+#DeriveLinesofSight()
+#VisualizeLinesOfSight()
+BoloDataWholeSweep()
 #TwoDimensional_LinesofSight()
 #val=[3.74,3.75,3.72,3.77,3.74,3.93,3.72,3.68,3.71,3.71,3.71,3.76,3.73,4.48,3.83,3.68,3.7,3.72,3.77,3.79,3.72,4.15,3.7,3.7,4.02,3.71,3.73,3.75,3.7,3.8,3.73]
 #vol=list(x**(-1) for x in val)
