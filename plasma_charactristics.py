@@ -23,21 +23,21 @@ from scipy import integrate
 plt.rc('font',size=14)
 plt.rc('figure', titlesize=15)
 #%%
-plt.figure(figsize=(10,7))
-for i in (np.arange(10,27,1)):
-    U,I,P=np.genfromtxt('/data6/Auswertung/shot13079/kennlinien/0000{i}.dat'.format(i=i),unpack=True)
+# plt.figure(figsize=(10,7))
+# for i in (np.arange(10,27,1)):
+#     U,I,P=np.genfromtxt('/data6/Auswertung/shot13079/kennlinien/0000{i}.dat'.format(i=i),unpack=True)
 
-    plt.plot(U*20,-I,linestyle='None',marker='.',markersize=0.1,label='{i}'.format(i=np.mean(P)))
-plt.suptitle('Strom-Spannungs Kennlinien aufgenommen mit Langmuirsonden-Verfahreinheit')
-plt.xlabel('Spannung [V]')
-plt.ylabel('Strom [mA]')
-#plt.legend(loc=1)
-plt.show()
-
-# plt.plot(U,np.gradient(I),linestyle='None',marker='.')
-# plt.xlim(0.5,1)
-# #plt.plot(U, interp1d(U,np.gradient(I)))
+#     plt.plot(U*20,-I,linestyle='None',marker='.',markersize=0.1,label='{i}'.format(i=np.mean(P)))
+# plt.suptitle('Strom-Spannungs Kennlinien aufgenommen mit Langmuirsonden-Verfahreinheit')
+# plt.xlabel('Spannung [V]')
+# plt.ylabel('Strom [mA]')
+# #plt.legend(loc=1)
 # plt.show()
+
+# # plt.plot(U,np.gradient(I),linestyle='None',marker='.')
+# # plt.xlim(0.5,1)
+# # #plt.plot(U, interp1d(U,np.gradient(I)))
+# # plt.show()
 
 # %%
 def LoadData(location):
@@ -74,19 +74,23 @@ def Pressure(shotnumber,gas):
 
 def GetMicrowavePower(shotnumber):
     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    U_in=LoadData(location)['2 GHz Richtk. forward']
-    U_in[U_in>0]    = -1e-6
-    signal_dBm  = 42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in / (-0.5508373840567) )**0.4255365582241 )
-    signal_dBm  += 60.49 #for foreward signal
-    #signal_dBm  += 60.11 #for backward signal
-    signalinwatt   = 10**(signal_dBm/10.) * 1e-3
-    start=np.argmax(np.gradient(signalinwatt))
-    stop=np.argmin(np.gradient(signalinwatt))
-    # plt.plot(signalinwatt[start:stop])
-    # plt.plot(start,signalinwatt[start],'ro')
-    # plt.plot(stop,signalinwatt[stop],'ro')
-    # plt.show()
-    return (np.mean(signalinwatt[start:stop]))
+    U_in_for=LoadData(location)['2 GHz Richtk. forward']
+    U_in_back=LoadData(location)['2 GHz Richtk. backward']
+    U_in_for[U_in_for>0]    = -1e-6
+    U_in_back[U_in_back>0]    = -1e-6
+    signal_dBm_for  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_for / (-0.5508373840567) )**0.4255365582241 ))+60.49
+    signal_dBm_back  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_back / (-0.5508373840567) )**0.4255365582241 ))+60.11
+    signalinwatt_for   = 10**(signal_dBm_for/10.) * 1e-3
+    signalinwatt_back   =10**(signal_dBm_back/10.) * 1e-3
+    start=np.argmax(np.gradient(signalinwatt_for))
+    stop=np.argmin(np.gradient(signalinwatt_for))
+    #plt.plot(signalinwatt_for[start:stop])
+    #plt.plot(signalinwatt_back[start:stop])
+    #plt.plot(start,signalinwatt_for[start],'ro')
+    #plt.plot(stop,signalinwatt_for[stop],'ro')
+    #plt.show()
+    print(np.mean(signalinwatt_for[start:stop]),np.mean(signalinwatt_back[start:stop]))
+    return (np.mean(signalinwatt_for[start:stop])-np.mean(signalinwatt_back[start:stop]))
     
     
 #This function extracts the mean values of all timetraces recorded with the 2D probe. 
@@ -113,7 +117,7 @@ def PlotMeanValues(compare=False,save=False):
     if compare==True:
         for i in shotnumbers:
             Position, char_U, char_I, I_isat=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=i),unpack=True,usecols=(0,1,2,3))
-            plt.plot(Position, I_isat,label='shot{s}, MW: {mw} Watt , Pressure: {p} mPa '.format(s=i,mw=float(f'{GetMicrowavePower(i):.3f}'),p=float(f'{Pressure(i,gas):.3f}')))
+            plt.plot(Position, I_isat,label='shot{s}, MW: {mw} Watt,\n Pressure: {p} mPa '.format(s=i,mw=float(f'{GetMicrowavePower(i):.3f}'),p=float(f'{Pressure(i,gas):.3f}')))
         plt.xlabel('Position R [m]')
         plt.ylabel('Ion satturation current [mA]')
         plt.suptitle('Comparison of Ion saturation currents from 2D Probe scans for {} '.format(gas))
@@ -165,8 +169,8 @@ def PlotMeanValues(compare=False,save=False):
         # plt.show()
         if save==True:
             fig1.savefig(str(outfile)+"shot{s}/2D_Probe_Singal_mean_values_of_I_sat_{g}.pdf".format(s=shotnumber,g=gas), bbox_inches='tight')
-            fig2.savefig(str(outfile)+"shot{s}/2D_Probe_Singal_mean_values_of_Bolo_sum_{g}.pdf".format(s=shotnumber,g=gas), bbox_inches='tight')
-            fig3.savefig(str(outfile)+"shot{s}/2D_Probe_Singal_mean_values_of_Interferometer_{g}.pdf".format(s=shotnumber,g=gas), bbox_inches='tight')
+            #fig2.savefig(str(outfile)+"shot{s}/2D_Probe_Singal_mean_values_of_Bolo_sum_{g}.pdf".format(s=shotnumber,g=gas), bbox_inches='tight')
+            #fig3.savefig(str(outfile)+"shot{s}/2D_Probe_Singal_mean_values_of_Interferometer_{g}.pdf".format(s=shotnumber,g=gas), bbox_inches='tight')
 
 
 #This function plots the Temperatures received from fitting to the characteristics.
@@ -187,10 +191,10 @@ def TemperatureProfile(compare=False,save=False):
 
     else:
         Position, T=np.genfromtxt(infile+'shot{s}Te.dat'.format(s=shotnumber),unpack=True)
-        plt.plot(Position, T,label='shot{s}, MW: {mw} Watt , Pressure: {p} mPa '.format(s=shotnumber,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber,gas):.3f}')))
+        plt.plot(Position, T,label='shot{s}, MW: {mw} Watt , \n Pressure: {p} mPa '.format(s=shotnumber,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber,gas):.3f}')))
         plt.xlabel('Position R [m]')
         plt.ylabel('Temperature [eV]')
-        plt.suptitle('2D Probe scan of shot {s} // {g} \n Temperatureprofile determined by fits to the characteristics'.format(s=shotnumber,g=gas))
+        plt.suptitle('2D Probe scan of shot {s} // {g} \n Temperatureprofile determined by fits to the characteristics'.format(s=shotnumber,g=gas),y=1.05)
         plt.legend(loc=1, bbox_to_anchor=(1.7,1))    
         fig1= plt.gcf()
         plt.show()
@@ -241,24 +245,25 @@ def CompareDifferentGases():
     plt.show()
     for i,j in zip(shotnumbers,gases):
         gas=j
-          Position, T=np.genfromtxt('/data6/Auswertung/shot{s}/shot{s}Te.dat'.format(s=i),unpack=True)
+        Position, T=np.genfromtxt('/data6/Auswertung/shot{s}/shot{s}Te.dat'.format(s=i),unpack=True)
         plt.plot(Position, T,label='shot{s}, {g}, MW: {mw} Watt, Pressure: {p} mPa '.format(s=i,g=gas,mw=float(f'{GetMicrowavePower(i):.3f}'),p=float(f'{Pressure(i,gas):.3f}')))
     plt.legend(loc=1, bbox_to_anchor=(1.5,1))  
     plt.show()
     
 # %%
-shotnumbers=(13061,13082,13089,13104) 
-gases=('He','Ne','H','Ar')
-shotnumber=13108
+shotnumbers=(13123,13118,13119) 
+gases=('He','He','He')
+shotnumber=13123
 infile='/data6/Auswertung/shot{s}/'.format(s=shotnumber)
 #infile='/data6/shot{}/probe2D/'.format(shotnumber)
 outfile='/home/gediz/Results/Plasma_charactersitics/'
 
 if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
-#gas='Ar'   
+gas='He'   
 
-CompareDifferentGases()
-
-
+#CompareDifferentGases()
+#GetMicrowavePower(shotnumber)
+#TemperatureProfile(compare=True,save=True)
+PlotMeanValues(compare=True,save=True)
 #%%

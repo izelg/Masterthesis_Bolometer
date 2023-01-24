@@ -22,7 +22,7 @@ import os
 import collections
 from scipy import integrate
 from scipy.interpolate import pchip_interpolate
-from scipy.signal import find_peaks
+import scipy.signal as sig
 
 #%%------------------------------------------------------------------------------------------------------
 plt.rc('figure', titlesize=15)
@@ -127,10 +127,11 @@ def Spectrometer_Data(lightsource='', save=False,analyze=False):
     plt.ylabel('Counts')
     plt.suptitle('Spectrometer Data of {l} \n {e}'.format(l=lightsource,e=extratitle))
     if analyze==True:
-        peaks=find_peaks(y,300,10)
+        peaks=sig.find_peaks(y,300,10)
         for i in peaks[0]:
             plt.plot(x[i],y[i],'ro')
             plt.annotate(str(x[i])+'nm',(x[i]+5,y[i]),color='red')
+        print(peaks)
     fig1= plt.gcf()
     plt.show()
     if save==True:
@@ -139,6 +140,31 @@ def Spectrometer_Data(lightsource='', save=False,analyze=False):
         np.savetxt(str(outfile)+"spectrometer_data_of_lightsource_{}.txt".format(lightsource), data, delimiter='\t \t', header='Data of all three Spectrometer-channels for the lightsource {l} \n {e} \nwavelength [nm] \t counts'.format(l=lightsource,e=extratitle))
     return x,y
 
+def Peak_Analyzer(lightsource=''):
+    x=Spectrum(lightsource)[0]
+    y=Spectrum(lightsource)[1]
+
+    plt.xlabel('wavelength [nm]')
+    plt.ylabel('Counts')
+    plt.suptitle('Spectrometer Data of {l} \n {e}'.format(l=lightsource,e=extratitle))
+    peaks=sig.find_peaks(y,300,10)
+    prominences=sig.peak_prominences(x,peaks[0])
+    #plt.xlim(x[peaks[0][0]-50],x[peaks[0][3]+50])
+    plt.plot(x,y,'r.')
+    x_peaks=[]
+    y_peaks=[]
+    for i,j in zip(peaks[0],prominences[2]):
+        x_peaks.extend(x[i-5:i+5])
+        y_peaks.extend(y[i-5:i+5])
+        plt.plot(x[i],y[i],'ro')
+        plt.annotate(str(x[i])+'nm',(x[i]+5,y[i]),color='red')
+    plt.plot(x_peaks,y_peaks,'b.')
+    plt.show()
+    print(peaks[1])
+    return peaks[0]
+
+    
+    
 #This function creates an interpolated curve of the golddata with the same x(wavelength)-data
 #then each spectral point is multiplyed by the relative absorption of gold at that wavelength
 #it returns the reduced spectrum that is absorbed by gold and the percentage of the original spectrum 
@@ -151,10 +177,15 @@ def Gold_Fit(lightsource=''):
     #plt.plot(Spectrum(lightsource)[0], Spectrum(lightsource)[1])
     #plt.plot(Spectrum(lightsource)[0], reduced_spectrum)
     #plt.show()
+
     spec_int_trap =integrate.trapezoid(Spectrum(lightsource)[1], Spectrum(lightsource)[0])
     new_spec_int_trap=integrate.trapezoid(reduced_spectrum, Spectrum(lightsource)[0])
-    absorbed_percentage=(new_spec_int_trap/spec_int_trap)*100
-    return reduced_spectrum, absorbed_percentage, spec_int_trap, new_spec_int_trap
+    absorbed_percentage_integral=(new_spec_int_trap/spec_int_trap)*100
+
+    spec_int_trap =np.sum(Spectrum(lightsource)[1])
+    new_spec_int_trap=np.sum(reduced_spectrum)
+    absorbed_percentage_points=(new_spec_int_trap/spec_int_trap)*100
+    return reduced_spectrum, absorbed_percentage_integral, absorbed_percentage_points, spec_int_trap, new_spec_int_trap
 
 #Plot spectral or gold data quickly on a log scale
 def Log_Plot(data):
@@ -174,14 +205,15 @@ def Reduced_Spectrum(lightsource='', save=False):
     y2=Spectrum(lightsource)[1]
     label2=Spectrum(lightsource)[2]
     y3=Gold_Fit(lightsource)[0]
-    percentage=Gold_Fit(lightsource)[1]
+    percentage_integral=Gold_Fit(lightsource)[1]
+    percentage_points=Gold_Fit(lightsource)[2]
     fig,ax = plt.subplots()
     ax2=ax.twinx()
-    ax2=ax.twiny()
+    #ax2=ax.twiny()
     ax3=ax.twinx()
     #ax3=ax.twiny()
-    lns1=ax.semilogx(x2,y2, label=label2, color='red', alpha=0.5)
-    lns2=ax2.semilogx(x2,y3,label=label2+' reduced to {}%'.format(float(f'{percentage:.2f}')), color='green')
+    lns1=ax.semilogx(x2,y2,marker='.',linestyle='-', label=label2, color='red', alpha=0.5)
+    lns2=ax.semilogx(x2,y3,marker='.',linestyle='-', label=label2+' reduced to {i}% using integral \n and {p}% using points'.format(i=float(f'{percentage_integral:.2f}'),p=float(f'{percentage_points:.2f}')), color='green')
     lns3=ax3.semilogx(x1,y1, label=label1)
     ax.set(xlabel='wavelength [nm]', ylabel='Counts')
     ax3.set(ylabel='Absorption')
@@ -199,7 +231,7 @@ def CompareSpectra():
     z=0
     for i in lightsources: 
         x,y=np.genfromtxt(str(outfile)+'spectrometer_data_of_lightsource_'+str(i)+'.txt',unpack=True,skip_header=3)
-        title=label=open(str(outfile)+'spectrometer_data_of_lightsource_'+str(i)+'.txt', 'r').readlines()[1]
+        title=open(str(outfile)+'spectrometer_data_of_lightsource_'+str(i)+'.txt', 'r').readlines()[1]
         plt.plot(x+z,y,label=title)
         z=z+5
     plt.ylabel('Counts')
@@ -213,13 +245,42 @@ if __name__ == "__main__":
     infile ='/scratch.mv3/koehn/backup_Anne/zilch/Bolo/Absorption_AU/'
     #outfile='/home/gediz/Results/Goldfoil_Absorption/'
     outfile='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
-    spectrumdata='/home/gediz/Measurements/Spectrometer/Spectra_of_Helium_Plasma_15_12_2022/'
+    #spectrumdata='/home/gediz/Measurements/Spectrometer/Spectra_of_Helium_Plasma_15_12_2022/'
+    spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
     shotnumber=13120
     gas='He' 
     extratitle='{g} // p={p} mPa// MW={m} W'.format(g=gas,m=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))
-    lightsources=('shot13120','shot13120_sonde_raus')
+    lightsources=('shot13122_sonde_raus','shot13121_sonde_raus','shot13120_sonde_raus')
     
     #CompareSpectra()
-    Spectrometer_Data('shot13120',analyze=True)
+    Reduced_Spectrum('shot13118_sonde_raus')
+    #Spectrometer_Data('shot13123',analyze=True)
+    #Peak_Analyzer('shot13118_sonde_raus')
+    #Gold_Fit('shot13118_sonde_raus_peaks')
+    
+    
+    
+    
+    
+    
+# %%
+peak1=[1433,3046,4710,5012,2444,3678,1473,2526,1127,780,2028]
+peak2=[467,878,1375,1359,873,927,499,750,485,320,655]
+peak3=[1080,2138,3260,3748,1882,746,1354,2075,943,657,1436]
+peak4=[579,797,1048,1134,771,836,650,664,439,336,708]
+
+p1_p2=[]
+p2_p3=[]
+p3_p4=[]
+for i in np.arange(0,len(peak1)):
+    p1_p2.append(peak1[i]/peak2[i])
+    p2_p3.append(peak2[i]/peak3[i])
+    p3_p4.append(peak3[i]/peak4[i])
+
+print(p1_p2)
+print(p2_p3)
+print(p3_p4)
+
+
 # %%

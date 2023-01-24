@@ -74,18 +74,18 @@ def Pressure(shotnumber):
 
 def GetMicrowavePower(shotnumber):
     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    U_in=LoadData(location)['2 GHz Richtk. forward']
-    U_in[U_in>0]    = -1e-6
-    signal_dBm  = 42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in / (-0.5508373840567) )**0.4255365582241 )
-    signal_dBm  += 60.49 #for foreward signal
-    #signal_dBm  += 60.11 #for backward signal
-    signalinwatt   = 10**(signal_dBm/10.) * 1e-3
-    start=np.argmax(np.gradient(signalinwatt))
-    stop=np.argmin(np.gradient(signalinwatt))
-    # plt.plot(start,signalinwatt[start],'ro')
-    # plt.plot(stop,signalinwatt[stop],'ro')
-    # plt.show()
-    return (np.mean(signalinwatt[start:stop]))
+    U_in_for=LoadData(location)['2 GHz Richtk. forward']
+    U_in_back=LoadData(location)['2 GHz Richtk. backward']
+    U_in_for[U_in_for>0]    = -1e-6
+    U_in_back[U_in_back>0]    = -1e-6
+    signal_dBm_for  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_for / (-0.5508373840567) )**0.4255365582241 ))+60.49
+    signal_dBm_back  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_back / (-0.5508373840567) )**0.4255365582241 ))+60.11
+    signalinwatt_for   = 10**(signal_dBm_for/10.) * 1e-3
+    signalinwatt_back   =10**(signal_dBm_back/10.) * 1e-3
+    start=np.argmax(np.gradient(signalinwatt_for))
+    stop=np.argmin(np.gradient(signalinwatt_for))
+    return (np.mean(signalinwatt_for[start:stop])-np.mean(signalinwatt_back[start:stop]))
+    
 
 #This Function plots a timeseries of your choosing
 #-->use these channelnames: Zeit [ms]		8 GHz power		2 GHz Richtk. forward	I_Bh			U_B			Pressure		2 GHz Richtk. backward	slot1			I_v			Interferometer (Mueller)	Interferometer digital	8 GHz refl. power	Interferometer (Zander)	Bolo_sum		Bolo1			Bolo2			Bolo3			Bolo4			Bolo5			Bolo6			Bolo7			Bolo8			optDiode		r_vh			Coil Temperature
@@ -203,7 +203,7 @@ def CombinedTimeSeries (shot1,shot2,shot3, shot4, shot5, shot6, shot7, shot8, Pl
 def SignalHighLowTime(Plot= False, save=False):
     if MW == '8 GHz':
         MW_n = '8 GHz power'
-    if MW== '2 GHz':
+    if MW== '2.45 GHz':
         MW_n= '2 GHz Richtk. forward'
     y= np.array(LoadData(location)[MW_n])[:,None]
     time= np.array(LoadData(location)['Zeit [ms]'])[:,None]
@@ -560,19 +560,19 @@ def CompareBolometerProfiles(Type="" ,save=False,normalize=False):
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=13043
-    shotnumbers=(13012,13037,13043) 
+    shotnumber=13118
+    shotnumbers=(13130,13140,13153) 
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
        
     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     #location=  '/data6/Bolo_Calibration_December/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None] # s
-    gas='None'
+    gas='He'
     Bolometer_amplification_1=100
     Bolometer_amplification_2=1
     Bolometer_timeresolution=100
-    #extratitle='{g} // Bolometer: x{a}, x{b}, {c}ms // MW: {mw}Watt // P={p}mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
-    extratitle=''
+    extratitle='{g} // Bolometer: x{a}, x{b}, {c}ms // MW: {mw}Watt // P={p}mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+    #extratitle=''
 
     #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
     sourcefolder= '/home/gediz/Results/Bolometer_Profiles/combined_shots/shots_50025_to_50018/'   #the folder where the combined shots data should be stored
@@ -590,14 +590,14 @@ if __name__ == "__main__":
     if height_w >= 0.1:        #This is the part where the code finds out if 8 or 2GHz MW heating was used. Change the signal height if MW powers used change in the future
         MW = '8 GHz'
     elif height_z >= 0.1: 
-        MW = '2 GHz'
+        MW = '2.45 GHz'
     else:
         MW = 'none'
 
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
     
-    # for s in (13099,13100,13101,13102,13103,13104,13105,13106,13107,13108,13109,13110):
+    # for s in (13151,13152,13153):
     #     shotnumber=s
     #     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     #         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
@@ -606,10 +606,8 @@ if __name__ == "__main__":
     #     PlotAllTimeseriesTogether(save=True)
     #     BolometerProfile('Bolo',save=True)
     #     BolometerProfile('Power',save=True)
-    CompareBolometerProfiles('Bolo',normalize=True)
+    CompareBolometerProfiles('Power')
     #CompareBolometerProfiles('Bolo')
     #CombinedTimeSeries('50025','50024','50023','50022','50021','50020','50019','50018',Plot=True,save=True)
-    #BolometerProfile('Bolo')
-    #BolometerProfile('Power')
-    PlotAllTimeseriesTogether()
+
 # %%

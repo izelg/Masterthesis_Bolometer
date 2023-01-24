@@ -49,7 +49,7 @@ s_w=1.4 #Width of the slit [cm]
 s_h=0.5 #Height of the slit [cm]
 alpha=14 #Angle of the Bolometerhead to plane [°]
 c_w=0.38 #Channelwidth of Goldsensor [cm]
-c_h=0.17 #HChannelheight of Goldsensor [cm]
+c_h=0.13 #HChannelheight of Goldsensor [cm]
 c_d=0.225 #depth of Goldsensor [cm]
 h=2 #height of Bolometerhead [cm]
 z_0=63.9    #middle of flux surfaces
@@ -67,11 +67,10 @@ x=np.arange(40,a,0.1)
 
 plt.xlabel('R [cm]',fontsize=18)
 plt.ylabel('r [cm]',fontsize=18)
-f1=0.123 #Distance first channel to edge [cm]
-f2=0.35 #Distance between channels [cm]
+f1=0.14 #Distance first channel to edge [cm]
+f2=0.40 #Distance between channels [cm]
 h=[-2+f1,-2+f1+c_h,-2+f1+c_h+f2,-2+f1+c_h*2+f2,-2+f1+c_h*2+f2*2,-2+f1+c_h*3+f2*2,-2+f1+c_h*3+f2*3,-2+f1+c_h*4+f2*3,f1,f1+c_h,f1+c_h+f2,f1+c_h*2+f2,f1+c_h*2+f2*2,f1+c_h*3+f2*2,f1+c_h*3+f2*3,f1+c_h*4+f2*3,f1*2+c_h*4+f2*3]
-#h=[-2+f/2,-2+f/2+c_h,-2+f/2+c_h+f,-2+f*1.5+c_h*2,-2+f*2.5+c_h*2,-2+f*2.5+c_h*3,-2+f*3.5+c_h*3,-2+f*3.5+c_h*4,f*0.5,f*0.5+c_h,f*1.5+c_h,f*1.5+c_h*+2,f*2.5+c_h*2,f*2.5+c_h*3,f*3.5+c_h*3,f*3.5+c_h*4]
-#h=[-1.6-c_h/2,-1.6+c_h/2,-1.2-c_h/2,-1.2+c_h/2,-0.8-c_h/2,-0.8+c_h/2,-0.4-c_h/2,-0.4+c_h/2,0.4-c_h/2,0.4+c_h/2,0.8-c_h/2,0.8+c_h/2,1.2-c_h/2,1.2+c_h/2,1.6-c_h/2,1.6+c_h/2]
+
 x_b=[]
 y_b=[]
 for i in h:
@@ -93,16 +92,16 @@ channels=[0,1,2,3,4,5,6,7]
 #lines of sight
 for i,j,k in zip(lines,colors,channels):
     plt.plot([x_b[i],x_b[i+1]],[y_b[i],y_b[i+1]],color='red')
-    #popt1,pcov1=curve_fit(lin,[x_b[i],a-b],[y_b[i],-s_h/2])
-    #popt2,pcov2=curve_fit(lin,[x_b[i+1],a-b],[y_b[i+1],s_h/2])
+    popt1,pcov1=curve_fit(lin,[x_b[i],a-b],[y_b[i],-s_h/2])
+    popt2,pcov2=curve_fit(lin,[x_b[i+1],a-b],[y_b[i+1],s_h/2])
     #plt.plot(np.arange(40,x_b[i],0.1),lin(np.arange(40,x_b[i],0.1),*popt1),color=j,linestyle='dashed')
     #plt.plot(np.arange(40,x_b[i+1],0.1),lin(np.arange(40,x_b[i+1],0.1),*popt2),color=j,linestyle='dashed')
     popt3,pcov3=curve_fit(lin,[a-b,a-b-12.4,a-b-19.5,a-b-22.9],[-s_h/2,ex_1[i],ex_2[i],ex_3[i]])
     popt4,pcov4=curve_fit(lin,[a-b,a-b-12.4,a-b-19.5,a-b-22.9],[s_h/2,ex_1[i+1],ex_2[i+1],ex_3[i+1]])
     plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt3),color=j)
     plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt4),color=j)
-    plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[i],ex_2[i],ex_3[i]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=j)
-    plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[i+1],ex_2[i+1],ex_3[i+1]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=j)
+    #plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[i],ex_2[i],ex_3[i]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=j)
+    #plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[i+1],ex_2[i+1],ex_3[i+1]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=j)
 
 
 #fluxsurfaces
@@ -136,10 +135,10 @@ ax.add_patch(bolovessel)
 ax.add_patch(bolohead1)
 ax.add_patch(bolohead2)
 
-#plt.xlim(40,100)
-#plt.ylim(-30,30)
-plt.xlim(a-3,a+3)
-plt.ylim(-3,3)
+plt.xlim(40,100)
+plt.ylim(-30,30)
+#plt.xlim(a-3,a+3)
+#plt.ylim(-3,3)
 #plt.grid(True)
 fig1= plt.gcf()
 plt.show()
@@ -150,7 +149,7 @@ a=60+32.11+3.45 #Position of Bolometerheadmiddle [cm]
 b=3.45 #Distance of Bolometerhead Middle to  Slit [cm]
 s_w=1.4 #Width of the slit [cm]
 s_h=0.5 #Height of the slit [cm]
-alpha=14 #Angle of the Bolometerhead to plane [°]
+alpha=13 #Angle of the Bolometerhead to plane [°]
 c_w=0.38 #Channelwidth of Goldsensor [cm]
 c_h=0.176 #HChannelheight of Goldsensor [cm]
 c_d=0.225 #depth of Goldsensor [cm]
@@ -170,8 +169,8 @@ x=np.arange(40,a,0.1)
 
 plt.xlabel('R [cm]',fontsize=18)
 plt.ylabel('r [cm]',fontsize=18)
-f1=0.123 #Distance first channel to edge [cm]
-f2=0.35 #Distance between channels [cm]
+f1=0.14 #Distance first channel to edge [cm]
+f2=0.40 #Distance between channels [cm]
 h=[-2+f1,-2+f1+c_h,-2+f1+c_h+f2,-2+f1+c_h*2+f2,-2+f1+c_h*2+f2*2,-2+f1+c_h*3+f2*2,-2+f1+c_h*3+f2*3,-2+f1+c_h*4+f2*3,f1,f1+c_h,f1+c_h+f2,f1+c_h*2+f2,f1+c_h*2+f2*2,f1+c_h*3+f2*2,f1+c_h*3+f2*3,f1+c_h*4+f2*3,f1*2+c_h*4+f2*3]
 #h=[-2+f/2,-2+f/2+c_h,-2+f/2+c_h+f,-2+f*1.5+c_h*2,-2+f*2.5+c_h*2,-2+f*2.5+c_h*3,-2+f*3.5+c_h*3,-2+f*3.5+c_h*4,f*0.5,f*0.5+c_h,f*1.5+c_h,f*1.5+c_h*+2,f*2.5+c_h*2,f*2.5+c_h*3,f*3.5+c_h*3,f*3.5+c_h*4]
 #h=[-1.6-c_h/2,-1.6+c_h/2,-1.2-c_h/2,-1.2+c_h/2,-0.8-c_h/2,-0.8+c_h/2,-0.4-c_h/2,-0.4+c_h/2,0.4-c_h/2,0.4+c_h/2,0.8-c_h/2,0.8+c_h/2,1.2-c_h/2,1.2+c_h/2,1.6-c_h/2,1.6+c_h/2]
