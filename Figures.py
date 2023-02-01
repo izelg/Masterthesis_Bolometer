@@ -16,8 +16,8 @@ plt.plot([25,35],[-2,5.5],linestyle='dashed',alpha=0.7,color='blue')
 plt.plot([22.5,35],[-2,2.1],linestyle='dashed',alpha=0.7,color='green')
 plt.xticks([5,10,15,20,25,30,35],[r'10$^5$',r'10$^{10}$',r'10$^{15}$',r'10$^{20}$',r'10$^{25}$',r'10$^{30}$',r'10$^{35}$'],fontsize=12)
 plt.yticks([-2,0,2,4,6,8],[r'10$^{-2}$',r'10$^0$',r'10$^2$',r'10$^4$',r'10$^6$',''],fontsize=12)
-plt.xlabel(r'Density [m$^{-3}$]',fontsize=16)
-plt.ylabel(r'Temperature [eV]',fontsize=16)
+plt.xlabel(r'density [m$^{-3}$]',fontsize=16)
+plt.ylabel(r'temperature [eV]',fontsize=16)
 plt.annotate('interstellar\n plasmas',(7,-1),fontsize=12)
 plt.annotate('interplanetar\n   plasmas ',(9,1),fontsize=12)
 plt.annotate('flames',(14,-1.5),fontsize=12)
@@ -238,4 +238,51 @@ plt.ylim(-20,20)
 fig1= plt.gcf()
 plt.show()
 fig1.savefig('/home/gediz/LaTex/Thesis/Figures/lines_of_sight_measurement.pdf')
+# %%
+#Fluxsurfaces and Temperature, Density
+a=60+32.11+3.45 #Position of Bolometerheadmiddle [cm]
+b=3.45 #Distance of Bolometerhead Middle to  Slit [cm]
+s_w=1.4 #Width of the slit [cm]
+s_h=0.5 #Height of the slit [cm]
+alpha=14 #Angle of the Bolometerhead to plane [°]
+c_w=0.38 #Channelwidth of Goldsensor [cm]
+c_h=0.13 #HChannelheight of Goldsensor [cm]
+c_d=0.225 #depth of Goldsensor [cm]
+h=2 #height of Bolometerhead [cm]
+z_0=63.9    #middle of flux surfaces
+t=17.5 #radius of vessel [cm]
+
+fig=plt.figure(figsize=(10,10))
+plt.rc('xtick',labelsize=15)
+plt.rc('ytick',labelsize=15)
+ax=fig.add_subplot(111)
+ax2=ax.twinx()
+ax3=ax.twinx()
+x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position.csv',sep=',',engine='python'),dtype=np.float64)
+y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii.csv',sep=',',engine='python')
+shotnumber=13105
+
+ax.set_xlabel('R [cm]',fontsize=18)
+ax.set_ylabel('density [m$^-$$^3$]',fontsize=18,color='green')
+ax.tick_params(axis='y', labelcolor='green')
+ax2.set_ylabel('temperature [eV]',fontsize=18,color='red')
+ax2.tick_params(axis='y', labelcolor='red')
+ax3.set_yticks([])
+Position1=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=shotnumber),unpack=True,usecols=0)
+Density=[914693519482453.9, 1195474759430940.0, 1382528487574368.8, 1506412816111439.0, 2399344795032418.0, 2793878393832172.5, 3643906098279352.0, 4954748608531252.0, 6040984860021678.0, 7173615192571933.0, 9116318227409138.0, 1.1459678372174782e+16, 1.4179279329688002e+16, 1.6617026719077388e+16, 1.825701908154783e+16, 1.9163466946400468e+16, 1.933019898285706e+16, 1.8934100993598344e+16, 1.872500524272425e+16, 1.8658725949248148e+16, 1.8700682124910644e+16, 1.8831780959027196e+16, 1.8961669563157476e+16, 1.881558425197214e+16, 1.8613288933084424e+16, 1.8767348299445108e+16, 1.9053989938286704e+16, 1.94500612213667e+16, 1.996652924163139e+16, 2.0664326637827344e+16, 2.1283636148849756e+16, 2.1781594278794596e+16, 2.2233474349163216e+16, 2.2428691916796556e+16, 2.246131195168899e+16, 2.204625157792732e+16, 2.0818267320530564e+16, 1.8997245920151348e+16, 1.6294358473434292e+16, 1.3279216540994364e+16, 1.0460493720178184e+16, 8870470209856892.0, 7380918055498378.0, 6070002286508864.0, 5018940111381089.0, 4291152377062758.5, 3892772934550662.5, 3378430561534559.5, 2877662849789524.0, 2466093423524798.0, 2125680899761901.8, 1760000570286304.0, 1488424981127544.8]
+Position2, T=np.genfromtxt('/data6/Auswertung/shot{s}/shot{s}Te.dat'.format(s=shotnumber),unpack=True)
+ax2.plot(Position2*100, T,color='red',linewidth=3)
+ax.plot(Position1*100,Density,color='green',linewidth=3)
+
+#fluxsurfaces
+for i in [0,1,2,3,4,5,6,7]:
+    x=[u-60 for u in np.array(x_.iloc[i+1])]
+    y=np.array(y_.iloc[i+1])
+    ax3.plot(x,y,marker='.',color='grey',alpha=0.5)
+
+
+fig1= plt.gcf()
+plt.show()
+fig1.savefig('/home/gediz/LaTex/Thesis/Figures/fluxsurfaces_with_temperatureprofiles.pdf')
+
 # %%

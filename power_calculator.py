@@ -101,7 +101,7 @@ def Pixelmethod():
     #note that more channels, a smaller resolution and more fluxsurfaces result in longer computation times
     bolo_channel=[5] #1 to 8
     bolo_power=[0,0,0,3.4E-6,3.4E-6,0,0,0]
-    res=0.5
+    res=0.3
     fluxsurfaces=[0,1,2,3,4,5,6,7] #0 to 7
     err='None'
     #-----------------------------------------------------#-
@@ -278,7 +278,7 @@ def Totalpower(Type=''):
     pressures=[]
     mw=[]
     plt.figure(figsize=(10,7))
-    colors=['navy','blue','royalblue','lightsteelblue','indigo','rebeccapurple','darkorchid','mediumorchid']
+    colors=['navy','blue','royalblue','cornflowerblue','rebeccapurple','darkorchid','mediumorchid','indigo','purple','darkgreen','forestgreen','green','limegreen']
     for s,i in zip(shotnumbers,np.arange(0,len(shotnumbers))):
         bolo_p=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=s),usecols=1)[3]*10**(-6)
         pressures.append(Pressure(s))
@@ -286,17 +286,19 @@ def Totalpower(Type=''):
         P_ges_middle.append(((4*np.pi*bolo_p)/(((c_w*c_h)/10000)*v_i_ges_middle))*0.1198*mesh*gold)
         P_ges_min.append(((4*np.pi*bolo_p)/(((c_w*c_h)/10000)*v_i_ges_min))*0.1198*mesh*gold)
         P_ges_max.append(((4*np.pi*bolo_p)/(((c_w*c_h)/10000)*v_i_ges_max))*0.1198*mesh*gold)
-        title='shot n°{s} // P$_m$$_w$= {m} W // p={p} mPa'.format(s=s,m=float(f'{GetMicrowavePower(s):.3f}'),p=float(f'{Pressure(s):.3f}'))
+        title='shot n°{s}, P$_m$$_w$= {m} W, p={p} mPa'.format(s=s,m=float(f'{GetMicrowavePower(s):.3f}'),p=float(f'{Pressure(s):.3f}'))
         if Type=='Pressure':
             plt.errorbar(pressures[i],P_ges_middle[i],yerr=0.1*P_ges_middle[i],marker='o',capsize=5,label=title,color=colors[i])
+            plt.annotate(str(float(f'{(P_ges_middle[i]/mw[i])*100:.1f}'))+'%',(pressures[i]+0.2,P_ges_middle[i]),color=colors[i])
             plt.xlabel('pressure [mPa]')
         if Type=='Power':
             plt.errorbar(mw[i],P_ges_middle[i],yerr=0.1*P_ges_middle[i],marker='o',capsize=5,label=title,color=colors[i])
             plt.annotate(str(float(f'{(P_ges_middle[i]/mw[i])*100:.1f}'))+'%',(mw[i]+10,P_ges_middle[i]),color=colors[i])
             plt.xlabel('microwave power [W]')
-    plt.suptitle('Total emitted radiation Power calculated from channel 4 \n {t} scan'.format(t=Type),y=1.05,fontsize=20)
-    plt.ylabel('total power [W]')
-    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.7))
+    plt.suptitle('Total emitted radiation power calculated from channel 4 \n {t} scan with {g}'.format(t=Type,g=gas),fontsize=20)
+    plt.ylabel('total emitted radiation power [W]')
+    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.5))
+    print(P_ges_middle)
     plt.show()
     #print('Total Plasmaradiationpower: {p} Watt'.format(p=float(f'{P_ges_middle:.2f}')))
     #print('Total Plasmaradiationpower min: {p} Watt'.format(p=float(f'{P_ges_min:.2f}')))
@@ -358,11 +360,11 @@ def TopView():
 # %%
 
 shotnumber=13119
-shotnumbers=(13072,13071,13070,13069)
+shotnumbers=(13076,13075,13074,13073,13077)
 gas='He'
 
 location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
 
-Totalpower('Power')
+Totalpower('Pressure')
 #Pixelmethod()
 # %%

@@ -473,7 +473,9 @@ uv3=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot70035/shot70035_bo
 res1=[x*(-1) for x in np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated.txt',usecols=3,delimiter=',')]
 res2=[x*(-1) for x in np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_second_set.txt',usecols=3,delimiter=',')]
 res3=[x*(-1) for x in np.genfromtxt('/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_third_set.txt',usecols=3,delimiter=',')]
-
+blind=[832,412,1920,632,1800,1700,1270,3040]
+out=[16,8,80,8,40,60,40,160]
+prozent=[16/832,8/412,80/1920,8/632,40/1800,60/1700,40/1270,160/3040]
 
 fig,ax1=plt.subplots()
 fig.set_figheight(7)
@@ -489,12 +491,12 @@ ax9=ax1.twinx()
 ax10=ax1.twinx()
 ax11=ax1.twinx()
 ax12=ax1.twinx()
-values=[a1,a2,a3,v1,v2,v3,uv1,uv2,uv3,res1,res2,res3]
+values=[a1,a2,a3,v1,v2,v3,uv1,uv2,uv3,blind,out,prozent]
 colors=['red','darkred','orange','blue','darkblue','lightblue','green','darkgreen','lightgreen','pink','violet','magenta']
 labels=[r'Air, 1k$\Omega$',r'air, 1k$\Omega$, changed V2,V3',r'air,  1k$\Omega$, sine, simulated wheatstone',r'vac,  1k$\Omega$',r'vac, 100$\Omega$',r'vac, sine,1k$\Omega$','UV air klein','UV air 350','UV air 254','Res 1','Res 2', 'Res 3']
 axes=[ax1,ax2,ax3,ax4,ax5,ax6,ax7,ax8,ax9,ax10,ax11,ax12]
 n=1
-for p in [0,1,3,4,6,7,8,9,10,11]:
+for p in [9,10,11]:
     for i,k,t,a in zip([values[p]],[colors[p]],[labels[p]],[axes[p]]):
         j=[x-np.mean(i) for x in i]
         leg=a.plot(b,j,marker='o',color=k,label=t)
@@ -503,8 +505,8 @@ for p in [0,1,3,4,6,7,8,9,10,11]:
         a.legend(leg, labs, loc=1,bbox_to_anchor=(1.7,n))
         n=n-0.1
         #RelativeOpticalCalibration('mean')
-ax1.set(ylabel='Bolometerchannel')
-ax1.set(xlabel='Signal  normalized')
+ax1.set(ylabel='Signal  normalized')
+ax1.set(xlabel='Bolometerchannel')
 # leg = l1+l2+l3+l4+l5+l6+l7+l8+l9+l10+l11+l12
 
 plt.show()

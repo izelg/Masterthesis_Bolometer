@@ -245,8 +245,8 @@ if __name__ == "__main__":
     infile ='/scratch.mv3/koehn/backup_Anne/zilch/Bolo/Absorption_AU/'
     #outfile='/home/gediz/Results/Goldfoil_Absorption/'
     outfile='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
-    #spectrumdata='/home/gediz/Measurements/Spectrometer/Spectra_of_Helium_Plasma_15_12_2022/'
-    spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
+    spectrumdata='/home/gediz/Measurements/Spectrometer/Spectra_of_Helium_Plasma_15_12_2022/'
+    #spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
     shotnumber=13120
     gas='He' 
@@ -254,8 +254,8 @@ if __name__ == "__main__":
     lightsources=('shot13122_sonde_raus','shot13121_sonde_raus','shot13120_sonde_raus')
     
     #CompareSpectra()
-    Reduced_Spectrum('shot13118_sonde_raus')
-    #Spectrometer_Data('shot13123',analyze=True)
+    #Reduced_Spectrum('shot13118_sonde_raus')
+    Spectrometer_Data('shot13119_sonde_raus',analyze=True)
     #Peak_Analyzer('shot13118_sonde_raus')
     #Gold_Fit('shot13118_sonde_raus_peaks')
     
@@ -265,22 +265,8 @@ if __name__ == "__main__":
     
     
 # %%
-peak1=[1433,3046,4710,5012,2444,3678,1473,2526,1127,780,2028]
-peak2=[467,878,1375,1359,873,927,499,750,485,320,655]
-peak3=[1080,2138,3260,3748,1882,746,1354,2075,943,657,1436]
-peak4=[579,797,1048,1134,771,836,650,664,439,336,708]
-
-p1_p2=[]
-p2_p3=[]
-p3_p4=[]
-for i in np.arange(0,len(peak1)):
-    p1_p2.append(peak1[i]/peak2[i])
-    p2_p3.append(peak2[i]/peak3[i])
-    p3_p4.append(peak3[i]/peak4[i])
-
-print(p1_p2)
-print(p2_p3)
-print(p3_p4)
-
+w,s=np.genfromtxt('/scratch.mv3/koehn/backup_Anne/zilch/Spectrum/NIST_He_n10e17Te7eVTi0p1eV_0p1_2400nm.txt',unpack=True,usecols=(1,3),delimiter='|',skip_header=5)
+plt.plot(w,s)
+plt.show()
 
 # %%

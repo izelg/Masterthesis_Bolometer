@@ -2,7 +2,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as mticker
-
+import pandas as pd
+import re
+#%%
 T=[1.00E+00,	2.00E+00,	5.00E+00,	1.00E+01,	2.00E+01,	3.00E+01,	4.00E+01,	5.00E+01,	6.50E+01,	8.00E+01,	1.00E+02,	1.50E+02,	2.00E+02]
 D,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13=np.genfromtxt('/home/gediz/ADAS/adas_test_density_temperature_he.txt',unpack=True)
 f = mticker.ScalarFormatter(useOffset=False, useMathText=True)
@@ -15,4 +17,12 @@ plt.legend(loc=1,bbox_to_anchor=(1.5,1))
 plt.xlabel('Temperature [eV]')
 plt.ylabel('Photon Emissivity Coefficients [cm\u00b3/s]')
 plt.show()
+# %%
+location='/home/gediz/ADAS/pec93#he_pjr#he0.dat'
+
+#with open(location, "r") as f:
+   # cols = f.readlines()[3]
+ #   cols = re.sub(r"\t+", ';', cols)[:-2].split(';')
+data = pd.read_csv(location, skiprows=1, sep="\t", engine='python')
+print(data)
 # %%
