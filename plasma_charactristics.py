@@ -20,7 +20,7 @@ import os
 import itertools
 from scipy.interpolate import interp1d
 from scipy import integrate
-plt.rc('font',size=14)
+plt.rc('font',size=18)
 plt.rc('figure', titlesize=15)
 #%%
 # plt.figure(figsize=(10,7))
@@ -176,13 +176,15 @@ def PlotMeanValues(compare=False,save=False):
 #This function plots the Temperatures received from fitting to the characteristics.
 #It is also possible to compare a list of shots as specified before calling the function
 def TemperatureProfile(compare=False,save=False):
+    plt.figure(figsize=(10,6))
     if compare==True:
         for i in shotnumbers:
             Position, T=np.genfromtxt('/data6/Auswertung/shot{s}/shot{s}Te.dat'.format(s=i),unpack=True)
             plt.plot(Position, T,label='shot n°{s}, P$_m$$_w$= {mw} W, \n p= {p} mPa '.format(s=i,mw=float(f'{GetMicrowavePower(i):.3f}'),p=float(f'{Pressure(i,gas):.3f}')))
-        plt.xlabel('position R [m]')
+        plt.ylim(bottom=0)
+        plt.xlabel('position R- r$_0$ [m]')
         plt.ylabel('temperature [eV]')
-        plt.suptitle(' Comparison of temeperature-profiles for {}'.format(gas))
+        plt.suptitle(' Comparison of temperature-profiles for {}'.format(gas))
         plt.legend(loc=1, bbox_to_anchor=(1.9,1))    
         fig1= plt.gcf()
         plt.show()
@@ -238,6 +240,7 @@ def NormDensityProfile():
     print(integrate.trapezoid(density_interpol(new_pos)))
     
 def DensityProfile(compare=False,save=False):
+    plt.figure(figsize=(10,6))
     if compare==True:
         for i in shotnumbers:
             d=CorrectedDensityProfile(i)[1]*3.88E17
@@ -245,7 +248,8 @@ def DensityProfile(compare=False,save=False):
             Position=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=shotnumber),usecols=0)
             Density=[u*d/norm for u in CorrectedDensityProfile(i)[0]]
             plt.plot(Position, Density,label='shot n°{s}, P$_m$$_w$= {mw} W, \n p= {p} mPa '.format(s=i,mw=float(f'{GetMicrowavePower(i):.3f}'),p=float(f'{Pressure(i,gas):.3f}')))
-        plt.xlabel('position R [m]')
+        plt.ylim(bottom=0)
+        plt.xlabel('position R - r$_0$ [m]')
         plt.ylabel('density [m$^-$$^3$]')
         plt.suptitle(' Comparison of density-profiles for {}'.format(gas))
         plt.legend(loc=1, bbox_to_anchor=(1.9,1))    
@@ -319,7 +323,7 @@ def FastElectrons():
 shotnumbers=(13090,13095,13096,13097) 
 gases=('H','H','H','H')
 gas='Ar'  
-shotnumber=13105
+shotnumber=13090
 #infile='/data6/Auswertung/shot{s}/'.format(s=shotnumber)
 infile='/data6/shot{}/probe2D/'.format(shotnumber)
 outfile='/home/gediz/Results/Plasma_charactersitics/'
@@ -330,8 +334,8 @@ if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
 #ExtractMeanValues()
 #CompareDifferentGases()
 #GetMicrowavePower(shotnumber)
-#TemperatureProfile(compare=True,save=True)
+TemperatureProfile(compare=True,save=True)
 #PlotMeanValues(compare=True)
 #FastElectrons()
-DensityProfile()
+DensityProfile(compare=True,save=True)
 #%%

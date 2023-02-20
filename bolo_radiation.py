@@ -105,8 +105,8 @@ def PlotSingleTimeseries(i=1, save=False):
     plt.figure(figsize=(10,5))
     plt.plot(time, y)
     plt.suptitle(title)
-    plt.xlabel('Time [s]')
-    plt.ylabel('Signal [V]')
+    plt.xlabel('time [s]')
+    plt.ylabel('signal [V]')
     fig1= plt.gcf()
     plt.show()
     if save==True:
@@ -150,15 +150,18 @@ def PlotAllTimeseriesTogether (figheight=None, figwidth=None, save=False):
         print("You didn't choose a figurewidth so I set it to 10")
         figwidth=10
     plt.figure(figsize=(figwidth, figheight))
-    plt.suptitle ('All Bolometer Signals of shot n°{n} together. MW used: {m} \n {e}'.format(n=shotnumber, m=MW, e=extratitle))
+    plt.suptitle ('All bolometer signals of shot n°{n} together. MW used: {m} \n {e}'.format(n=shotnumber, m=MW, e=extratitle))
     time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None]
-    for i in np.arange(1,9):
+    colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue']
+    for i,c in zip(np.arange(1,9),colors):
         bolo_raw_data = np.array(LoadData(location)["Bolo{}".format(i)])[:,None]
-        plt.plot(time,  bolo_raw_data, label="Bolo{}".format(i) )
+        m=min(bolo_raw_data)
+        bolo_raw_data=[(k-m)+i*0.05 for k in bolo_raw_data]
+        plt.plot(time,  bolo_raw_data, label="Bolo{}".format(i),color=c )
         #plt.plot([time [u],time[u]],[bolo_raw_data[u],bolo_raw_data[u]],'o')
         #print(bolo_raw_data[u])
-    plt.xlabel('Time [s]')
-    plt.ylabel('Signal [V]')
+    plt.xlabel('time [s]')
+    plt.ylabel('signal [V]')
     plt.legend(loc=1, bbox_to_anchor=(1.2,1) )
     fig1= plt.gcf()
     plt.show()
@@ -479,14 +482,14 @@ def BolometerProfile(Type="", save=False):
         else:
             y.append(abs(SignalHeight(Type, i)[2])) #--><--
     if Type == 'Bolo':
-        ylabel1= 'Signal [V]'
+        ylabel1= 'signal [V]'
         name='raw data'
         name_='raw_data'
         #corr=[0.621,0.836,0.965,0.635,1.669,1.307,1.748,1.647] #from calibration in vacuum with wrong AC signal
         corr=[0.947,1.234,0.779,1.06,1.156,0.852,1.271,0.925]   #from calibration with right signal in air
         sem_corr=[0.016,0.019,0.024,0.015,0.043,0.029,0.045,0.05]
     if Type == 'Power':
-        ylabel1= 'Power [\u03bcW]'
+        ylabel1= 'power [\u03bcW]'
         name= 'radiation powers'
         name_='radiation_powers'
         #corr=[0.703,0.930,1.104,0.728,1.325,1.042,1.438,1.313] #from calibration in vacuum with wron AC signal
@@ -494,7 +497,7 @@ def BolometerProfile(Type="", save=False):
         #sem_corr=[0.021,0.033,0.024,0.023,0.033,0.023,0.044,0.033]
         sem_corr=[0.005,0.004,0.007,0.005,0.010,0.006,0.004,0.006]  #from calibration with right signal in air
     if Datatype=='Data':
-        title= 'Signals of the Bolometerchannels from {n} of shot n°{s} \n MW used: {m} \n {e}'.format(n=name, s= shotnumber, m=MW, e=extratitle)
+        title= 'Signals of the bolometer channels from {n} of shot n°{s} \n MW used: {m} \n {e}'.format(n=name, s= shotnumber, m=MW, e=extratitle)
     if Datatype=='Source':
         title='Signals of the Bolometerchannels from {n} \n of {e}'.format(n=name,e=extratitle)
     z=[]
@@ -504,13 +507,13 @@ def BolometerProfile(Type="", save=False):
         zerr.append(y[j]*k)
     plt.figure(figsize=(10,5))
     plt.plot(x,y, marker='o', linestyle='dashed', label="Original Bolometerprofile")
-    # colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue']
-    # for i,j,c in zip(x,y,colors):
-    #     plt.plot(i,j,marker='o',color=c,markersize=10)
+    colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue']
+    for i,j,c in zip(x,y,colors):
+        plt.plot(i,j,marker='o',color=c,markersize=10)
     #plt.errorbar(x,z,yerr=zerr, marker='o',capsize=5, linestyle='dashed',label="Corrected Bolometerprofile \n with relative correction")
     plt.ylabel(ylabel1)
-    plt.xlabel('Bolometerchannel')
-    #plt.ylim(50,400)
+    plt.xlabel('bolometer channel')
+    plt.ylim(bottom=0)
     plt.suptitle(title, y=1.05)
     #plt.legend(loc=1, bbox_to_anchor=(1.3,1))
     fig1 = plt.gcf()
@@ -544,7 +547,7 @@ def CompareBolometerProfiles(Type="" ,save=False,normalize=False):
     colors=['navy','blue','royalblue','cornflowerblue','indigo','rebeccapurple','darkorchid','mediumorchid','darkgreen','forestgreen','green','limegreen']
     for i,c in zip(shotnumbers,colors):
         shot1=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type),usecols=1)
-        title='shot n°{s}, P$_m$$_w$= {m} W, p={p} mPa'.format(s=i,m=float(f'{GetMicrowavePower(i):.3f}'),p=float(f'{Pressure(i):.3f}'))
+        title='shot n°{s}, P$_M$$_W$= {m} W, p={p} mPa'.format(s=i,m=float(f'{GetMicrowavePower(i):.3f}'),p=float(f'{Pressure(i):.3f}'))
         if normalize==True:
             norm='normalized values'
             mean=np.mean(shot1)
@@ -553,9 +556,9 @@ def CompareBolometerProfiles(Type="" ,save=False,normalize=False):
             norm=''
         #norm='corrected values'
         plt.plot(x,shot1, marker='o', linestyle='dashed', label=title)#open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type), 'r').readlines()[2][3:-1])
-    plt.xlabel('bolometerchannel')
+    plt.xlabel('bolometer channel')
     plt.ylabel(ylabel)
-    plt.suptitle('Comparison of bolometer-profiles from {n} of {g} {u}'.format(n=name_,g=gas,u=norm))#, c=shot_number_3, d=shot_number_4))
+    #plt.suptitle('Comparison of bolometer-profiles from {n} of {g} {u}'.format(n=name_,g=gas,u=norm))#, c=shot_number_3, d=shot_number_4))
     plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.4))
     fig1= plt.gcf()
     plt.show()
@@ -580,7 +583,7 @@ if __name__ == "__main__":
     Bolometer_amplification_1=100
     Bolometer_amplification_2=1
     Bolometer_timeresolution=100
-    extratitle='{g} // Bolometer: x{a}, x{b}, {c}ms // P$_m$$_w$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+    extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
     #extratitle=''
 
     #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
@@ -612,9 +615,9 @@ if __name__ == "__main__":
     #         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
     #     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     #     extratitle='{g} // Bolometer: x{a}, x{b}, {c}ms // P$_m$$_w$={mw} W // p={p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
-    #     PlotAllTimeseriesTogether(save=True)
-    #     BolometerProfile('Bolo',save=True)
-    #     BolometerProfile('Power',save=True)
+    #PlotAllTimeseriesTogether(save=True)
+    #BolometerProfile('Bolo',save=True)
+    #BolometerProfile('Power',save=True)
     CompareBolometerProfiles('Power',save=True)
     #CompareBolometerProfiles('Bolo')
     #CombinedTimeSeries('50025','50024','50023','50022','50021','50020','50019','50018',Plot=True,save=True)

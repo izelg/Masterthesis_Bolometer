@@ -66,7 +66,7 @@ x=np.arange(40,a,0.1)
 
 
 plt.xlabel('R [cm]',fontsize=18)
-plt.ylabel('r [cm]',fontsize=18)
+plt.ylabel('z [cm]',fontsize=18)
 f1=0.14 #Distance first channel to edge [cm]
 f2=0.40 #Distance between channels [cm]
 h=[-2+f1,-2+f1+c_h,-2+f1+c_h+f2,-2+f1+c_h*2+f2,-2+f1+c_h*2+f2*2,-2+f1+c_h*3+f2*2,-2+f1+c_h*3+f2*3,-2+f1+c_h*4+f2*3,f1,f1+c_h,f1+c_h+f2,f1+c_h*2+f2,f1+c_h*2+f2*2,f1+c_h*3+f2*2,f1+c_h*3+f2*3,f1+c_h*4+f2*3,f1*2+c_h*4+f2*3]
@@ -108,19 +108,19 @@ for i,j,k in zip(lines,colors,channels):
 for i in [0,1,2,3,4,5,6,7]:
     x=np.array(x_.iloc[i+1])
     y=np.array(y_.iloc[i+1])
-    plt.plot(x,y,marker='.',color='grey')
+    plt.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey')
 
 #torsatron
-#plt.annotate('plasma vessel',(55,25),color='grey',fontsize=15) 
+plt.annotate('plasma vessel',(55,25),color='grey',fontsize=15) 
 vessel=plt.Circle((60,0),t,fill=False,color='grey',linewidth=3,alpha=0.5)
 #port
 plt.plot([a-b-20,a-b-10.3],[-12.5,-12.5],[a-b-20,a-b-10.3],[12.5,12.5],[a-b-10.3,a-b-10.3],[-12.5,12.5],color='grey',linewidth=3,alpha=0.5)
-#plt.annotate('outer\n  port',(73,24),color='grey',fontsize=15)
+plt.annotate('outer\n  port',(73,24),color='grey',fontsize=15)
 #slit
 plt.plot([a-b,a-b],[-12,-s_h/2],[a-b,a-b],[12,s_h/2],color='grey',linewidth=3,alpha=0.5,linestyle='dashed')
-#plt.annotate('slit',(a-b,0),xytext=(a-b-10,-25),arrowprops=dict(facecolor='grey',edgecolor='none',alpha=0.5,width=3),color='grey',fontsize=15)
+plt.annotate('slit',(a-b,0),xytext=(a-b-10,-25),arrowprops=dict(facecolor='grey',edgecolor='none',alpha=0.5,width=3),color='grey',fontsize=15)
 bolovessel=patches.Rectangle((60+21.8,-12),20.8,24,edgecolor='grey',facecolor='none',linewidth=3, alpha=0.5)
-#plt.annotate('bolometer vessel',(85,25),color='grey',fontsize=15)
+plt.annotate('bolometer vessel',(85,25),color='grey',fontsize=15)
 #bolometerhead
 ts=ax.transData
 coords1=[-abs(np.cos((90-alpha)*np.pi/180)*(-2))+a,-2]
@@ -129,7 +129,7 @@ tr1 = matplotlib.transforms.Affine2D().rotate_deg_around(coords1[0],coords1[1], 
 tr2 = matplotlib.transforms.Affine2D().rotate_deg_around(coords2[0],coords2[1],alpha)
 bolohead1=patches.Rectangle((-abs(np.cos((90-alpha)*np.pi/180)*(-2))+a,-2),2,2,edgecolor='grey',facecolor='grey',linewidth=3, alpha=0.5,transform=tr1+ts)
 bolohead2=patches.Rectangle((-abs(np.cos((90-alpha)*np.pi/180)*(0))+a,0),2,2,edgecolor='grey',facecolor='grey',linewidth=3, alpha=0.5,transform=tr2+ts)
-#plt.annotate('bolometer\n   head',(a,-2),xytext=(a-5,-27),arrowprops=dict(facecolor='grey',edgecolor='none',alpha=0.5,width=3),color='grey',fontsize=15)
+plt.annotate('bolometer\n   head',(a,-2),xytext=(a-5,-27),arrowprops=dict(facecolor='grey',edgecolor='none',alpha=0.5,width=3),color='grey',fontsize=15)
 ax.add_patch(vessel)
 ax.add_patch(bolovessel)
 ax.add_patch(bolohead1)
@@ -262,11 +262,12 @@ x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_1
 y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii.csv',sep=',',engine='python')
 shotnumber=13105
 
-ax.set_xlabel('R [cm]',fontsize=18)
+ax.set_xlabel('R - r$_0$ [cm]',fontsize=18)
 ax.set_ylabel('density [m$^-$$^3$]',fontsize=18,color='green')
 ax.tick_params(axis='y', labelcolor='green')
 ax2.set_ylabel('temperature [eV]',fontsize=18,color='red')
 ax2.tick_params(axis='y', labelcolor='red')
+ax2.set_ylim(0,14)
 ax3.set_yticks([])
 Position1=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=shotnumber),unpack=True,usecols=0)
 Density=[914693519482453.9, 1195474759430940.0, 1382528487574368.8, 1506412816111439.0, 2399344795032418.0, 2793878393832172.5, 3643906098279352.0, 4954748608531252.0, 6040984860021678.0, 7173615192571933.0, 9116318227409138.0, 1.1459678372174782e+16, 1.4179279329688002e+16, 1.6617026719077388e+16, 1.825701908154783e+16, 1.9163466946400468e+16, 1.933019898285706e+16, 1.8934100993598344e+16, 1.872500524272425e+16, 1.8658725949248148e+16, 1.8700682124910644e+16, 1.8831780959027196e+16, 1.8961669563157476e+16, 1.881558425197214e+16, 1.8613288933084424e+16, 1.8767348299445108e+16, 1.9053989938286704e+16, 1.94500612213667e+16, 1.996652924163139e+16, 2.0664326637827344e+16, 2.1283636148849756e+16, 2.1781594278794596e+16, 2.2233474349163216e+16, 2.2428691916796556e+16, 2.246131195168899e+16, 2.204625157792732e+16, 2.0818267320530564e+16, 1.8997245920151348e+16, 1.6294358473434292e+16, 1.3279216540994364e+16, 1.0460493720178184e+16, 8870470209856892.0, 7380918055498378.0, 6070002286508864.0, 5018940111381089.0, 4291152377062758.5, 3892772934550662.5, 3378430561534559.5, 2877662849789524.0, 2466093423524798.0, 2125680899761901.8, 1760000570286304.0, 1488424981127544.8]
@@ -278,7 +279,8 @@ ax.plot(Position1*100,Density,color='green',linewidth=3)
 for i in [0,1,2,3,4,5,6,7]:
     x=[u-60 for u in np.array(x_.iloc[i+1])]
     y=np.array(y_.iloc[i+1])
-    ax3.plot(x,y,marker='.',color='grey',alpha=0.5)
+    ax3.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey')
+
 
 
 fig1= plt.gcf()
