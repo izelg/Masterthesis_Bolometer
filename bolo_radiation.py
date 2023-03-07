@@ -32,7 +32,7 @@ import itertools
 
 #plt.rc('text',usetex=True)
 #plt.rc('font',family='serif')
-plt.rc('font',size=14)
+plt.rc('font',size=20)
 #plt.rc('axes',titlesize=11)
 #plt.rc('figure', figsize=(10,5))
 plt.rc('figure', titlesize=15)
@@ -75,21 +75,35 @@ def Pressure(shotnumber):
 def GetMicrowavePower(shotnumber):
     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None]
-    U_in_for=LoadData(location)['2 GHz Richtk. forward']
-    U_in_back=LoadData(location)['2 GHz Richtk. backward']
-    U_in_for[U_in_for>0]    = -1e-6
-    U_in_back[U_in_back>0]    = -1e-6
-    signal_dBm_for  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_for / (-0.5508373840567) )**0.4255365582241 ))+60.49
-    signal_dBm_back  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_back / (-0.5508373840567) )**0.4255365582241 ))+60.11
-    signalinwatt_for   = 10**(signal_dBm_for/10.) * 1e-3
-    signalinwatt_back   =10**(signal_dBm_back/10.) * 1e-3
-    start=np.argmax(np.gradient(signalinwatt_for))
-    stop=np.argmin(np.gradient(signalinwatt_for))
-    #plt.plot(time,U_in_for, label='shot{s}, {m}V'.format(s=shotnumber, m=np.mean(U_in_for[start:stop])))
-    #plt.legend()
-    #plt.show()
-    return (np.mean(signalinwatt_for[start:stop])-np.mean(signalinwatt_back[start:stop]))
-    
+    z= LoadData(location)['2 GHz Richtk. forward']
+    w= LoadData(location)['8 GHz power']
+    height_z = abs(max(z)-min(z))
+    height_w = abs(max(w)-min(w))
+    if height_w >= 0.1:        #This is the part where the code finds out if 8 or 2GHz MW heating was used. Change the signal height if MW powers used change in the future
+        MW = '8 GHz'
+    elif height_z >= 0.1: 
+        MW = '2.45 GHz'
+    else:
+        MW = 'none'
+    if MW=='2.45 GHz':
+        U_in_for=LoadData(location)['2 GHz Richtk. forward']
+        U_in_back=LoadData(location)['2 GHz Richtk. backward']
+        U_in_for[U_in_for>0]    = -1e-6
+        U_in_back[U_in_back>0]    = -1e-6
+        signal_dBm_for  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_for / (-0.5508373840567) )**0.4255365582241 ))+60.49
+        signal_dBm_back  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_back / (-0.5508373840567) )**0.4255365582241 ))+60.11
+        signalinwatt_for   = 10**(signal_dBm_for/10.) * 1e-3
+        signalinwatt_back   =10**(signal_dBm_back/10.) * 1e-3
+        start=np.argmax(np.gradient(signalinwatt_for))
+        stop=np.argmin(np.gradient(signalinwatt_for))
+        return (np.mean(signalinwatt_for[start:stop])-np.mean(signalinwatt_back[start:stop]),MW)
+    if MW=='8 GHz':
+        U_in=LoadData(location)['8 GHz power']*1E3
+        a1  = 17.5637
+        a2  = 0.332023
+        a3  = 0.458919 
+        P= a1 * np.exp(a2 * np.abs(U_in)**a3)
+        return(np.mean(np.sort(P)[-100:-1]),MW)
 
 #This Function plots a timeseries of your choosing
 #-->use these channelnames: Zeit [ms]		8 GHz power		2 GHz Richtk. forward	I_Bh			U_B			Pressure		2 GHz Richtk. backward	slot1			I_v			Interferometer (Mueller)	Interferometer digital	8 GHz refl. power	Interferometer (Zander)	Bolo_sum		Bolo1			Bolo2			Bolo3			Bolo4			Bolo5			Bolo6			Bolo7			Bolo8			optDiode		r_vh			Coil Temperature
@@ -150,7 +164,7 @@ def PlotAllTimeseriesTogether (figheight=None, figwidth=None, save=False):
         print("You didn't choose a figurewidth so I set it to 10")
         figwidth=10
     plt.figure(figsize=(figwidth, figheight))
-    plt.suptitle ('All bolometer signals of shot n°{n} together. MW used: {m} \n {e}'.format(n=shotnumber, m=MW, e=extratitle))
+    plt.suptitle ('All bolometer signals of shot n°{n} together. MW used: {m} \n {e}'.format(n=shotnumber, m=GetMicrowavePower()[1], e=extratitle))
     time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None]
     colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue']
     for i,c in zip(np.arange(1,9),colors):
@@ -387,25 +401,25 @@ def SignalHeight(Type="", i=1,  Plot=False, save=False):
 
     popt1, pcov1 = curve_fit(lin,x1,y1)
     popt2, pcov2 = curve_fit(lin,x2,y2)
-    div1 = popt2[1]-popt1[1]            #Takes the Signal height based on the axial intercept of the fit
-    div2 = lin(x[stop-1000], *popt2)-lin(x[stop-1000], *popt1)        #Takes the Signal height a 1000 points in front of the falling Signal edge
+    div1 = lin(x[start], *popt2)-lin(x[start], *popt1)             #Takes the Signal height based on the axial intercept of the fit
+    div2 = lin(x[stop], *popt2)-lin(x[stop], *popt1)        #Takes the Signal height a 100 points in front of the falling Signal edge
     div_avrg = float(f'{(div1+div2)/2:.4f}')        #Takes amean value for the Signal height based on the two linear fits
 
     if Plot==True:
         plt.plot(time, y, alpha=0.5, label='Bolometerdata of channel {c} shot n°{s}'.format(c=i, s= shotnumber))
         plt.plot(x, lin(x, *popt1), color='orange', label= 'Fit to the values with Plasma')
         plt.plot(x, lin(x, *popt2), color='green', label= 'Fit to the values without Plasma')
-        plt.plot(1,popt2[1], marker='o', color='blue')
-        plt.plot(1, popt1[1], marker='o', color='blue')
-        plt.plot(x[stop-1000],lin(x[stop-1000], *popt1), marker='o', color='blue')
-        plt.plot(x[stop-1000], lin(x[stop-1000], *popt2), marker='o', color='blue')
-        plt.plot([1,1],[popt1[1],popt2[1]], color='blue', label='Height Difference of the \n Signal with and without Plasma')
-        plt.plot([x[stop-1000],x[stop-1000] ], [lin(x[stop-1000], *popt1), lin(x[stop-1000], *popt2)], color='blue')
-        plt.annotate(float(f'{div1:.4f}'), (1, popt1[1]+div1/2), color='blue')
-        plt.annotate(float(f'{div2:.4f}'), (x[stop-1000], lin(x[stop-1000], *popt1)+div2/2), color='blue')
+        plt.plot(x[start-100],lin(x[start-100], *popt1), marker='o', color='blue')
+        plt.plot(x[start-100], lin(x[start-100], *popt2), marker='o', color='blue')
+        plt.plot(x[stop-100],lin(x[stop-100], *popt1), marker='o', color='blue')
+        plt.plot(x[stop-100], lin(x[stop-100], *popt2), marker='o', color='blue')
+        plt.plot([x[start-100],x[start-100] ], [lin(x[start-100], *popt1), lin(x[start-100], *popt2)], color='blue', label='Height Difference of the \n Signal with and without Plasma')
+        plt.plot([x[stop-100],x[stop-100] ], [lin(x[stop-100], *popt1), lin(x[stop-100], *popt2)], color='blue')
+        plt.annotate(float(f'{div1:.4f}'), (x[start-100], lin(x[start-100], *popt1)+div1/2), color='blue')
+        plt.annotate(float(f'{div2:.4f}'), (x[stop-100], lin(x[stop-100], *popt1)+div2/2), color='blue')
         plt.plot(x[start], y[start], marker='o', color='red')
         plt.plot(x[stop], y[stop], marker='o', color='red', label='signal edge, derived using the {} Data'.format(MW))
-        plt.legend(loc=1, bbox_to_anchor=(1.8,1))
+        plt.legend(loc='lower center', bbox_to_anchor=(0.5,-0.9))
         plt.xlabel('Time (s)')
         plt.ylabel(ylabel)
         plt.suptitle('Linear Fits to determine the Signal Height \n The average signal height is {v}{u}'.format(v=abs(div_avrg), u=unit))
@@ -507,9 +521,9 @@ def BolometerProfile(Type="", save=False):
         zerr.append(y[j]*k)
     plt.figure(figsize=(10,5))
     plt.plot(x,y, marker='o', linestyle='dashed', label="Original Bolometerprofile")
-    colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue']
-    for i,j,c in zip(x,y,colors):
-        plt.plot(i,j,marker='o',color=c,markersize=10)
+    # colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue']
+    # for i,j,c in zip(x,y,colors):
+    #     plt.plot(i,j,marker='o',color=c,markersize=10)
     #plt.errorbar(x,z,yerr=zerr, marker='o',capsize=5, linestyle='dashed',label="Corrected Bolometerprofile \n with relative correction")
     plt.ylabel(ylabel1)
     plt.xlabel('bolometer channel')
@@ -522,10 +536,10 @@ def BolometerProfile(Type="", save=False):
         data = np.column_stack([np.array(x), np.array(y)])#, np.array(z), np.array(abs(y-z))])
         if Datatype=='Data':
             datafile_path = str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shotnumber, t=name_)
-            np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. \n Label for plot \n shot n°{s}// {e}\n channeln° \t {u}'.format(n=name, s= shotnumber, m=MW, u =ylabel1,e=extratitle))
+            np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. \n Label for plot \n shot n°{s}// {e}\n channeln° \t {u}'.format(n=name, s= shotnumber, m=GetMicrowavePower()[1], u =ylabel1,e=extratitle))
             fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.pdf".format(n=shotnumber, t=name_), bbox_inches='tight')
         if Datatype=='Source':
-            np.savetxt(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n  Label for plot \nshot n°{s}, {n}, MW power: {m}, {e}\nchanneln° // {l}'.format(n=name, s= sourcetitle,m=MW,e=extratitle,l=ylabel1))
+            np.savetxt(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n  Label for plot \nshot n°{s}, {n}, MW power: {m}, {e}\nchanneln° // {l}'.format(n=name, s= sourcetitle,m=GetMicrowavePower()[1],e=extratitle,l=ylabel1))
             fig1.savefig(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.pdf'.format(t=name_,n=sourcetitlesave), bbox_inches='tight')
 
     return x, y#, z, y-z
@@ -543,11 +557,15 @@ def CompareBolometerProfiles(Type="" ,save=False,normalize=False):
         type='radiation_powers'
         name_='radiation powers'
         ylabel='power [\u03bcW]'
-    plt.figure(figsize=(10,7))
-    colors=['navy','blue','royalblue','cornflowerblue','indigo','rebeccapurple','darkorchid','mediumorchid','darkgreen','forestgreen','green','limegreen']
-    for i,c in zip(shotnumbers,colors):
+    plt.figure(figsize=(13,10))
+    #colors=['navy','blue','royalblue','cornflowerblue','indigo','rebeccapurple','darkorchid','mediumorchid','darkgreen','forestgreen','green','limegreen']
+    colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000']
+    markers=['o','v','s','P','p','D']
+    for i,c,m in zip(shotnumbers,colors,markers):
         shot1=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type),usecols=1)
-        title='shot n°{s}, P$_M$$_W$= {m} W, p={p} mPa'.format(s=i,m=float(f'{GetMicrowavePower(i):.3f}'),p=float(f'{Pressure(i):.3f}'))
+        title='shot n°{s}, MW: {mw}, P$_M$$_W$= {m} W, p={p} mPa'.format(s=i,mw=GetMicrowavePower(i)[1],m=float(f'{GetMicrowavePower(i)[0]:.3f}'),p=float(f'{Pressure(i):.3f}'))
+        #title='shot n°{s}, P$_M$$_W$= {m} W'.format(s=i,m=float(f'{GetMicrowavePower(i):.3f}'))
+        #title='shot n°{s}, p={p} mPa'.format(s=i,p=float(f'{Pressure(i):.3f}'))
         if normalize==True:
             norm='normalized values'
             mean=np.mean(shot1)
@@ -555,11 +573,12 @@ def CompareBolometerProfiles(Type="" ,save=False,normalize=False):
         else:
             norm=''
         #norm='corrected values'
-        plt.plot(x,shot1, marker='o', linestyle='dashed', label=title)#open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type), 'r').readlines()[2][3:-1])
-    plt.xlabel('bolometer channel')
-    plt.ylabel(ylabel)
+        plt.plot(x,shot1, marker=m, markersize=18,linestyle='dashed', label=title,color=c)#open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type), 'r').readlines()[2][3:-1])
+    plt.xlabel('bolometer channel',fontsize=25)
+    plt.ylabel(ylabel,fontsize=25)
     #plt.suptitle('Comparison of bolometer-profiles from {n} of {g} {u}'.format(n=name_,g=gas,u=norm))#, c=shot_number_3, d=shot_number_4))
-    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.4))
+    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.3),title=gas)#,title=r'He, p$\approx$ 13 mPa')
+    plt.ylim(0)
     fig1= plt.gcf()
     plt.show()
     if save==True:
@@ -572,18 +591,19 @@ def CompareBolometerProfiles(Type="" ,save=False,normalize=False):
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=13105
-    shotnumbers=(13090,13095,13096,13097) 
+    shotnumber=13199
+    shotnumbers=(13196,13094) 
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
-       
+
     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     #location=  '/data6/Bolo_Calibration_December/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None] # s
-    gas='Ar'
+
+    gas='H'
     Bolometer_amplification_1=100
     Bolometer_amplification_2=1
     Bolometer_timeresolution=100
-    extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+    extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber)[0]:.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
     #extratitle=''
 
     #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
@@ -593,31 +613,22 @@ if __name__ == "__main__":
     sourcetitlesave='calibration_with_green_laser_air'
     
     outfile='/home/gediz/Results/Bolometer_Profiles/'
+    outfile_2='/home/gediz/LaTex/DPG/'
     
-    
-    z= LoadData(location)['2 GHz Richtk. forward']
-    w= LoadData(location)['8 GHz power']
-    height_z = abs(max(z)-min(z))
-    height_w = abs(max(w)-min(w))
-    if height_w >= 0.1:        #This is the part where the code finds out if 8 or 2GHz MW heating was used. Change the signal height if MW powers used change in the future
-        MW = '8 GHz'
-    elif height_z >= 0.1: 
-        MW = '2.45 GHz'
-    else:
-        MW = 'none'
+
 
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
     
-    # for s in (13167,13168,13169,13170,13171,13172,13173,13174):
+    # for s in (13193,13194,13195,13196,13197,13198,13199,13200):
     #     shotnumber=s
     #     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     #         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
     #     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     #     extratitle='{g} // Bolometer: x{a}, x{b}, {c}ms // P$_m$$_w$={mw} W // p={p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
-    #PlotAllTimeseriesTogether(save=True)
-    #BolometerProfile('Bolo',save=True)
-    #BolometerProfile('Power',save=True)
+    #     PlotAllTimeseriesTogether(save=True)
+    #     BolometerProfile('Bolo',save=True)
+    #BolometerProfile('Power')
     CompareBolometerProfiles('Power',save=True)
     #CompareBolometerProfiles('Bolo')
     #CombinedTimeSeries('50025','50024','50023','50022','50021','50020','50019','50018',Plot=True,save=True)

@@ -175,9 +175,11 @@ def PlotMeanValues(compare=False,save=False):
 
 #This function plots the Temperatures received from fitting to the characteristics.
 #It is also possible to compare a list of shots as specified before calling the function
-def TemperatureProfile(compare=False,save=False):
-    plt.figure(figsize=(10,6))
-    if compare==True:
+def TemperatureProfile(s,Type='',save=False):
+
+    if Type=='Compare':
+        s=shotnumbers
+        plt.figure(figsize=(10,6))
         for i in shotnumbers:
             Position, T=np.genfromtxt('/data6/Auswertung/shot{s}/shot{s}Te.dat'.format(s=i),unpack=True)
             plt.plot(Position, T,label='shot n°{s}, P$_m$$_w$= {mw} W, \n p= {p} mPa '.format(s=i,mw=float(f'{GetMicrowavePower(i):.3f}'),p=float(f'{Pressure(i,gas):.3f}')))
@@ -191,7 +193,9 @@ def TemperatureProfile(compare=False,save=False):
         if save==True:
             fig1.savefig(str(outfile)+"comparisons/{g}/comparison_of_shots{s}_temperatureprofiles_{g}.pdf".format(s=shotnumbers,g=gas), bbox_inches='tight')
 
-    else:
+    if Type=='Single':
+        s=shotnumber
+        plt.figure(figsize=(10,6))
         Position, T=np.genfromtxt(infile+'shot{s}Te.dat'.format(s=shotnumber),unpack=True)
         plt.plot(Position, T,label='shot n°{s}, P$_m$$_w$= {mw} W , \n p= {p} mPa '.format(s=shotnumber,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber,gas):.3f}')))
         plt.xlabel('position R [m]')
@@ -203,6 +207,9 @@ def TemperatureProfile(compare=False,save=False):
         if save==True:
             fig1.savefig(str(outfile)+"shot{s}/Temperatureprofile_from_fits_to_characteristics_{g}.pdf".format(s=shotnumber,g=gas), bbox_inches='tight')
 
+    if Type=='Values' : 
+        Position, T=np.genfromtxt('/data6/Auswertung/shot{s}/shot{s}Te.dat'.format(s=s),unpack=True)
+        return(Position,T)
 
 def CorrectedDensityProfile(shotnumber):
     Position, char_U, char_I, I_isat,Bolo_sum, Interferometer=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=shotnumber),unpack=True)
@@ -239,9 +246,10 @@ def NormDensityProfile():
     plt.show()
     print(integrate.trapezoid(density_interpol(new_pos)))
     
-def DensityProfile(compare=False,save=False):
-    plt.figure(figsize=(10,6))
-    if compare==True:
+def DensityProfile(s,Type='',save=False):
+    if Type=='Compare':
+        s=shotnumbers
+        plt.figure(figsize=(10,6))
         for i in shotnumbers:
             d=CorrectedDensityProfile(i)[1]*3.88E17
             norm=integrate.trapezoid(CorrectedDensityProfile(i)[0])
@@ -258,7 +266,9 @@ def DensityProfile(compare=False,save=False):
         if save==True:
             fig1.savefig(str(outfile)+"comparisons/{g}/comparison_of_shots{s}_densityprofiles_{g}.pdf".format(s=shotnumbers,g=gas), bbox_inches='tight')
 
-    else:
+    if Type=='Single':
+        s=shotnumber
+        plt.figure(figsize=(10,6))
         d=CorrectedDensityProfile(shotnumber)[1]*3.88E17
         norm=integrate.trapezoid(CorrectedDensityProfile(shotnumber)[0])
         Position=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=shotnumber),usecols=0)
@@ -266,14 +276,20 @@ def DensityProfile(compare=False,save=False):
         plt.plot(Position, Density,label='shot n°{s}, P$_m$$_w$= {mw} W , \n p= {p} mPa '.format(s=shotnumber,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber,gas):.3f}')))
         plt.xlabel('position R [m]')
         plt.ylabel('density [m$^-$$^3$]')
-        plt.suptitle('2D Probe scan of shot {s} // {g} \n density-profile normalized with line integrated density {d} m$^-$$^3$'.format(s=shotnumber,g=gas,d=float(f'{CorrectedDensityProfile(shotnumber)[1]:.3f}')),y=1.05)
+        plt.suptitle('2D Probe scan of shot {s} // {g} \n density-profile normalized with line integrated density {d} m$^-$$^3$'.format(s=shotnumber,g=gas,d=float(f'{d:.3e}')),y=1.05)
         plt.legend(loc=1, bbox_to_anchor=(1.7,1))    
         fig1= plt.gcf()
+        plt.yscale('log')
         plt.show()
-        print(Density)
         if save==True:
             fig1.savefig(str(outfile)+"shot{s}/Densityprofile_{g}.pdf".format(s=shotnumber,g=gas), bbox_inches='tight')
-            
+    if Type=='Values':
+        d=CorrectedDensityProfile(s)[1]*3.88E17
+        norm=integrate.trapezoid(CorrectedDensityProfile(s)[0])
+        Position=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=s),usecols=0)
+        Density=[u*d/norm for u in CorrectedDensityProfile(s)[0]]
+
+        return Position, Density    
             
 def CompareDifferentGases():
     for i,j in zip(shotnumbers,gases):
@@ -315,27 +331,37 @@ def FastElectrons():
     ax.tick_params(axis='y', labelcolor='red')
     plt.show()
     
-    
+def Densities(s):
+    T=290
+    k=1.38E-23
+    p=Pressure(s,gas)*10**(-3)
+    n=p/(k*T)
+    n_e=CorrectedDensityProfile(s)[1]*3.88E17
+    n_0=n-n_e
+    deg_ion=(n_e/n)*100
+    return(n,n_e,n_0,deg_ion)
     
     
       
 # %%
+
 shotnumbers=(13090,13095,13096,13097) 
 gases=('H','H','H','H')
-gas='Ar'  
+gas='H'  
 shotnumber=13090
-#infile='/data6/Auswertung/shot{s}/'.format(s=shotnumber)
-infile='/data6/shot{}/probe2D/'.format(shotnumber)
+infile='/data6/Auswertung/shot{s}/'.format(s=shotnumber)
+#infile='/data6/shot{}/probe2D/'.format(shotnumber)
 outfile='/home/gediz/Results/Plasma_charactersitics/'
 
 if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
- 
+
 #ExtractMeanValues()
 #CompareDifferentGases()
 #GetMicrowavePower(shotnumber)
-TemperatureProfile(compare=True,save=True)
+#TemperatureProfile('Single')
 #PlotMeanValues(compare=True)
 #FastElectrons()
-DensityProfile(compare=True,save=True)
+#DensityProfile('Single')
+#Densities()
 #%%

@@ -396,13 +396,13 @@ def CompareRelativeCorrections(save=False):
         mean.append(np.mean(j))
     al=1
     #plt.plot(x,y0,alpha=al,label='air,  1k$\Omega$, sine, simulated wheatstone', marker='o')
-    plt.plot(x,y1,alpha=al,label='Air, 1k$\Omega$', marker='o')
-    plt.plot(x,y2,alpha=al, label='air, 1k$\Omega$, changed V2,V3',  marker='o')
-    plt.plot(x,y3,alpha=al,label='UV air 254', marker='o')
-    plt.plot(x,y4 ,alpha=al,label='UV air 350', marker='o')    
-    plt.plot(x,y5,alpha=al,label='UV air klein',  marker='o')
-    #plt.plot(x,y6 ,alpha=al,label='vac,  1k$\Omega$', marker='o')
-    #plt.plot(x,y7,alpha=al,label='vac,  100$\Omega$', marker='o')
+    #plt.plot(x,y1,alpha=al,label='Air, 1k$\Omega$', marker='o')
+    #plt.plot(x,y2,alpha=al, label='air, 1k$\Omega$, changed V2,V3',  marker='o')
+    #plt.plot(x,y3,alpha=al,label='UV air 254', marker='o')
+    #plt.plot(x,y4 ,alpha=al,label='UV air 350', marker='o')    
+    #plt.plot(x,y5,alpha=al,label='UV air klein',  marker='o')
+    plt.plot(x,y6 ,alpha=al,label='vac,  1k$\Omega$', marker='o')
+    plt.plot(x,y7,alpha=al,label='vac,  100$\Omega$', marker='o')
     #plt.plot(x,y8 ,alpha=al,label='vac, sine 1k$\Omega$', marker='o')
     plt.plot(x,y9,alpha=al,label='Res 1', marker='o')
     plt.plot(x,y10,alpha=al,label='Res 2', marker='o')
@@ -476,6 +476,8 @@ res3=[x*(-1) for x in np.genfromtxt('/home/gediz/Results/Calibration/Channel_res
 blind=[832,412,1920,632,1800,1700,1270,3040]
 out=[16,8,80,8,40,60,40,160]
 prozent=[16/832,8/412,80/1920,8/632,40/1800,60/1700,40/1270,160/3040]
+tau = [0.1204,0.1195,0.1204,0.1214,0.0801,0.0792,0.0779,0.0822]
+kappa =  [0.460,0.465,0.466,0.469,0.649,0.649,0.637,0.638]
 
 fig,ax1=plt.subplots()
 fig.set_figheight(7)
@@ -491,21 +493,22 @@ ax9=ax1.twinx()
 ax10=ax1.twinx()
 ax11=ax1.twinx()
 ax12=ax1.twinx()
-values=[a1,a2,a3,v1,v2,v3,uv1,uv2,uv3,blind,out,prozent]
+values=[a1,a2,a3,v1,v2,v3,uv1,uv2,uv3,res1,res2,res3,blind,out,prozent]
 colors=['red','darkred','orange','blue','darkblue','lightblue','green','darkgreen','lightgreen','pink','violet','magenta']
 labels=[r'Air, 1k$\Omega$',r'air, 1k$\Omega$, changed V2,V3',r'air,  1k$\Omega$, sine, simulated wheatstone',r'vac,  1k$\Omega$',r'vac, 100$\Omega$',r'vac, sine,1k$\Omega$','UV air klein','UV air 350','UV air 254','Res 1','Res 2', 'Res 3']
 axes=[ax1,ax2,ax3,ax4,ax5,ax6,ax7,ax8,ax9,ax10,ax11,ax12]
 n=1
-for p in [9,10,11]:
+for p in [3,4,9,10,11]:
     for i,k,t,a in zip([values[p]],[colors[p]],[labels[p]],[axes[p]]):
-        j=[x-np.mean(i) for x in i]
+        j=[x*2*kap*ta for x,kap,ta in zip(i,kappa,tau)]
         leg=a.plot(b,j,marker='o',color=k,label=t)
+        #a.plot(b,i,marker='x',color=k)
         a.set_yticks([], [])
         labs =[l.get_label() for l in leg] 
         a.legend(leg, labs, loc=1,bbox_to_anchor=(1.7,n))
         n=n-0.1
         #RelativeOpticalCalibration('mean')
-ax1.set(ylabel='Signal  normalized')
+ax1.set(ylabel='Signal normalized')
 ax1.set(xlabel='Bolometerchannel')
 # leg = l1+l2+l3+l4+l5+l6+l7+l8+l9+l10+l11+l12
 

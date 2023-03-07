@@ -76,15 +76,18 @@ def GetMicrowavePower(shotnumber):
     return (np.mean(signalinwatt[start:stop]))
 
 def Gold_Abs():
-    location =str(golddata)
+    #location =str(golddata)
+    location='/home/gediz/Results/Goldfoil_Absorption/gold_abs_Anne.txt'
     x,y= np.loadtxt(location, unpack='true')
     name='Gold absorption'
     return x,y, name
 
 def Spectrum(lightsource=''):
-    x,y= np.genfromtxt(str(spectrumdata)+'spectrometer_data_of_lightsource_'+lightsource+'.txt', skip_header=2,unpack='true')  
+    if ADAS==True:
+        x,y=np.genfromtxt(str(spectrumdata),skip_header=3,unpack=True)
+    else:
+        x,y= np.genfromtxt(str(spectrumdata)+'spectrometer_data_of_lightsource_'+lightsource+'.txt', skip_header=2,unpack='true')  
     name='Spectral Data'
-    print (x[np.argmax(y)])
     return x,y, name
 
 #Use this function to plot the Absportion line of Gold using the literature data and an interpolation
@@ -198,34 +201,64 @@ def Log_Plot(data):
 #This function plots and saves the original spectrum, the gold absorption curve and the reduces spectrum as 
 #absorbed by gold all together and prints the absorbed percentage in the legend
 def Reduced_Spectrum(lightsource='', save=False):
-    x1=Gold_Abs()[0]
-    y1=Gold_Abs()[1]
-    label1=Gold_Abs()[2]
-    x2=Spectrum(lightsource)[0]
-    y2=Spectrum(lightsource)[1]
-    label2=Spectrum(lightsource)[2]
-    y3=Gold_Fit(lightsource)[0]
-    percentage_integral=Gold_Fit(lightsource)[1]
-    percentage_points=Gold_Fit(lightsource)[2]
-    fig,ax = plt.subplots()
-    ax2=ax.twinx()
-    #ax2=ax.twiny()
-    ax3=ax.twinx()
-    #ax3=ax.twiny()
-    lns1=ax.semilogx(x2,y2,marker='.',linestyle='-', label=label2, color='red', alpha=0.5)
-    lns2=ax.semilogx(x2,y3,marker='.',linestyle='-', label=label2+' reduced to {i}% using integral \n and {p}% using points'.format(i=float(f'{percentage_integral:.2f}'),p=float(f'{percentage_points:.2f}')), color='green')
-    lns3=ax3.semilogx(x1,y1, label=label1)
-    ax.set(xlabel='wavelength [nm]', ylabel='Counts')
-    ax3.set(ylabel='Absorption')
-    ax3.tick_params(axis='y', labelcolor='blue')
-    leg = lns1 + lns2 +lns3
-    labs = [l.get_label() for l in leg]
-    ax.legend(leg, labs, loc=1)
-    plt.suptitle('Gold absorption and the Spectrum of lightsource {}'.format(lightsource))
-    fig1= plt.gcf()
-    plt.show()
-    if save==True:
-        fig1.savefig("/home/gediz/Results/Goldfoil_Absorption/Lightsources_Gold_Absorption/reduced_spectrum_absorbed_by_gold_of_lightsource_{}.pdf".format(lightsource))
+    if ADAS==True:
+        x1= np.sort(Spectrum(lightsource)[0])
+        y1=pchip_interpolate(Gold_Abs()[0],Gold_Abs()[1],np.sort(Spectrum(lightsource)[0]))
+        x0=Gold_Abs()[0]
+        y0=Gold_Abs()[1]
+        x=np.arange(0,10E2,1)
+        y=pchip_interpolate(x0,y0,x)
+        x2=Spectrum(lightsource)[0]
+        y2=Spectrum(lightsource)[1]
+        y3=Gold_Fit(lightsource)[0]
+        percentage_integral=Gold_Fit(lightsource)[1]
+        percentage_points=Gold_Fit(lightsource)[2]
+        fig,ax = plt.subplots()
+        ax2=ax.twinx()
+        ax3=ax.twinx()
+        ax3.set_xlim(0,1000)
+        ax3.plot(x0,y0,'ro--')
+        ax3.plot(x,y,color='red')
+        lns1=ax.bar(x2,y2,width=10, label='Spectrum', color='red', alpha=0.5)
+        lns2=ax.bar(x2,y3,width=10, label='Spectrum reduced to {i}% using integral \n and {p}% using points'.format(i=float(f'{percentage_integral:.2f}'),p=float(f'{percentage_points:.2f}')), color='green')
+        lns3=ax3.plot(x1,y1, label='Gold absorption')
+        ax.set(xlabel='wavelength [nm]', ylabel='Counts')
+        ax3.set(ylabel='Absorption')
+        ax3.tick_params(axis='y', labelcolor='blue')
+        #leg = lns1+ lns2+lns3
+        #labs = [l.get_label() for l in leg]
+        ax.legend(loc=1)
+        plt.suptitle('Gold absorption and the Spectrum of lightsource {}'.format(lightsource))
+
+    else:
+        x1=Gold_Abs()[0]
+        y1=Gold_Abs()[1]
+        label1=Gold_Abs()[2]
+        x2=Spectrum(lightsource)[0]
+        y2=Spectrum(lightsource)[1]
+        label2=Spectrum(lightsource)[2]
+        y3=Gold_Fit(lightsource)[0]
+        percentage_integral=Gold_Fit(lightsource)[1]
+        percentage_points=Gold_Fit(lightsource)[2]
+        fig,ax = plt.subplots()
+        ax2=ax.twinx()
+        #ax2=ax.twiny()
+        ax3=ax.twinx()
+        #ax3=ax.twiny()
+        lns1=ax.semilogx(x2,y2,marker='.',linestyle='-', label=label2, color='red', alpha=0.5)
+        lns2=ax.semilogx(x2,y3,marker='.',linestyle='-', label=label2+' reduced to {i}% using integral \n and {p}% using points'.format(i=float(f'{percentage_integral:.2f}'),p=float(f'{percentage_points:.2f}')), color='green')
+        lns3=ax3.semilogx(x1,y1, label=label1)
+        ax.set(xlabel='wavelength [nm]', ylabel='Counts')
+        ax3.set(ylabel='Absorption')
+        ax3.tick_params(axis='y', labelcolor='blue')
+        leg = lns1 + lns2 +lns3
+        labs = [l.get_label() for l in leg]
+        ax.legend(leg, labs, loc=1)
+        plt.suptitle('Gold absorption and the Spectrum of lightsource {}'.format(lightsource))
+        fig1= plt.gcf()
+        plt.show()
+        if save==True:
+            fig1.savefig("/home/gediz/Results/Goldfoil_Absorption/Lightsources_Gold_Absorption/reduced_spectrum_absorbed_by_gold_of_lightsource_{}.pdf".format(lightsource))
     
 def CompareSpectra():
     z=0
@@ -245,17 +278,19 @@ if __name__ == "__main__":
     infile ='/scratch.mv3/koehn/backup_Anne/zilch/Bolo/Absorption_AU/'
     #outfile='/home/gediz/Results/Goldfoil_Absorption/'
     outfile='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
-    spectrumdata='/home/gediz/Measurements/Spectrometer/Spectra_of_Helium_Plasma_15_12_2022/'
+    #spectrumdata='/home/gediz/Measurements/Spectrometer/Spectra_of_Helium_Plasma_15_12_2022/'
     #spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
+    spectrumdata='/home/gediz/Results/ADAS_Data/Spectra/H_Spectrum_excit_T_7.00E+00_eV_D_2.00E+15_m-3.txt'
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
-    shotnumber=13120
-    gas='He' 
+    shotnumber=13090
+    gas='H' 
     extratitle='{g} // p={p} mPa// MW={m} W'.format(g=gas,m=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))
     lightsources=('shot13122_sonde_raus','shot13121_sonde_raus','shot13120_sonde_raus')
-    
+    ADAS=True
     #CompareSpectra()
-    #Reduced_Spectrum('shot13118_sonde_raus')
-    Spectrometer_Data('shot13119_sonde_raus',analyze=True)
+    Reduced_Spectrum()
+    #GoldAbsorptionPlot()
+    #Spectrometer_Data('shot13119_sonde_raus',analyze=True)
     #Peak_Analyzer('shot13118_sonde_raus')
     #Gold_Fit('shot13118_sonde_raus_peaks')
     

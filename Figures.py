@@ -5,6 +5,7 @@ import pandas as pd
 from scipy.optimize import curve_fit
 import matplotlib.patches as patches
 import matplotlib
+import plasma_charactristics as pc
 #%% Plasmatypes and regimes--------------------------------------------------------------------------------------------------------------------------------------------------
 
 #n=np.arange(10E5, 10E35)
@@ -56,8 +57,8 @@ z_0=63.9    #middle of flux surfaces
 t=17.5 #radius of vessel [cm]
 
 fig=plt.figure(figsize=(10,10))
-plt.rc('xtick',labelsize=15)
-plt.rc('ytick',labelsize=15)
+plt.rc('xtick',labelsize=20)
+plt.rc('ytick',labelsize=20)
 ax=fig.add_subplot(111)
 x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position.csv',sep=',',engine='python'),dtype=np.float64)
 y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii.csv',sep=',',engine='python')
@@ -65,8 +66,8 @@ y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_rad
 x=np.arange(40,a,0.1)
 
 
-plt.xlabel('R [cm]',fontsize=18)
-plt.ylabel('z [cm]',fontsize=18)
+plt.xlabel('R [cm]',fontsize=25)
+plt.ylabel('z [cm]',fontsize=25)
 f1=0.14 #Distance first channel to edge [cm]
 f2=0.40 #Distance between channels [cm]
 h=[-2+f1,-2+f1+c_h,-2+f1+c_h+f2,-2+f1+c_h*2+f2,-2+f1+c_h*2+f2*2,-2+f1+c_h*3+f2*2,-2+f1+c_h*3+f2*3,-2+f1+c_h*4+f2*3,f1,f1+c_h,f1+c_h+f2,f1+c_h*2+f2,f1+c_h*2+f2*2,f1+c_h*3+f2*2,f1+c_h*3+f2*3,f1+c_h*4+f2*3,f1*2+c_h*4+f2*3]
@@ -88,6 +89,29 @@ ex_3=[-13.65, -8.23, -10.52, -5.1000000000000005, -7.390000000000001, -1.9700000
 lines=[0,2,4,6,8,10,12,14]
 colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','darkorange']
 channels=[0,1,2,3,4,5,6,7]
+#fluxsurfaces
+
+for i in [0,1,2,3,4,5,6,7,8]:
+    x=np.array(x_.iloc[i])
+    y=np.array(y_.iloc[i])
+    plt.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey',linewidth=3)
+
+pos_9,pos_10,pos_11,pos_12,rad_9,rad_10,rad_11,rad_12=[],[],[],[],[],[],[],[]
+for d,pos,rad in zip((1,2,3,4),(pos_9,pos_10,pos_11,pos_12),(rad_9,rad_10,rad_11,rad_12)):
+    for j in np.arange(0,len(x)):
+        r=np.sqrt((x[j]-z_0)**2+y[j]**2)
+        beta=np.arctan(y[j]/(x[j]-z_0))
+        if (x[j]-z_0)<=0:
+            x_neu=(r+d)*-np.cos(beta)+z_0
+            y_neu=(r+d)*-np.sin(beta)
+        else:
+            x_neu=(r+d)*np.cos(beta)+z_0
+            y_neu=(r+d)*np.sin(beta)
+        pos.append(x_neu)
+        rad.append(y_neu)
+    plt.plot(np.append(pos,pos[0]),np.append(rad,rad[0]),linewidth=2,color='grey',alpha=0.5)
+    print(pos)
+    print(rad)
 
 #lines of sight
 for i,j,k in zip(lines,colors,channels):
@@ -98,29 +122,27 @@ for i,j,k in zip(lines,colors,channels):
     #plt.plot(np.arange(40,x_b[i+1],0.1),lin(np.arange(40,x_b[i+1],0.1),*popt2),color=j,linestyle='dashed')
     popt3,pcov3=curve_fit(lin,[a-b,a-b-12.4,a-b-19.5,a-b-22.9],[-s_h/2,ex_1[i],ex_2[i],ex_3[i]])
     popt4,pcov4=curve_fit(lin,[a-b,a-b-12.4,a-b-19.5,a-b-22.9],[s_h/2,ex_1[i+1],ex_2[i+1],ex_3[i+1]])
-    plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt3),color=j)
-    plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt4),color=j)
+    plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt3),color=j,linewidth=2)
+    plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt4),color=j,linewidth=2)
     #plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[i],ex_2[i],ex_3[i]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=j)
     #plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[i+1],ex_2[i+1],ex_3[i+1]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=j)
 
 
-#fluxsurfaces
-for i in [0,1,2,3,4,5,6,7]:
-    x=np.array(x_.iloc[i+1])
-    y=np.array(y_.iloc[i+1])
-    plt.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey')
 
+
+f=25 #fontsize inside plot
+c='black'#fontcolor inside plot
 #torsatron
-plt.annotate('plasma vessel',(55,25),color='grey',fontsize=15) 
+plt.annotate('plasma vessel',(50,25),color=c,fontsize=f) 
 vessel=plt.Circle((60,0),t,fill=False,color='grey',linewidth=3,alpha=0.5)
 #port
 plt.plot([a-b-20,a-b-10.3],[-12.5,-12.5],[a-b-20,a-b-10.3],[12.5,12.5],[a-b-10.3,a-b-10.3],[-12.5,12.5],color='grey',linewidth=3,alpha=0.5)
-plt.annotate('outer\n  port',(73,24),color='grey',fontsize=15)
+plt.annotate('outer\n port',(71,23),color=c,fontsize=f)
 #slit
 plt.plot([a-b,a-b],[-12,-s_h/2],[a-b,a-b],[12,s_h/2],color='grey',linewidth=3,alpha=0.5,linestyle='dashed')
-plt.annotate('slit',(a-b,0),xytext=(a-b-10,-25),arrowprops=dict(facecolor='grey',edgecolor='none',alpha=0.5,width=3),color='grey',fontsize=15)
+plt.annotate('slit',(a-b-0.1,-0.5),xytext=(a-b-15,-25),arrowprops=dict(facecolor=c,edgecolor='none',alpha=0.5,width=3),color=c,fontsize=f)
 bolovessel=patches.Rectangle((60+21.8,-12),20.8,24,edgecolor='grey',facecolor='none',linewidth=3, alpha=0.5)
-plt.annotate('bolometer vessel',(85,25),color='grey',fontsize=15)
+plt.annotate('bolometer\n  vessel',(83,23),color=c,fontsize=f)
 #bolometerhead
 ts=ax.transData
 coords1=[-abs(np.cos((90-alpha)*np.pi/180)*(-2))+a,-2]
@@ -129,7 +151,7 @@ tr1 = matplotlib.transforms.Affine2D().rotate_deg_around(coords1[0],coords1[1], 
 tr2 = matplotlib.transforms.Affine2D().rotate_deg_around(coords2[0],coords2[1],alpha)
 bolohead1=patches.Rectangle((-abs(np.cos((90-alpha)*np.pi/180)*(-2))+a,-2),2,2,edgecolor='grey',facecolor='grey',linewidth=3, alpha=0.5,transform=tr1+ts)
 bolohead2=patches.Rectangle((-abs(np.cos((90-alpha)*np.pi/180)*(0))+a,0),2,2,edgecolor='grey',facecolor='grey',linewidth=3, alpha=0.5,transform=tr2+ts)
-plt.annotate('bolometer\n   head',(a,-2),xytext=(a-5,-27),arrowprops=dict(facecolor='grey',edgecolor='none',alpha=0.5,width=3),color='grey',fontsize=15)
+plt.annotate('bolometer\n   head',(a,-2),xytext=(a-10,-27),arrowprops=dict(facecolor=c,edgecolor='none',alpha=0.5,width=3),color=c,fontsize=f)
 ax.add_patch(vessel)
 ax.add_patch(bolovessel)
 ax.add_patch(bolohead1)
@@ -252,34 +274,38 @@ h=2 #height of Bolometerhead [cm]
 z_0=63.9    #middle of flux surfaces
 t=17.5 #radius of vessel [cm]
 
-fig=plt.figure(figsize=(10,10))
-plt.rc('xtick',labelsize=15)
-plt.rc('ytick',labelsize=15)
+fig=plt.figure(figsize=(15,10))
+plt.rc('xtick',labelsize=20)
+plt.rc('ytick',labelsize=20)
+plt.rcParams['lines.markersize']=12
 ax=fig.add_subplot(111)
 ax2=ax.twinx()
 ax3=ax.twinx()
-x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position.csv',sep=',',engine='python'),dtype=np.float64)
-y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii.csv',sep=',',engine='python')
-shotnumber=13105
-
-ax.set_xlabel('R - r$_0$ [cm]',fontsize=18)
-ax.set_ylabel('density [m$^-$$^3$]',fontsize=18,color='green')
-ax.tick_params(axis='y', labelcolor='green')
-ax2.set_ylabel('temperature [eV]',fontsize=18,color='red')
-ax2.tick_params(axis='y', labelcolor='red')
-ax2.set_ylim(0,14)
+x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position_extended.csv',sep=',',engine='python'),dtype=np.float64)
+y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
+a=0
+colors=['#1bbbe9','#023047','#ffb703','#c1121f','#780000']
+markers=['o','v','s','P','p','D']
+for shot,m,c in zip((13090,13095,13096,13097),markers,colors):
+    P_t,T=pc.TemperatureProfile(shot,'Values')
+    P_d,D=pc.DensityProfile(shot,'Values')
+    ax2.plot(P_t*100, T,marker=m,linewidth=6,color=c)#(P_t-P_t[-1]+P_t[0])*100,np.flip(T),
+    ax.plot((P_d-P_d[-1]+P_d[0])*100,np.flip(D),marker=m,color=c,linewidth=6)#,(P_d-P_d[-1]+P_d[0])*100,np.flip(D)
+ax.set_xlabel('R - r$_0$ [cm]',fontsize=25)
+ax.set_ylabel('density [m$^-$$^3$]',fontsize=25)
+ax.set_yscale('log')
+ax.set_xlim(-12,19)
+ax2.set_ylabel('temperature [eV]',fontsize=25)
+ax2.set_ylim(0,10)
 ax3.set_yticks([])
-Position1=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=shotnumber),unpack=True,usecols=0)
-Density=[914693519482453.9, 1195474759430940.0, 1382528487574368.8, 1506412816111439.0, 2399344795032418.0, 2793878393832172.5, 3643906098279352.0, 4954748608531252.0, 6040984860021678.0, 7173615192571933.0, 9116318227409138.0, 1.1459678372174782e+16, 1.4179279329688002e+16, 1.6617026719077388e+16, 1.825701908154783e+16, 1.9163466946400468e+16, 1.933019898285706e+16, 1.8934100993598344e+16, 1.872500524272425e+16, 1.8658725949248148e+16, 1.8700682124910644e+16, 1.8831780959027196e+16, 1.8961669563157476e+16, 1.881558425197214e+16, 1.8613288933084424e+16, 1.8767348299445108e+16, 1.9053989938286704e+16, 1.94500612213667e+16, 1.996652924163139e+16, 2.0664326637827344e+16, 2.1283636148849756e+16, 2.1781594278794596e+16, 2.2233474349163216e+16, 2.2428691916796556e+16, 2.246131195168899e+16, 2.204625157792732e+16, 2.0818267320530564e+16, 1.8997245920151348e+16, 1.6294358473434292e+16, 1.3279216540994364e+16, 1.0460493720178184e+16, 8870470209856892.0, 7380918055498378.0, 6070002286508864.0, 5018940111381089.0, 4291152377062758.5, 3892772934550662.5, 3378430561534559.5, 2877662849789524.0, 2466093423524798.0, 2125680899761901.8, 1760000570286304.0, 1488424981127544.8]
-Position2, T=np.genfromtxt('/data6/Auswertung/shot{s}/shot{s}Te.dat'.format(s=shotnumber),unpack=True)
-ax2.plot(Position2*100, T,color='red',linewidth=3)
-ax.plot(Position1*100,Density,color='green',linewidth=3)
+ax3.set_ylim(-10,10)
 
 #fluxsurfaces
-for i in [0,1,2,3,4,5,6,7]:
-    x=[u-60 for u in np.array(x_.iloc[i+1])]
-    y=np.array(y_.iloc[i+1])
-    ax3.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey')
+for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
+    x=[u-60 for u in np.array(x_.iloc[i])]
+    y=np.array(y_.iloc[i])
+    ax3.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey',linewidth=5,alpha=0.2)
+    print(max(x))
 
 
 
