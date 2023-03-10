@@ -6,6 +6,23 @@ from scipy.optimize import curve_fit
 import matplotlib.patches as patches
 import matplotlib
 import plasma_charactristics as pc
+import bolo_radiation as br
+
+#%% Parameter
+Poster=True
+
+
+if Poster==True:
+    plt.rc('font',size=20)
+    plt.rc('xtick',labelsize=20)
+    plt.rc('ytick',labelsize=20)
+    plt.rcParams['lines.markersize']=12
+else:
+    plt.rc('font',size=14)
+    plt.rc('figure', titlesize=15)
+colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
+markers=['o','v','s','P','p','D','*','x']
+
 #%% Plasmatypes and regimes--------------------------------------------------------------------------------------------------------------------------------------------------
 
 #n=np.arange(10E5, 10E35)
@@ -87,31 +104,30 @@ ex_2=[-10.115, -5.705, -7.855, -3.445, -5.595, -1.1849999999999996, -3.334999999
 ex_3=[-13.65, -8.23, -10.52, -5.1000000000000005, -7.390000000000001, -1.9700000000000024, -4.2600000000000025, 1.1599999999999993, -1.1300000000000008, 4.290000000000001, 2.0000000000000018, 7.419999999999998, 5.129999999999997, 10.549999999999999, 8.259999999999998, 13.68]
 
 lines=[0,2,4,6,8,10,12,14]
-colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','darkorange']
 channels=[0,1,2,3,4,5,6,7]
 #fluxsurfaces
 
 for i in [0,1,2,3,4,5,6,7,8]:
     x=np.array(x_.iloc[i])
     y=np.array(y_.iloc[i])
-    plt.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey',linewidth=3)
+    plt.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey',linewidth=3,alpha=0.5)
 
-pos_9,pos_10,pos_11,pos_12,rad_9,rad_10,rad_11,rad_12=[],[],[],[],[],[],[],[]
-for d,pos,rad in zip((1,2,3,4),(pos_9,pos_10,pos_11,pos_12),(rad_9,rad_10,rad_11,rad_12)):
-    for j in np.arange(0,len(x)):
-        r=np.sqrt((x[j]-z_0)**2+y[j]**2)
-        beta=np.arctan(y[j]/(x[j]-z_0))
-        if (x[j]-z_0)<=0:
-            x_neu=(r+d)*-np.cos(beta)+z_0
-            y_neu=(r+d)*-np.sin(beta)
-        else:
-            x_neu=(r+d)*np.cos(beta)+z_0
-            y_neu=(r+d)*np.sin(beta)
-        pos.append(x_neu)
-        rad.append(y_neu)
-    plt.plot(np.append(pos,pos[0]),np.append(rad,rad[0]),linewidth=2,color='grey',alpha=0.5)
-    print(pos)
-    print(rad)
+# pos_9,pos_10,pos_11,pos_12,rad_9,rad_10,rad_11,rad_12=[],[],[],[],[],[],[],[]
+# for d,pos,rad in zip((1,2,3,4),(pos_9,pos_10,pos_11,pos_12),(rad_9,rad_10,rad_11,rad_12)):
+#     for j in np.arange(0,len(x)):
+#         r=np.sqrt((x[j]-z_0)**2+y[j]**2)
+#         beta=np.arctan(y[j]/(x[j]-z_0))
+#         if (x[j]-z_0)<=0:
+#             x_neu=(r+d)*-np.cos(beta)+z_0
+#             y_neu=(r+d)*-np.sin(beta)
+#         else:
+#             x_neu=(r+d)*np.cos(beta)+z_0
+#             y_neu=(r+d)*np.sin(beta)
+#         pos.append(x_neu)
+#         rad.append(y_neu)
+#     plt.plot(np.append(pos,pos[0]),np.append(rad,rad[0]),linewidth=2,color='grey',alpha=0.5)
+#     print(pos)
+#     print(rad)
 
 #lines of sight
 for i,j,k in zip(lines,colors,channels):
@@ -273,11 +289,9 @@ c_d=0.225 #depth of Goldsensor [cm]
 h=2 #height of Bolometerhead [cm]
 z_0=63.9    #middle of flux surfaces
 t=17.5 #radius of vessel [cm]
+gas='H'
+fig=plt.figure(figsize=(10,7))
 
-fig=plt.figure(figsize=(15,10))
-plt.rc('xtick',labelsize=20)
-plt.rc('ytick',labelsize=20)
-plt.rcParams['lines.markersize']=12
 ax=fig.add_subplot(111)
 ax2=ax.twinx()
 ax3=ax.twinx()
@@ -286,11 +300,20 @@ y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_rad
 a=0
 colors=['#1bbbe9','#023047','#ffb703','#c1121f','#780000']
 markers=['o','v','s','P','p','D']
+#fluxsurfaces
+for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
+    x=[u-60 for u in np.array(x_.iloc[i])]
+    y=np.array(y_.iloc[i])
+    ax3.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey',linewidth=5,alpha=0.2)
 for shot,m,c in zip((13090,13095,13096,13097),markers,colors):
-    P_t,T=pc.TemperatureProfile(shot,'Values')
+    P_t,T=pc.TemperatureProfile(shot,'Values')[0],pc.TemperatureProfile(shot,'Values')[1]
     P_d,D=pc.DensityProfile(shot,'Values')
-    ax2.plot(P_t*100, T,marker=m,linewidth=6,color=c)#(P_t-P_t[-1]+P_t[0])*100,np.flip(T),
-    ax.plot((P_d-P_d[-1]+P_d[0])*100,np.flip(D),marker=m,color=c,linewidth=6)#,(P_d-P_d[-1]+P_d[0])*100,np.flip(D)
+    b=[0,5,10,15,20,25]
+    l='shot n°{s}, P$_M$$_W$= {m} W'.format(s=shot,m=float(f'{br.GetMicrowavePower(shot)[0]:.1f}'))
+    ax2.plot(P_t*100, T,linewidth=3,color=c,marker=m,markersize=5)
+    ax2.plot([e for i,e in enumerate(P_t*100) if i in b],[e for i,e in enumerate(T) if i in b],marker=m,linestyle='None',color=c,markersize=18,label=l)
+    ax.plot((P_d-P_d[-1]+P_d[0])*100,np.flip(D),marker=m,markersize=5,color=c,linewidth=3)#,(P_d-P_d[-1]+P_d[0])*100,np.flip(D)
+    ax.plot([e for i,e in enumerate((P_d-P_d[-1]+P_d[0])*100) if i in b],[e for i,e in enumerate(np.flip(D)) if i in b],marker=m,linestyle='None',color=c,markersize=18)
 ax.set_xlabel('R - r$_0$ [cm]',fontsize=25)
 ax.set_ylabel('density [m$^-$$^3$]',fontsize=25)
 ax.set_yscale('log')
@@ -300,17 +323,12 @@ ax2.set_ylim(0,10)
 ax3.set_yticks([])
 ax3.set_ylim(-10,10)
 
-#fluxsurfaces
-for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
-    x=[u-60 for u in np.array(x_.iloc[i])]
-    y=np.array(y_.iloc[i])
-    ax3.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey',linewidth=5,alpha=0.2)
-    print(max(x))
 
+ax2.legend(loc='lower center',bbox_to_anchor=(0.5,-0.62),title=r'H, p$\approx$ 7.5 mPa')
 
 
 fig1= plt.gcf()
 plt.show()
-fig1.savefig('/home/gediz/LaTex/Thesis/Figures/fluxsurfaces_with_temperatureprofiles.pdf')
+fig1.savefig('/home/gediz/LaTex/Thesis/Figures/fluxsurfaces_with_temperatureprofiles.pdf',bbox_inches='tight')
 
 # %%

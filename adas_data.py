@@ -4,9 +4,19 @@ import numpy as np
 import matplotlib.ticker as mticker
 import pandas as pd
 import re
-plt.rcParams["figure.figsize"] = (10,10)
-plt.rc('figure', titlesize=15)
-plt.rc('font',size=14)
+#%% Parameter
+Poster=True
+
+
+if Poster==True:
+    plt.rc('font',size=18)
+    plt.rc('xtick',labelsize=20)
+    plt.rc('ytick',labelsize=20)
+    plt.rcParams['lines.markersize']=18
+else:
+    plt.rc('font',size=14)
+    plt.rc('figure', titlesize=15)
+colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159']
 
 h=6.626E-34
 c=299792458
@@ -125,7 +135,7 @@ def pec_h(spectrum=False,rc=False):
     lines=f.readlines()
     densities.append(lines[2]+lines[3]+lines[4])
     temperatures.append(lines[5]+lines[6]+lines[7]+lines[8])
-    densities=[float(dens) for dens in (densities[0].replace('\n','')).split() ]
+    densities=[float(dens)*1e6 for dens in (densities[0].replace('\n','')).split() ]
     temperatures=[float(temp) for temp in (temperatures[0].replace('\n','')).split()]
 
     for line in lines:
@@ -143,8 +153,8 @@ def pec_h(spectrum=False,rc=False):
 
   if spectrum==True:
     ty='EXCIT' #'RECOM', 'ECXIT
-    t=10
-    d=23
+    t=8
+    d=11
     #for d in np.arange(1,23):
     w_e=[]
     s_e=[]
@@ -161,7 +171,7 @@ def pec_h(spectrum=False,rc=False):
           w_r.append(float(globals()[i][0])*10**(-1))
 
       #plt.bar(w_e,s_e,width=10,label=str(temperatures[t])+'eV')
-    plt.bar(w_e,s_e,width=10,label=str('%.2E' % densities[d])+'cm$^-$$^3$')
+    plt.bar(w_e,s_e,width=10,label=str('%.2E' % densities[d])+'m$^-$$^3$')
       #plt.bar(w_r,s_r,width=10,label=str(temperatures[t])+'eV')
     plt.xlabel('wavelength [nm]')
     plt.ylabel('pec [cm$^3$/s]')
@@ -174,22 +184,23 @@ def pec_h(spectrum=False,rc=False):
     return(w_e,s_e)
 
   if rc==True:
-    # pec_d=[]
-    # for d in np.arange(1,len(densities)):
-    #   pec=[]
-    #   for t in np.arange(0,len(temperatures)):
+    plt.figure(figsize=(8,5))
+    pec_d=[]
+    for d,col in zip([2,5,8,11,14,17,20,23],colors):#np.arange(1,len(densities)):
+      pec=[]
+      for t in np.arange(0,len(temperatures)):
 
-    #     x=[]
-    #     y=[]
-    #     a=0
-    #     for i in np.arange(0,len(all_wl)):
-    #       if types[i]=='EXCIT':
-    #         x.append(wavelengths[i])
-    #         y.append(globals()[all_wl[i]][d][t])
-    #         a+=((h*c/(x[i]*10**(-10)))*y[i])
-    #     pec.append(a/e*m)
-    #   plt.plot(temperatures[0:20],pec[0:20],'o--',alpha=0.3,label=('%.2E' % densities[d-1]) +' cm$^-$$^3$')
-    #   pec_d.append(pec[10])
+        x=[]
+        y=[]
+        a=0
+        for i in np.arange(0,len(all_wl)):
+          if types[i]=='EXCIT':
+            x.append(wavelengths[i])
+            y.append(globals()[all_wl[i]][d][t])
+            a+=((h*c/(x[i]*10**(-10)))*y[i])
+        pec.append(a/e*m)
+      plt.plot(temperatures[0:19],pec[0:19],'o--',markersize=10,color=col,alpha=0.3,label=('%.2E' % densities[d-1]) +' m$^-$$^3$')
+      pec_d.append(pec[10])
     pec=[]
     for t in np.arange(0,len(temperatures)):
       x=[]
@@ -202,19 +213,22 @@ def pec_h(spectrum=False,rc=False):
             y.append(globals()[all_wl[i]][d][t])
           a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
       pec.append(a/e*m)
-    plt.plot(temperatures[0:20],pec[0:20],'ro--',label='with averaged density')
-    plt.plot(erc_h()[0],erc_h()[1],'bo--',label='data from ADF11')
-    plt.legend(loc=1,bbox_to_anchor=(1.4,1))
-    plt.xlabel('temperatures [eV]')
-    plt.ylabel('excitation energy rate coefficients [eVm$^3$/s]')
+    plt.plot(temperatures[0:19],pec[0:19],'o--',label='with averaged \n density',color='#1ba1e9')
+    #plt.plot(erc_h()[0],erc_h()[1],'bo--',label='data from ADF11')
+    plt.legend(loc='right',bbox_to_anchor=(1.5,0.5))
+    plt.xlabel('temperature [eV]',fontsize=25)
+    plt.ylabel('excitation energy \n rate coefficients [eVm$^3$/s]',fontsize=25)
     plt.yscale('log')
-    plt.ylim(1E-17,1E-12)
+    plt.ylim(8E-15,6E-13)
+    fig1= plt.gcf()
     plt.show()
+    fig1.savefig('/home/gediz/LaTex/Thesis/Figures/pec_h.pdf',bbox_inches='tight')
+
     # plt.plot(densities[0:23],pec_d,'o--')
     # plt.xscale('log')
     # plt.yscale('log')
     # plt.show()
-    return temperatures[0:20], pec[0:20]
+    #return temperatures[0:20], pec[0:20]
 # %%
 #plt12_h  
 #line emission from excitation energy rate coefficients
@@ -349,5 +363,5 @@ def erc_he():
   #print(temperatures[3],f'{densities[7]:.2e}',globals()['rad_d_8'][3])
   return temperatures, globals()[all_rad_d_0[0]]
   # %%
-erc_h()
+erc_he()
 # %%

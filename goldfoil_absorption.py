@@ -23,6 +23,18 @@ import collections
 from scipy import integrate
 from scipy.interpolate import pchip_interpolate
 import scipy.signal as sig
+#%% Parameter
+Poster=True
+
+
+if Poster==True:
+    plt.rc('font',size=18)
+    plt.rc('xtick',labelsize=20)
+    plt.rc('ytick',labelsize=20)
+    plt.rcParams['lines.markersize']=12
+else:
+    plt.rc('font',size=14)
+    plt.rc('figure', titlesize=15)
 
 #%%------------------------------------------------------------------------------------------------------
 plt.rc('figure', titlesize=15)
@@ -213,22 +225,25 @@ def Reduced_Spectrum(lightsource='', save=False):
         y3=Gold_Fit(lightsource)[0]
         percentage_integral=Gold_Fit(lightsource)[1]
         percentage_points=Gold_Fit(lightsource)[2]
-        fig,ax = plt.subplots()
+        fig,ax = plt.subplots(figsize=(8,5))
         ax2=ax.twinx()
         ax3=ax.twinx()
-        ax3.set_xlim(0,1000)
-        ax3.plot(x0,y0,'ro--')
-        ax3.plot(x,y,color='red')
-        lns1=ax.bar(x2,y2,width=10, label='Spectrum', color='red', alpha=0.5)
-        lns2=ax.bar(x2,y3,width=10, label='Spectrum reduced to {i}% using integral \n and {p}% using points'.format(i=float(f'{percentage_integral:.2f}'),p=float(f'{percentage_points:.2f}')), color='green')
-        lns3=ax3.plot(x1,y1, label='Gold absorption')
-        ax.set(xlabel='wavelength [nm]', ylabel='Counts')
-        ax3.set(ylabel='Absorption')
-        ax3.tick_params(axis='y', labelcolor='blue')
+        ax.set_xlim(0,1000)
+        ax.set_ylim(0,max(y2)*1.1)
+        ax3.plot(x,y,color='#c1121f',linewidth=3)
+        lns1=ax.bar(x2,y2,width=18, label='Spectrum H\n'+r'T$_e$$\approx$5eV, n$_e$$\approx$2E-17m$^-$$^3$',color='#1ba1e9', alpha=0.5)
+        lns2=ax.bar(x2,y3,width=18, label='Spectrum reduced to {p}%'.format(p=float(f'{percentage_points:.2f}')), color='#1ba1e9')
+        ax.set_xlabel('wavelength [nm]',fontsize=25)
+        ax.set_ylabel( 'pec [cm$^3$/s]',fontsize=25)
+        ax3.set_ylabel('absorption gold',color='#c1121f',fontsize=25)
+        ax3.tick_params(axis='y', labelcolor='#c1121f')
+        ax2.set_yticks([])
         #leg = lns1+ lns2+lns3
         #labs = [l.get_label() for l in leg]
         ax.legend(loc=1)
-        plt.suptitle('Gold absorption and the Spectrum of lightsource {}'.format(lightsource))
+        fig1= plt.gcf()
+        plt.show()
+        fig1.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_H.pdf',bbox_inches='tight')
 
     else:
         x1=Gold_Abs()[0]
@@ -280,7 +295,7 @@ if __name__ == "__main__":
     outfile='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
     #spectrumdata='/home/gediz/Measurements/Spectrometer/Spectra_of_Helium_Plasma_15_12_2022/'
     #spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
-    spectrumdata='/home/gediz/Results/ADAS_Data/Spectra/H_Spectrum_excit_T_7.00E+00_eV_D_2.00E+15_m-3.txt'
+    spectrumdata='/home/gediz/Results/ADAS_Data/Spectra/H_Spectrum_excit_T_5.00E+00_eV_D_2.00E+17_m-3.txt'
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
     shotnumber=13090
     gas='H' 

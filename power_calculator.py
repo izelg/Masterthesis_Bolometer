@@ -35,13 +35,15 @@ Poster=True
 
 
 if Poster==True:
-    plt.rc('font',size=25)
+    plt.rc('font',size=20)
     plt.rc('xtick',labelsize=20)
     plt.rc('ytick',labelsize=20)
-    plt.rcParams['lines.markersize']=12
+    plt.rcParams['lines.markersize']=18
 else:
     plt.rc('font',size=14)
     plt.rc('figure', titlesize=15)
+colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
+markers=['o','v','s','P','p','D','8','*','x']
 
 #%%
 
@@ -68,56 +70,17 @@ def LoadData(location):
     data = pd.read_csv(location, skiprows=4, sep="\t\t", names=cols, engine='python')
     return data
 
-def Pressure(shotnumber):
-    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    y= LoadData(location)["Pressure"]
-    time = LoadData(location)['Zeit [ms]'] / 1000
-    pressure= np.mean(y[0:100])
-    d = 9.33                # according to PKR261 manual
-    pressure = 10.**(1.667*pressure-d)*1000
-    if gas == 'H':
-        corr = 2.4
-    elif gas == 'D':
-        print( '    you have choosen deuterium as gas, no calibration factor exists for this gas' )
-        print( '    the same factor as for hydrogen will be used' )
-        corr = 2.4
-    elif gas == 'He':
-        corr =5.9
-    elif gas == 'Ne':
-        corr =4.1
-    elif gas == 'Ar':
-        corr =.8
-    elif gas == 'Kr':
-        corr =.5
-    elif gas == 'Xe':
-        corr =.4
-    return pressure*corr
-
-def GetMicrowavePower(shotnumber):
-    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    U_in_for=LoadData(location)['2 GHz Richtk. forward']
-    U_in_back=LoadData(location)['2 GHz Richtk. backward']
-    U_in_for[U_in_for>0]    = -1e-6
-    U_in_back[U_in_back>0]    = -1e-6
-    signal_dBm_for  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_for / (-0.5508373840567) )**0.4255365582241 ))+60.49
-    signal_dBm_back  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_back / (-0.5508373840567) )**0.4255365582241 ))+60.11
-    signalinwatt_for   = 10**(signal_dBm_for/10.) * 1e-3
-    signalinwatt_back   =10**(signal_dBm_back/10.) * 1e-3
-    start=np.argmax(np.gradient(signalinwatt_for))
-    stop=np.argmin(np.gradient(signalinwatt_for))
-    return (np.mean(signalinwatt_for[start:stop])-np.mean(signalinwatt_back[start:stop]))
-   
 # Pixelmethod
 def Pixelmethod():
     start=datetime.now()
     #-----------------------------------------------------#-
     #!!! Enter here which channels lines of sight you want to have analyzed(1 to 8), what pixel-resolution you need (in cm) and  which flux surfaces (0 to 7) should be modeled. 
     #note that more channels, a smaller resolution and more fluxsurfaces result in longer computation times
-    bolo_channel=[8] #1 to 8
+    bolo_channel=[4] #1 to 8
     bolo_power=[0,0,0,3.4E-6,3.4E-6,0,0,0]
-    res=0.4
-    fluxsurfaces=[8,9,10,11] #0 to 7
-    err='None'
+    res=0.5
+    fluxsurfaces=[0,1,2,3,4,5,6,7,8,9,10,11]
+    err='Min'
     #-----------------------------------------------------#-
     if err=='None':
         x_err=0
@@ -138,8 +101,8 @@ def Pixelmethod():
         y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
 
 
-        plt.xlabel('R [cm]')
-        plt.ylabel('r [cm]')
+        plt.xlabel('R [cm]',fontsize=30)
+        plt.ylabel('z [cm]',fontsize=30)
 
         #Derive the exact positions of the bolometerchannels
         #I derive the x and y positions of the four upper channels lower and upper edge
@@ -178,7 +141,7 @@ def Pixelmethod():
         n_=list(o+0.01 for o in (np.arange(int(min(y_.iloc[12]))-1,int(max(y_.iloc[12]))+1,res)))
         inside_line=[[],[],[],[],[],[],[],[]]
         lines=[0,2,4,6,8,10,12,14]
-        colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue','blue','green','gold','magenta']
+        #colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue','blue','green','gold','magenta']
         #here the desired line of sight is plotted from the experimental data. To see the calculate lines of sight activate the dashed lines plot
         #now the points of interest(the ones in a square of the rough size of the outer most fluxsurface) are tested for their position relative to the line of sight
         #If the point lies inside the two lines describing the line of sight of that channel, its coordinates are added to "inside_line"
@@ -187,8 +150,8 @@ def Pixelmethod():
         popt4,pcov4=curve_fit(lin,[a-b+x_err,a-b-12.4+x_err,a-b-19.5+x_err,a-b-22.9+x_err],[s_h/2,ex_1[lines[bol-1]+1]+y_err,ex_2[lines[bol-1]+1]+y_err,ex_3[lines[bol-1]+1]+y_err])
         #popt3,pcov3=curve_fit(lin,[a-b+x_err,a-b-22.9+x_err],[-s_h/2,ex_3[lines[bol-1]]-y_err])
         #popt4,pcov4=curve_fit(lin,[a-b+x_err,a-b-22.9+x_err],[s_h/2,ex_3[lines[bol-1]+1]+y_err])
-        plt.plot(x,lin(x,*popt3),color=colors[bol-1])
-        plt.plot(x,lin(x,*popt4),color=colors[bol-1])
+        plt.plot(x,lin(x,*popt3),color=colors[bol-1],linewidth=4)
+        plt.plot(x,lin(x,*popt4),color=colors[bol-1],linewidth=4)
         plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[lines[bol-1]],ex_2[lines[bol-1]],ex_3[lines[bol-1]]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=colors[bol-1])
         plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[lines[bol-1]+1],ex_2[lines[bol-1]+1],ex_3[lines[bol-1]+1]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=colors[bol-1])
 
@@ -217,20 +180,20 @@ def Pixelmethod():
         #n_=list(b+0.01 for b in (np.arange(int(min(y_.iloc[i+1])),int(max(y_.iloc[i+1]))+1,res)))
             for (m,n) in inside_line[bol-1]:
                 if (m,n) not in inside_:
-                    plt.plot(m,n,marker='o',color=colors[f])
+                    plt.plot(m,n,marker='.',color=colors[f])
                     if n<0:
                         half=np.concatenate((np.arange(-1,0),np.arange(32,63)))
                     else:
                         half=np.arange(0,32)
                     x=np.array(x_.iloc[f])
                     y=np.array(y_.iloc[f])
-                    plt.plot(x,y,marker='.',color=colors[f])
+                    plt.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors[f])
                     ideal=intersections(half)[0]
                     x_inner=intersections([ideal])[2][intersections([ideal])[1]]
                     y_inner=lin(x_inner,*(intersections([ideal])[4]))
                     x=np.array(x_.iloc[f+1])
                     y=np.array(y_.iloc[f+1])
-                    plt.plot(x,y,marker='.',color=colors[f+1])
+                    plt.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors[f+1])
                     ideal=intersections(half)[0]
                     x_outer=intersections([ideal])[2][intersections([ideal])[1]]
                     y_outer=lin(x_outer,*(intersections([ideal])[4]))
@@ -266,7 +229,10 @@ def Pixelmethod():
             
         plt.ylim(min(y_.iloc[f+1])-res,max(y_.iloc[f+1])+res)
         plt.xlim(z_0+min(y_.iloc[f+1])-res,80)
+        fig1= plt.gcf()
         plt.show()
+        fig1.savefig('/home/gediz/Results/Modeled_Data/Fluxsurfaces_and_Lines_of_sight/flux_{f1}_to_{f2}_channel_{b}.pdf'.format(f1=fluxsurfaces[0],f2=fluxsurfaces[-1],b=bolo_channel[0]))
+
         vol_ges=0
         v_i_ges=0
         for k in np.append(fluxsurfaces, fluxsurfaces[-1]+1):
@@ -274,7 +240,7 @@ def Pixelmethod():
                 vol_ges+=vol[k]
             if len([v_i[k]]) != 0:
                 v_i_ges+=v_i[k][0]
-        vols_ges=vol_ges/1000000
+        vol_ges=vol_ges/1000000
         v_i_ges=v_i_ges/100
         P_ges=((4*np.pi*bolo_power[bol-1])/(((c_w*c_h)/10000)*v_i_ges))*0.1198
         print('Volume Observed by channel {c}: {v}m\u00b3'.format(c=bol,v=float(f'{vol_ges:.5f}')))
@@ -284,42 +250,65 @@ def Pixelmethod():
 
 #Total Power from Channel 4
 
-def Totalpower_from_exp(Type=''):
-    v_i_ges_middle=0.01476
-    v_i_ges_min=0.012895
-    v_i_ges_max=0.016405
-    P_ges_middle=[]
-    P_ges_min=[]
-    P_ges_max=[]
-    pressures=[]
-    mw=[]
+def Totalpower_from_exp(Type='',save=False):
+    v_i_ges_middle=[0.00978,0.0175945,0.020527,0.02182,0.02182,0.020527,0.0175945,0.00978]#0.01476
+    #v_i_ges_min=0.012895
+    #v_i_ges_max=0.016405
+
+    V_T=0.1198 #till outer most closed fluxsurface
+    V_T_2=0.237 #till edge of calculation area with "additional fluxsurfaces"
     plt.figure(figsize=(10,7))
-    colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000']
-    for s,i in zip(shotnumbers,np.arange(0,len(shotnumbers))):
-        bolo_p=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=s),usecols=1)[3]*10**(-6)
-        pressures.append(Pressure(s))
-        mw.append(GetMicrowavePower(s))
-        P_ges_middle.append(((4*np.pi*bolo_p)/(((c_w*c_h)/10000)*v_i_ges_middle))*0.1198*mesh*gold)
-        P_ges_min.append(((4*np.pi*bolo_p)/(((c_w*c_h)/10000)*v_i_ges_min))*0.1198*mesh*gold)
-        P_ges_max.append(((4*np.pi*bolo_p)/(((c_w*c_h)/10000)*v_i_ges_max))*0.1198*mesh*gold)
-        title='shot n°{s}, P$_m$$_w$= {m} W, p={p} mPa'.format(s=s,m=float(f'{GetMicrowavePower(s):.3f}'),p=float(f'{Pressure(s):.3f}'))
+    for j in [0,1,2,3,4,5,6]:
+        P_ges_exp,P_ges_calc,P_ges_est=[],[],[]
+        pressures=[]
+        mw=[]
+        for s,i,g in zip(shotnumbers[j],np.arange(0,len(shotnumbers[j])),gases[j]):
+            bolo_p=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=s),usecols=1)[3]*10**(-6)
+            #calc_p=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_H.txt'.format(s=s),usecols=1)[3]*10**(-6)
+            pressures.append(br.Pressure(g,s))
+            mw.append(br.GetMicrowavePower(s)[0])
+            #P_ges_est.append(Totalpower_from_mean_T(s))
+            P_ges_exp.append(((4*np.pi*bolo_p*mesh*gold)/(((c_w*c_h)/10000)*v_i_ges_middle[3]))*V_T_2)
+            #P_ges_calc.append(((4*np.pi*calc_p)/(((c_w*c_h)/10000)*v_i_ges_middle[3]))*V_T)
+            #title='{g}, shot n°{s}, MW: {mw}, P$_M$$_W$= {m} W, p={p} mPa'.format(g=g,s=s,mw=br.GetMicrowavePower(s)[1],m=float(f'{br.GetMicrowavePower(s)[0]:.1f}'),p=float(f'{br.Pressure(g,s):.1f}'))
         if Type=='Pressure':
-            plt.errorbar(pressures[i],P_ges_middle[i],yerr=0.1*P_ges_middle[i],marker='o',capsize=5,label=title,color=colors[i])
-            plt.annotate(str(float(f'{(P_ges_middle[i]/mw[i])*100:.1f}'))+'%',(pressures[i]+0.2,P_ges_middle[i]),color=colors[i])
+            title='{g}, MW: {mw}, P$_M$$_W$= {m} W'.format(g=g,mw=br.GetMicrowavePower(s)[1],m=float(f'{br.GetMicrowavePower(s)[0]:.1f}'))
+            plt.plot(pressures,P_ges_exp,marker=markers[j],color=colors[j],linestyle='dashed',label=title)
+            #plt.errorbar(pressures[i],P_ges_exp[i],yerr=0.1*P_ges_exp[i],marker='o',capsize=5,label=title+'exp',color=colors[i])
+            #plt.errorbar(pressures[i],P_ges_calc[i],yerr=0.1*P_ges_calc[i],marker='v',capsize=5,label=title+'cac',color=colors[i])
+            #plt.errorbar(pressures[i],P_ges_est[i],yerr=0.1*P_ges_est[i],marker='s',capsize=5,label=title+'est',color=colors[i])
+            plt.annotate(str(float(f'{(P_ges_exp[i]/mw[i])*100:.1f}'))+r'% of MWin',(pressures[i]+0.2,P_ges_exp[i]),color=colors[i])
+            #plt.annotate(str(float(f'{(P_ges_calc[i]/mw[i])*100:.1f}'))+r'% of MWin',(pressures[i]+0.2,P_ges_calc[i]),color=colors[i])
             plt.xlabel('pressure [mPa]')
         if Type=='Power':
-            plt.errorbar(mw[i],P_ges_middle[i],yerr=0.1*P_ges_middle[i],marker='o',capsize=5,label=title,color=colors[i])
-            plt.annotate(str(float(f'{(P_ges_middle[i]/mw[i])*100:.1f}'))+'%',(mw[i]+10,P_ges_middle[i]),color=colors[i])
-            plt.xlabel('microwave power [W]')
-    plt.suptitle('Total emitted radiation power calculated from channel 4 \n {t} scan with {g}'.format(t=Type,g=gas),fontsize=20)
-    plt.ylabel('total emitted radiation power [W]')
+            title='{g}, MW: {mw}, '.format(g=g,mw=br.GetMicrowavePower(s)[1],)+r'p$\approx$'+'{p} mPa'.format(p=float(f'{br.Pressure(g,s):.1f}'))
+            plt.plot(mw,P_ges_exp,marker=markers[j],color=colors[j],linestyle='dashed',label=title)
+        #     #plt.errorbar(mw,P_ges_exp,yerr=0.1*P_ges_exp,marker='o',label=title,capsize=5,color=colors[j])
+        #     #plt.annotate(str(float(f'{(P_ges_exp[i]/mw[i])*100:.1f}'))+'%',(mw[i]+10,P_ges_exp[i]),color=colors[j])
+            plt.xlabel('microwave power [W]',fontsize=25)
+    #plt.suptitle('Total emitted radiation power calculated from channel 4 \n {t} scan with {g}'.format(t=Type,g=gas),fontsize=20)
+    plt.ylabel('P$_r$$_a$$_d$ total [W]',fontsize=25)
     plt.ylim(0)
-    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.5))
-    print(P_ges_middle,bolo_p)
+    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.85))
+    fig1= plt.gcf()   
     plt.show()
-    #print('Total Plasmaradiationpower: {p} Watt'.format(p=float(f'{P_ges_middle:.2f}')))
-    #print('Total Plasmaradiationpower min: {p} Watt'.format(p=float(f'{P_ges_min:.2f}')))
-    #print('Total Plasmaradiationpower max: {p} Watt'.format(p=float(f'{P_ges_max:.2f}')))
+    if save==True:
+        fig1.savefig('/home/gediz/Results/Modeled_Data/Tota_P_rad/comparison_{T}_{g}.pdf'.format(T=Type, g=gases), bbox_inches='tight')
+
+
+def Totalpower_from_mean_T(s):
+    p_t,t,p_d,d=pc.TemperatureProfile(s,'Values',save=False)[0]*100,pc.TemperatureProfile(s,'Values',save=False)[1],pc.DensityProfile(s,'Values',save=False)[0]*100,pc.DensityProfile(s,'Values',save=False)[1]
+    plt12_h=[[0.2,0.3,0.5,0.7,1.0,1.5,2.0,3.0,5.0,7.0,10.0,15.0,20.0,30.0,50.0,70.0,100.0,150.0,200.0,300.0],[4.407688845190763e-35,8.516871836003884e-28,5.447289062950326e-22,1.7238686729080675e-19,1.3128247856849096e-17,3.809902586446144e-16,2.0557069822381066e-15,1.1219816909239107e-14,4.4647818960078494e-14,8.194415483209005e-14,1.3041383247019845e-13,1.8878908716623144e-13,2.2720958471076943e-13,2.7265288021124073e-13,3.1980213280329866e-13,3.4037318269587456e-13,3.5247900153249376e-13,3.554178707527905e-13,3.514790184085834e-13,3.3768040567583216e-13]]
+    interpol_rc=pchip_interpolate(plt12_h[0],plt12_h[1],np.mean(t[:-5]))
+    n_e_2=np.mean(d)
+    n_e=pc.Densities(s)[1]
+    n_0=pc.Densities(s)[2]
+    R=z_0/100
+    r=((0.763-z_0/100)+0.15)/2
+    V_T=0.237#2*np.pi**2*r**2*R
+    P=((interpol_rc*n_e*n_0*V_T)*1.602E-19)
+    return (interpol_rc,P,(P/br.GetMicrowavePower(s)[0])*100)
+
 
 #The power absorbed by the channels calculated with ADAS coefficients
 def Boloprofile_calc(save=True):
@@ -332,6 +321,7 @@ def Boloprofile_calc(save=True):
     p_t,t,p_d,d=pc.TemperatureProfile(s,'Values',save=False)[0]*100,pc.TemperatureProfile(s,'Values',save=False)[1],pc.DensityProfile(s,'Values',save=False)[0]*100,pc.DensityProfile(s,'Values',save=False)[1]
     plt12_h=[[0.2,0.3,0.5,0.7,1.0,1.5,2.0,3.0,5.0,7.0,10.0,15.0,20.0,30.0,50.0,70.0,100.0,150.0,200.0,300.0],[4.407688845190763e-35,8.516871836003884e-28,5.447289062950326e-22,1.7238686729080675e-19,1.3128247856849096e-17,3.809902586446144e-16,2.0557069822381066e-15,1.1219816909239107e-14,4.4647818960078494e-14,8.194415483209005e-14,1.3041383247019845e-13,1.8878908716623144e-13,2.2720958471076943e-13,2.7265288021124073e-13,3.1980213280329866e-13,3.4037318269587456e-13,3.5247900153249376e-13,3.554178707527905e-13,3.514790184085834e-13,3.3768040567583216e-13]]
     flux_t,flux_d,flux_rc=[],[],[]
+    n=pc.Densities(s)[0]
     n_e=pc.Densities(s)[1]
     n_0=pc.Densities(s)[2]
     for i in np.arange(0,len(flux_pos)-1):
@@ -341,13 +331,12 @@ def Boloprofile_calc(save=True):
         flux_d.append(np.mean(interpol_d))
         interpol_rc=pchip_interpolate(plt12_h[0],plt12_h[1],flux_t[i])
         flux_rc.append(interpol_rc)
-
     P_profile_calc=[]
     for b in [flux_1,flux_2,flux_3,flux_4,flux_4,flux_3,flux_2,flux_1]:
         P=0
-        for j in np.arange(0,len(flux_pos)-1):
+        for j in np.arange(0,len(flux_d)):
             #R=(a-40-flux_pos[j])/100
-            P+=((flux_rc[j]*n_e*n_0*b[j])*1.602E-19)*(A_D/(4*np.pi))*1/mesh*1/gold
+            P+=((flux_rc[j]*n_e*n_0*b[j])*1.602E-19)*(A_D/(4*np.pi))
         P_profile_calc.append(P/10**(-6))
     
     c1='#18a8d1'
@@ -357,19 +346,19 @@ def Boloprofile_calc(save=True):
     ax2=ax.twinx()
     P_profile=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=s),usecols=1)
     lns2=ax2.plot((1,2,3,4,5,6,7,8),P_profile_calc,'v--',color=c2,label='calculated power profile')
-    lns1=ax.plot((1,2,3,4,5,6,7,8),P_profile,'o--',color=c1,label='measured power profile')
+    lns1=ax.plot((1,2,3,4,5,6,7,8),P_profile*mesh*gold,'o--',color=c1,label='measured power profile')
     ax.set_xticks((1,2,3,4,5,6,7,8))
     ax.set_ylim(0)
     ax2.set_ylim(0)
     ax.set_xlabel('bolometer channel')
-    ax.set_ylabel('power [\u03bcW]',color=c1)
+    ax.set_ylabel('P$_r$$_a$$_d$ [\u03bcW]',color=c1)
     ax.tick_params(axis='y', labelcolor=c1)
-    ax2.set_ylabel('power [\u03bcW]',color=c2)
+    ax2.set_ylabel('P$_r$$_a$$_d$ [\u03bcW]',color=c2)
     ax2.tick_params(axis='y', labelcolor=c2)
     fig.patch.set_facecolor('white')
     leg = lns1 + lns2 
     labs = [l.get_label() for l in leg]
-    title= '{g}, shot n°{s}, MW: {mw} \n P$_M$$_W$= {m} W, p={p} mPa'.format(g=gas,s=s,mw=br.GetMicrowavePower(s)[1],m=float(f'{br.GetMicrowavePower(s)[0]:.1f}'),p=float(f'{Pressure(s):.1f}'))
+    title= '{g}, shot n°{s}, MW: {mw} \n P$_M$$_W$= {m} W, p={p} mPa'.format(g=gas,s=s,mw=br.GetMicrowavePower(s)[1],m=float(f'{br.GetMicrowavePower(s)[0]:.1f}'),p=float(f'{br.Pressure(gas,s):.1f}'))
     ax.legend(leg, labs, loc='lower center', title=title)
     fig1= plt.gcf()   
     plt.show()
@@ -432,14 +421,15 @@ def TopView():
 
 # %%
 
-shotnumber=13094
-shotnumbers=(13058,13059,13061,13062,13063)
+shotnumber=13092
+shotnumbers=[[13090,13095,13096,13097],[13195,13196,13197,13198],[13069,13070,13071,13072],[13188,13189,13190,13191],[13098,13107,13108,13109],[13207,13208,13209,13210],[13079,13085,13086,13087]]
+gases=[['H','H','H','H'],['H','H','H','H'],['He','He','He','He'],['He','He','He','He'],['Ar','Ar','Ar','Ar'],['Ar','Ar','Ar','Ar'],['Ne','Ne','Ne','Ne']]
 gas='H'
 infile='/data6/Auswertung/shot{s}/'.format(s=shotnumber)
 
 location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
 mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
-gold=1/0.85      #H for 7eV
+gold=1/0.81      #H for 7eV
 #gold=1/0.47      #He for 10 eV
 #gold=1/0.58      #He for 5 eV
 #gold=1/0.38       #He for 20 eV
@@ -448,7 +438,10 @@ outfile='/home/gediz/Results/Modeled_Data/Bolometerprofiles/'
 if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
-#Totalpower_from_exp('Pressure')
+
+Totalpower_from_exp('Power',save=True)
 #Pixelmethod()
-Boloprofile_calc()
+#for shotnumber in (13090,13091,13092,13093,13094,13095,13096,13097):
+    #Boloprofile_calc(save=True)
+#print(Totalpower_from_mean_T(shotnumber)[0],Totalpower_from_mean_T(shotnumber)[1])
 # %%

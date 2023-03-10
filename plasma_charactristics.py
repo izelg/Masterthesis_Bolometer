@@ -209,7 +209,7 @@ def TemperatureProfile(s,Type='',save=False):
 
     if Type=='Values' : 
         Position, T=np.genfromtxt('/data6/Auswertung/shot{s}/shot{s}Te.dat'.format(s=s),unpack=True)
-        return(Position,T)
+        return(Position,T,np.mean(T))
 
 def CorrectedDensityProfile(shotnumber):
     Position, char_U, char_I, I_isat,Bolo_sum, Interferometer=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=shotnumber),unpack=True)
@@ -270,11 +270,12 @@ def DensityProfile(s,Type='',save=False):
         s=shotnumber
         plt.figure(figsize=(10,6))
         d=CorrectedDensityProfile(shotnumber)[1]*3.88E17
-        norm=integrate.trapezoid(CorrectedDensityProfile(shotnumber)[0])
         Position=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=shotnumber),usecols=0)
+        norm=integrate.trapezoid(CorrectedDensityProfile(shotnumber)[0],Position)/abs(Position[-1]-Position[0])
         Density=[u*d/norm for u in CorrectedDensityProfile(shotnumber)[0]]
         plt.plot(Position, Density,label='shot n°{s}, P$_m$$_w$= {mw} W , \n p= {p} mPa '.format(s=shotnumber,mw=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber,gas):.3f}')))
         plt.xlabel('position R [m]')
+        plt.hlines(d,Position[0],Position[-1])
         plt.ylabel('density [m$^-$$^3$]')
         plt.suptitle('2D Probe scan of shot {s} // {g} \n density-profile normalized with line integrated density {d} m$^-$$^3$'.format(s=shotnumber,g=gas,d=float(f'{d:.3e}')),y=1.05)
         plt.legend(loc=1, bbox_to_anchor=(1.7,1))    
@@ -285,8 +286,8 @@ def DensityProfile(s,Type='',save=False):
             fig1.savefig(str(outfile)+"shot{s}/Densityprofile_{g}.pdf".format(s=shotnumber,g=gas), bbox_inches='tight')
     if Type=='Values':
         d=CorrectedDensityProfile(s)[1]*3.88E17
-        norm=integrate.trapezoid(CorrectedDensityProfile(s)[0])
         Position=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=s),usecols=0)
+        norm=integrate.trapezoid(CorrectedDensityProfile(shotnumber)[0],Position)/abs(Position[-1]-Position[0])
         Density=[u*d/norm for u in CorrectedDensityProfile(s)[0]]
 
         return Position, Density    
@@ -339,7 +340,7 @@ def Densities(s):
     n_e=CorrectedDensityProfile(s)[1]*3.88E17
     n_0=n-n_e
     deg_ion=(n_e/n)*100
-    return(n,n_e,n_0,deg_ion)
+    return n,n_e,n_0,deg_ion
     
     
       
@@ -348,7 +349,7 @@ def Densities(s):
 shotnumbers=(13090,13095,13096,13097) 
 gases=('H','H','H','H')
 gas='H'  
-shotnumber=13090
+shotnumber=13096
 infile='/data6/Auswertung/shot{s}/'.format(s=shotnumber)
 #infile='/data6/shot{}/probe2D/'.format(shotnumber)
 outfile='/home/gediz/Results/Plasma_charactersitics/'
@@ -359,9 +360,10 @@ if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
 #ExtractMeanValues()
 #CompareDifferentGases()
 #GetMicrowavePower(shotnumber)
-#TemperatureProfile('Single')
+#TemperatureProfile(shotnumber,'Single')
 #PlotMeanValues(compare=True)
 #FastElectrons()
-#DensityProfile('Single')
-#Densities()
+DensityProfile(shotnumber,'Single',save=True)
+#print(Densities(shotnumber)[1])
+#print(TemperatureProfile(shotnumber,'Values')[2])
 #%%
