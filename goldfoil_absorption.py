@@ -214,6 +214,9 @@ def Log_Plot(data):
 #absorbed by gold all together and prints the absorbed percentage in the legend
 def Reduced_Spectrum(lightsource='', save=False):
     if ADAS==True:
+        from matplotlib.ticker import ScalarFormatter
+
+        y_formatter = ScalarFormatter(useOffset=False)
         x1= np.sort(Spectrum(lightsource)[0])
         y1=pchip_interpolate(Gold_Abs()[0],Gold_Abs()[1],np.sort(Spectrum(lightsource)[0]))
         x0=Gold_Abs()[0]
@@ -221,8 +224,8 @@ def Reduced_Spectrum(lightsource='', save=False):
         x=np.arange(0,10E2,1)
         y=pchip_interpolate(x0,y0,x)
         x2=Spectrum(lightsource)[0]
-        y2=Spectrum(lightsource)[1]
-        y3=Gold_Fit(lightsource)[0]
+        y2=Spectrum(lightsource)[1]*100
+        y3=[a*100 for a in Gold_Fit(lightsource)[0]]
         percentage_integral=Gold_Fit(lightsource)[1]
         percentage_points=Gold_Fit(lightsource)[2]
         fig,ax = plt.subplots(figsize=(8,5))
@@ -231,10 +234,11 @@ def Reduced_Spectrum(lightsource='', save=False):
         ax.set_xlim(0,1000)
         ax.set_ylim(0,max(y2)*1.1)
         ax3.plot(x,y,color='#c1121f',linewidth=3)
-        lns1=ax.bar(x2,y2,width=18, label='Spectrum H\n'+r'T$_e$$\approx$5eV, n$_e$$\approx$2E-17m$^-$$^3$',color='#1ba1e9', alpha=0.5)
-        lns2=ax.bar(x2,y3,width=18, label='Spectrum reduced to {p}%'.format(p=float(f'{percentage_points:.2f}')), color='#1ba1e9')
+        ax.yaxis.set_major_formatter(y_formatter)
+        lns1=ax.bar(x2,y2,width=18, label='Hydrogen spectrum\n'+r'T$_e$$\approx$5 eV, n$_e$$\approx$2E-17 m$^-$$^3$',color='#1ba1e9', alpha=0.5)
+        lns2=ax.bar(x2,y3,width=18, label='spectrum reduced to {p}%'.format(p=float(f'{percentage_points:.2f}')), color='#1ba1e9')
         ax.set_xlabel('wavelength [nm]',fontsize=25)
-        ax.set_ylabel( 'pec [cm$^3$/s]',fontsize=25)
+        ax.set_ylabel( r'⟨σ$_{ex}$ v$_e$⟩$_{rad}^0$ [m$^3$/s]',fontsize=25)
         ax3.set_ylabel('absorption gold',color='#c1121f',fontsize=25)
         ax3.tick_params(axis='y', labelcolor='#c1121f')
         ax2.set_yticks([])

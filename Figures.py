@@ -83,8 +83,8 @@ y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_rad
 x=np.arange(40,a,0.1)
 
 
-plt.xlabel('R [cm]',fontsize=25)
-plt.ylabel('z [cm]',fontsize=25)
+plt.xlabel('R [cm]',fontsize=30)
+plt.ylabel('z [cm]',fontsize=30)
 f1=0.14 #Distance first channel to edge [cm]
 f2=0.40 #Distance between channels [cm]
 h=[-2+f1,-2+f1+c_h,-2+f1+c_h+f2,-2+f1+c_h*2+f2,-2+f1+c_h*2+f2*2,-2+f1+c_h*3+f2*2,-2+f1+c_h*3+f2*3,-2+f1+c_h*4+f2*3,f1,f1+c_h,f1+c_h+f2,f1+c_h*2+f2,f1+c_h*2+f2*2,f1+c_h*3+f2*2,f1+c_h*3+f2*3,f1+c_h*4+f2*3,f1*2+c_h*4+f2*3]
@@ -292,9 +292,10 @@ t=17.5 #radius of vessel [cm]
 gas='H'
 fig=plt.figure(figsize=(10,7))
 
-ax=fig.add_subplot(111)
-ax2=ax.twinx()
-ax3=ax.twinx()
+ax_t_f=fig.add_subplot(122)
+ax_t=ax_t_f.twinx()
+ax_d=fig.add_subplot(121)
+ax_d_f=ax_d.twinx()
 x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position_extended.csv',sep=',',engine='python'),dtype=np.float64)
 y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
 a=0
@@ -304,31 +305,43 @@ markers=['o','v','s','P','p','D']
 for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
     x=[u-60 for u in np.array(x_.iloc[i])]
     y=np.array(y_.iloc[i])
-    ax3.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey',linewidth=5,alpha=0.2)
+    ax_d_f.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey',linewidth=5,alpha=0.2)
+    ax_t_f.plot(np.append(x,x[0]),np.append(y,y[0]),color='grey',linewidth=5,alpha=0.2)
+
 for shot,m,c in zip((13090,13095,13096,13097),markers,colors):
     P_t,T=pc.TemperatureProfile(shot,'Values')[0],pc.TemperatureProfile(shot,'Values')[1]
     P_d,D=pc.DensityProfile(shot,'Values')
+    print(D)
+    d_mean=pc.CorrectedDensityProfile(shot)[1]*3.88E17/2
     b=[0,5,10,15,20,25]
     l='shot n°{s}, P$_M$$_W$= {m} W'.format(s=shot,m=float(f'{br.GetMicrowavePower(shot)[0]:.1f}'))
-    ax2.plot(P_t*100, T,linewidth=3,color=c,marker=m,markersize=5)
-    ax2.plot([e for i,e in enumerate(P_t*100) if i in b],[e for i,e in enumerate(T) if i in b],marker=m,linestyle='None',color=c,markersize=18,label=l)
-    ax.plot((P_d-P_d[-1]+P_d[0])*100,np.flip(D),marker=m,markersize=5,color=c,linewidth=3)#,(P_d-P_d[-1]+P_d[0])*100,np.flip(D)
-    ax.plot([e for i,e in enumerate((P_d-P_d[-1]+P_d[0])*100) if i in b],[e for i,e in enumerate(np.flip(D)) if i in b],marker=m,linestyle='None',color=c,markersize=18)
-ax.set_xlabel('R - r$_0$ [cm]',fontsize=25)
-ax.set_ylabel('density [m$^-$$^3$]',fontsize=25)
-ax.set_yscale('log')
-ax.set_xlim(-12,19)
-ax2.set_ylabel('temperature [eV]',fontsize=25)
-ax2.set_ylim(0,10)
-ax3.set_yticks([])
-ax3.set_ylim(-10,10)
+    ax_t.plot(P_t*100, T,linewidth=3,color=c,marker=m,markersize=5)
+    ax_t.plot([e for i,e in enumerate(P_t*100) if i in b],[e for i,e in enumerate(T) if i in b],marker=m,linestyle='None',color=c,markersize=18,label=l)
+    ax_d.plot(P_d*100,D,marker=m,markersize=5,color=c,linewidth=3)#,(P_d-P_d[-1]+P_d[0])*100,np.flip(D)
+    ax_d.plot([e for i,e in enumerate(P_d*100) if i in b],[e for i,e in enumerate(D) if i in b],marker=m,linestyle='None',color=c,markersize=18)
+    ax_d.hlines(d_mean,P_d[0]*100,P_d[-1]*100,color=c)
+ax_d.set_xlabel('R - R$_0$ [cm]',fontsize=25)
+ax_t_f.set_xlabel('R - R$_0$ [cm]',fontsize=25)
+ax_t.set_xlim(3,20)
+ax_d.set_xlim(3,20)
+ax_d_f.set_ylim(-13,13)
+ax_t_f.set_ylim(-13,13)
+ax_t.set_ylim(0)
+
+ax_d.set_ylabel('density [m$^-$$^3$]',fontsize=25)
+ax_d.set_yscale('log')
+ax_t.set_ylabel('temperature [eV]',fontsize=25)
+
+ax_d_f.set_yticks([])
+ax_t_f.set_yticks([])
 
 
-ax2.legend(loc='lower center',bbox_to_anchor=(0.5,-0.62),title=r'H, p$\approx$ 7.5 mPa')
+
+ax_t.legend(loc='lower center',bbox_to_anchor=(0,-0.62),title=r'H, p$\approx$ 7.5 mPa')
 
 
 fig1= plt.gcf()
 plt.show()
-fig1.savefig('/home/gediz/LaTex/Thesis/Figures/fluxsurfaces_with_temperatureprofiles.pdf',bbox_inches='tight')
+#fig1.savefig('/home/gediz/LaTex/Thesis/Figures/fluxsurfaces_with_temperatureprofiles.pdf',bbox_inches='tight')
 
 # %%

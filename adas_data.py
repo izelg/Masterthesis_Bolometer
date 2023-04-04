@@ -34,7 +34,7 @@ def pec_he(spectrum=False,rc=False):
     lines=f.readlines()
     densities.append(lines[2]+lines[3])
     temperatures.append(lines[4]+lines[5])
-    densities=[float(dens) for dens in (densities[0].replace('\n','')).split() ]
+    densities=[float(dens)*1e6 for dens in (densities[0].replace('\n','')).split() ]
     temperatures=[float(temp) for temp in (temperatures[0].replace('\n','')).split()]
 
     for line in lines:
@@ -52,8 +52,8 @@ def pec_he(spectrum=False,rc=False):
 
   if spectrum ==True:
     ty='EXCIT' #'RECOM', 'ECXIT'
-    t=2
-    d=11
+    t=3
+    d=1
     #for d in np.arange(1,12):
     w_e=[]
     s_e=[]
@@ -70,7 +70,7 @@ def pec_he(spectrum=False,rc=False):
           w_r.append(float(globals()[i][0])*10**(-1))
 
       #plt.bar(w_e,s_e,width=10,label=str(temperatures[t])+'eV')
-    plt.bar(w_e,s_e,width=10,label=str('%.2E' % densities[d])+'cm$^-$$^3$')
+    plt.bar(w_e,s_e,width=10,label=str('%.2E' % densities[d])+'m$^-$$^3$')
       #plt.bar(w_r,s_r,width=10,label=str(temperatures[t])+'eV')
     plt.xlabel('wavelength [nm]')
     plt.ylabel('pec [cm$^3$/s]')
@@ -153,7 +153,7 @@ def pec_h(spectrum=False,rc=False):
 
   if spectrum==True:
     ty='EXCIT' #'RECOM', 'ECXIT
-    t=8
+    t=0
     d=11
     #for d in np.arange(1,23):
     w_e=[]
@@ -199,7 +199,7 @@ def pec_h(spectrum=False,rc=False):
             y.append(globals()[all_wl[i]][d][t])
             a+=((h*c/(x[i]*10**(-10)))*y[i])
         pec.append(a/e*m)
-      plt.plot(temperatures[0:19],pec[0:19],'o--',markersize=10,color=col,alpha=0.3,label=('%.2E' % densities[d-1]) +' m$^-$$^3$')
+      plt.plot(temperatures[0:19],pec[0:19],'o--',markersize=10,color=col,alpha=0.4,label=('%.1E' % densities[d-1]) +' m$^-$$^3$')
       pec_d.append(pec[10])
     pec=[]
     for t in np.arange(0,len(temperatures)):
@@ -215,9 +215,10 @@ def pec_h(spectrum=False,rc=False):
       pec.append(a/e*m)
     plt.plot(temperatures[0:19],pec[0:19],'o--',label='with averaged \n density',color='#1ba1e9')
     #plt.plot(erc_h()[0],erc_h()[1],'bo--',label='data from ADF11')
-    plt.legend(loc='right',bbox_to_anchor=(1.5,0.5))
+    plt.legend(loc='right',bbox_to_anchor=(1.48,0.5),title='Hydrogen')
     plt.xlabel('temperature [eV]',fontsize=25)
-    plt.ylabel('excitation energy \n rate coefficients [eVm$^3$/s]',fontsize=25)
+    plt.ylabel(r'⟨σ$_{ex}$ v$_e$⟩$_{rad}^0$ ⟨E$_{rad}^0$⟩ [eVm$^3$/s]',fontsize=25)
+    #plt.ylabel('excitation energy \n rate coefficients [eVm$^3$/s]',fontsize=25)
     plt.yscale('log')
     plt.ylim(8E-15,6E-13)
     fig1= plt.gcf()
@@ -229,8 +230,7 @@ def pec_h(spectrum=False,rc=False):
     # plt.yscale('log')
     # plt.show()
     #return temperatures[0:20], pec[0:20]
-# %%
-#plt12_h  
+# %% plt12_h  
 #line emission from excitation energy rate coefficients
 #excitation energy rate coefficientss in Wcm^3
 def erc_h():
@@ -288,8 +288,7 @@ def erc_h():
 
 
 
-# %%
-#plt89_he  
+# %% plt89_he  
 #line emission from excitation energy rate coefficients
 #excitation energy rate coefficientss in Wcm^3
 def erc_he():
@@ -363,5 +362,5 @@ def erc_he():
   #print(temperatures[3],f'{densities[7]:.2e}',globals()['rad_d_8'][3])
   return temperatures, globals()[all_rad_d_0[0]]
   # %%
-erc_he()
+pec_h(rc=True)
 # %%
