@@ -8,31 +8,32 @@
 #You can also compare different Bolometerprofiles
 
 
-from pdb import line_prefix
-from unicodedata import name
-from blinker import Signal
 from click import style
 import pandas as pd
 import re
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
-import statistics
 import os
-import itertools
+from scipy.signal import savgol_filter
+
+
+import plasma_characteristics as pc
+
 #%% Parameter
-Poster=False
+Poster=True
 
 
 if Poster==True:
     plt.rc('font',size=20)
     plt.rc('xtick',labelsize=25)
     plt.rc('ytick',labelsize=25)
-    plt.rcParams['lines.markersize']=20
+    plt.rcParams['lines.markersize']=12
 else:
     plt.rc('font',size=14)
     plt.rc('figure', titlesize=15)
-colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#04E762','#89FC00','#03CEA4','#04A777','#537A5A','#FF9B71','#420039','#D81159']
+#colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#04E762','#89FC00','#03CEA4','#04A777','#537A5A','#FF9B71','#420039','#D81159']
+colors=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#3C096C','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788']
 markers=['o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x']
 
 #%% --------------------------------------------------------------------------------------------------------
@@ -50,63 +51,6 @@ def LoadData(location):
     data = pd.read_csv(location, skiprows=4, sep="\t\t", names=cols, engine='python')
     return data
 
-def Pressure(gas,shotnumber):
-    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    y= LoadData(location)["Pressure"]
-    time = LoadData(location)['Zeit [ms]'] / 1000
-    pressure= np.mean(y[0:100])
-    d = 9.33                # according to PKR261 manual
-    pressure = 10.**(1.667*pressure-d)*1000
-    if gas == 'H':
-        corr = 2.4
-    elif gas == 'D':
-        print( '    you have choosen deuterium as gas, no calibration factor exists for this gas' )
-        print( '    the same factor as for hydrogen will be used' )
-        corr = 2.4
-    elif gas == 'He':
-        corr =5.9
-    elif gas == 'Ne':
-        corr =4.1
-    elif gas == 'Ar':
-        corr =.8
-    elif gas == 'Kr':
-        corr =.5
-    elif gas == 'Xe':
-        corr =.4
-    return pressure*corr
-
-def GetMicrowavePower(shotnumber):
-    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None]
-    z= LoadData(location)['2 GHz Richtk. forward']
-    w= LoadData(location)['8 GHz power']
-    height_z = abs(max(z)-min(z))
-    height_w = abs(max(w)-min(w))
-    if height_w >= 0.1:        #This is the part where the code finds out if 8 or 2GHz MW heating was used. Change the signal height if MW powers used change in the future
-        MW = '8 GHz'
-    elif height_z >= 0.1: 
-        MW = '2.45 GHz'
-    else:
-        MW = 'none'
-    if MW=='2.45 GHz':
-        U_in_for=LoadData(location)['2 GHz Richtk. forward']
-        U_in_back=LoadData(location)['2 GHz Richtk. backward']
-        U_in_for[U_in_for>0]    = -1e-6
-        U_in_back[U_in_back>0]    = -1e-6
-        signal_dBm_for  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_for / (-0.5508373840567) )**0.4255365582241 ))+60.49
-        signal_dBm_back  = (42.26782054007 + (-28.92407247331 - 42.26782054007) / ( 1. + (U_in_back / (-0.5508373840567) )**0.4255365582241 ))+60.11
-        signalinwatt_for   = 10**(signal_dBm_for/10.) * 1e-3
-        signalinwatt_back   =10**(signal_dBm_back/10.) * 1e-3
-        start=np.argmax(np.gradient(signalinwatt_for))
-        stop=np.argmin(np.gradient(signalinwatt_for))
-        return (np.mean(signalinwatt_for[start:stop])-np.mean(signalinwatt_back[start:stop]),MW)
-    if MW=='8 GHz':
-        U_in=LoadData(location)['8 GHz power']*1E3
-        a1  = 17.5637
-        a2  = 0.332023
-        a3  = 0.458919 
-        P= a1 * np.exp(a2 * np.abs(U_in)**a3)
-        return(np.mean(np.sort(P)[-100:-1]),MW)
 
 #This Function plots a timeseries of your choosing
 #-->use these channelnames: Zeit [ms]		8 GHz power		2 GHz Richtk. forward	I_Bh			U_B			Pressure		2 GHz Richtk. backward	slot1			I_v			Interferometer (Mueller)	Interferometer digital	8 GHz refl. power	Interferometer (Zander)	Bolo_sum		Bolo1			Bolo2			Bolo3			Bolo4			Bolo5			Bolo6			Bolo7			Bolo8			optDiode		r_vh			Coil Temperature
@@ -167,7 +111,7 @@ def PlotAllTimeseriesTogether (figheight=None, figwidth=None, save=False):
         print("You didn't choose a figurewidth so I set it to 10")
         figwidth=10
     plt.figure(figsize=(figwidth, figheight))
-    plt.suptitle ('All bolometer signals of shot n°{n} together. MW used: {m} \n {e}'.format(n=shotnumber, m=GetMicrowavePower(shotnumber)[1], e=extratitle))
+    plt.suptitle ('All bolometer signals of shot n°{n} together. MW used: {m} \n {e}'.format(n=shotnumber, m=pc.GetMicrowavePower(shotnumber)[1], e=extratitle))
     time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None]
     colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue']
     for i,c in zip(np.arange(1,9),colors):
@@ -229,15 +173,14 @@ def SignalHighLowTime(Plot= False, save=False):
         MW_n = '8 GHz power'
     if MW== '2.45 GHz':
         MW_n= '2 GHz Richtk. forward'
-    y= np.array(LoadData(location)[MW_n])[:,None]
+    y= savgol_filter(np.ravel(np.array(LoadData(location)[MW_n])[:,None]),10,3)
     time= np.array(LoadData(location)['Zeit [ms]'])[:,None]
-
     steps=[]
     for i in np.arange(0, len(y)-10):
         step= (y[i]-y[i+10])
         steps.append(abs(step))
-    start=np.argwhere(np.array([steps])>0.1)[0][1]
-    stop=np.argwhere(np.array([steps])>0.1)[-1][1]
+    start=np.argwhere(np.array([steps])>0.05)[0][1]
+    stop=np.argwhere(np.array([steps])>0.05)[-1][1]
     if Plot== True:
         plt.show()
         plt.plot(time,y)
@@ -497,7 +440,7 @@ def BolometerProfile(Type="", save=False):
             y.append(abs(SignalHeight_max(Type,i,Plot=True)[0])) 
             #y.append(abs(SignalHeight_rough(Type,i,Plot=True)[0]))  
         else:
-            y.append(abs(SignalHeight(Type, i)[2])) #--><--
+            y.append(abs(SignalHeight(Type, i,Plot=False)[2])) #--><--
     if Type == 'Bolo':
         ylabel1= 'signal [V]'
         name='raw data'
@@ -539,17 +482,17 @@ def BolometerProfile(Type="", save=False):
         data = np.column_stack([np.array(x), np.array(y)])#, np.array(z), np.array(abs(y-z))])
         if Datatype=='Data':
             datafile_path = str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shotnumber, t=name_)
-            np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. \n Label for plot \n shot n°{s}// {e}\n channeln° \t {u}'.format(n=name, s= shotnumber, m=GetMicrowavePower(shotnumber)[1], u =ylabel1,e=extratitle))
+            np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. \n Label for plot \n shot n°{s}// {e}\n channeln° \t {u}'.format(n=name, s= shotnumber, m=pc.GetMicrowavePower(shotnumber)[1], u =ylabel1,e=extratitle))
             fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.pdf".format(n=shotnumber, t=name_), bbox_inches='tight')
         if Datatype=='Source':
-            np.savetxt(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n  Label for plot \nshot n°{s}, {n}, MW power: {m}, {e}\nchanneln° // {l}'.format(n=name, s= sourcetitle,m=GetMicrowavePower()[1],e=extratitle,l=ylabel1))
+            np.savetxt(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n  Label for plot \nshot n°{s}, {n}, MW power: {m}, {e}\nchanneln° // {l}'.format(n=name, s= sourcetitle,m=pc.GetMicrowavePower()[1],e=extratitle,l=ylabel1))
             fig1.savefig(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.pdf'.format(t=name_,n=sourcetitlesave), bbox_inches='tight')
 
     return x, y#, z, y-z
 
 #This function can compare the Bolometerprofiles of 4 different shots
 #There must already be a .txt file with the Signals for each channel as created with the function BolometerProfile()
-def CompareBolometerProfiles(Type="" ,save=False,normalize=False): 
+def CompareBolometerProfiles(Type="", ScanType='',save=False,normalize=False): 
     x=[1,2,3,4,5,6,7,8]
     #z=[8,7,6,5,4,3,2,1]
     if Type=='Bolo':
@@ -561,25 +504,37 @@ def CompareBolometerProfiles(Type="" ,save=False,normalize=False):
         name_='radiation powers'
         ylabel='P$_r$$_a$$_d$ [\u03bcW]'
     plt.figure(figsize=(10,7))
-    for i,c,m in zip(shotnumbers1,colors,markers):
-        g=gas
+    pressure,mw=[],[]
+    for i in shotnumbers1:
+        pressure.append(pc.Pressure(i,gas))
+        mw.append(pc.GetMicrowavePower(i)[0])
+    if ScanType=='Pressure':
+        sortnumbers=[shotnumbers1[i] for i in np.argsort(pressure)]
+    if ScanType=='Power':
+        sortnumbers=[shotnumbers1[i] for i in np.argsort(mw)]
+    if ScanType=='None':
+        sortnumbers=shotnumbers1
+    for i,c,m in zip(sortnumbers,colors,markers):
+        if ScanType=='Pressure':
+            label='shot n°{s}, p= {p} mPa'.format(s=i,p=float(f'{pc.Pressure(i,gas):.1f}'))
+            title= r'{g}, MW= {m}, P$_M$$_W$ $\approx$ {mw} kW'.format(g=gas,m=pc.GetMicrowavePower(i)[1],mw=float(f'{np.mean(mw)*10**(-3):.2f}'))
+        if ScanType=='Power':
+            label='shot n°{s}, P$_M$$_W$ = {mw} kW'.format(s=i,mw=float(f'{pc.GetMicrowavePower(i)[0]*10**(-3):.2f}'))
+            title= r'{g}, MW= {m}, p $\approx$ {p} mPa'.format(g=gas,m=pc.GetMicrowavePower(i)[1],p=float(f'{np.mean(pressure):.1f}'))
+        if ScanType=='None':
+            label='shot n°{s}, P$_M$$_W$ = {mw} W, p= {p} mPa'.format(s=i,mw=float(f'{pc.GetMicrowavePower(i)[0]*10**(-3):.2f}'),p=float(f'{pc.Pressure(i,gas):.1f}'))
+            title= r'{g}, MW= {m}'.format(g=gas,m=pc.GetMicrowavePower(i)[1])
         shot1=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type),usecols=1)
-        title='{g}, shot n°{s}, MW: {mw}, P$_M$$_W$= {m} W, p={p} mPa'.format(g=g,s=i,mw=GetMicrowavePower(i)[1],m=float(f'{GetMicrowavePower(i)[0]:.1f}'),p=float(f'{Pressure(g,i):.1f}'))
-        #title='shot n°{s}, P$_M$$_W$= {m} W'.format(s=i,m=float(f'{GetMicrowavePower(i)[0]:.1f}'))
-        #title='shot n°{s}, p={p} mPa'.format(s=i,p=float(f'{Pressure(g,i):.1f}'))
         if normalize==True:
             norm='normalized values'
             mean=np.mean(shot1)
             shot1=list(i/mean for i in shot1)
         else:
             norm=''
-        #norm='corrected values'
-        plt.plot(x,shot1, marker=m, linestyle='dashed', label=title,color=c)#open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type), 'r').readlines()[2][3:-1])
+        plt.plot(x,shot1,linewidth=3,marker=m, linestyle='dashed', label=label,color=c)#open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type), 'r').readlines()[2][3:-1])
     plt.xlabel('bolometer channel',fontsize=30)
     plt.ylabel(ylabel,fontsize=30)
-    #plt.suptitle('Comparison of bolometer-profiles from {n} of {g} {u}'.format(n=name_,g=gas,u=norm))#, c=shot_number_3, d=shot_number_4))
-    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.8),title='{g}, MW: {mw}, '.format(g=gas,mw=GetMicrowavePower(i)[1])+r'P$_M$$_W$$\approx$ 1.5 kW')#p$\approx$ 7.5 mPa
-    #plt.legend(loc='lower center',bbox_to_anchor=(0.5,0),title='{g}, MW: {mw}, '.format(g=gas,mw=GetMicrowavePower(i)[1])+r'p$\approx$ 1.8 mPa')
+    plt.legend(loc=1, bbox_to_anchor=(1.8,1),title=title)
     plt.ylim(0)
     fig1= plt.gcf()
     plt.show()
@@ -595,20 +550,20 @@ def CompareBolometerProfiles_two_Series(save=False):
     ax2=ax.twiny()
     for i,c,m in zip(shotnumbers1,colors,markers):
         shot1=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_radiation_powers.txt".format(n=i, t=type),usecols=1)
-        #title='shot n°{s}, MW: {mw}, P$_M$$_W$= {m} W, p={p} mPa'.format(s=i,mw=GetMicrowavePower(i)[1],m=float(f'{GetMicrowavePower(i)[0]:.1f}'),p=float(f'{Pressure(i):.1f}'))
-        #title='shot n°{s}, P$_M$$_W$= {m} W'.format(s=i,m=float(f'{GetMicrowavePower(i)[0]:.1f}'))
-        title='shot n°{s}, p={p} mPa'.format(s=i,p=float(f'{Pressure(gas,i):.1f}'))
+        #title='shot n°{s}, MW: {mw}, P$_M$$_W$= {m} W, p={p} mPa'.format(s=i,mw=pc.GetMicrowavePower(i)[1],m=float(f'{pc.GetMicrowavePower(i)[0]:.1f}'),p=float(f'{pc.Pressure(i,gas):.1f}'))
+        #title='shot n°{s}, P$_M$$_W$= {m} W'.format(s=i,m=float(f'{pc.GetMicrowavePower(i)[0]:.1f}'))
+        title='shot n°{s}, p={p} mPa'.format(s=i,p=float(f'{pc.Pressure(i,gas):.1f}'))
         ax.plot(x,shot1, marker=m, linestyle='dashed', label=title,color=c)#open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type), 'r').readlines()[2][3:-1])
     for j,c,m in zip(shotnumbers2,colors[len(shotnumbers1):],markers[len(shotnumbers1):]):
         shot1=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_radiation_powers.txt".format(n=j, t=type),usecols=1)
-        #title='shot n°{s}, MW: {mw}, P$_M$$_W$= {m} W, p={p} mPa'.format(s=j,mw=GetMicrowavePower(j)[1],m=float(f'{GetMicrowavePower(j)[0]:.1f}'),p=float(f'{Pressure(j):.1f}'))
-        #title='shot n°{s}, P$_M$$_W$= {m} W'.format(s=j,m=float(f'{GetMicrowavePower(j)[0]:.1f}'))
-        title='shot n°{s}, p={p} mPa'.format(s=j,p=float(f'{Pressure(gas,j):.1f}'))
+        #title='shot n°{s}, MW: {mw}, P$_M$$_W$= {m} W, p={p} mPa'.format(s=j,mw=GetMicrowavePower(j)[1],m=float(f'{pc.GetMicrowavePower(j)[0]:.1f}'),p=float(f'{pc.Pressure(j,gas):.1f}'))
+        #title='shot n°{s}, P$_M$$_W$= {m} W'.format(s=j,m=float(f'{pc.GetMicrowavePower(j)[0]:.1f}'))
+        title='shot n°{s}, p={p} mPa'.format(s=j,p=float(f'{pc.Pressure(j,gas):.1f}'))
         ax2.plot(x,shot1, marker=m, linestyle='dashed', label=title,color=c)#open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type), 'r').readlines()[2][3:-1])
     ax.set_xlabel('bolometer channel',fontsize=35)
     ax.set_ylabel(ylabel,fontsize=35)
-    ax.legend(loc='lower center',bbox_to_anchor=(0.2,-0.4),title='{g}, MW: {mw}, '.format(g=gas,mw=GetMicrowavePower(i)[1])+r'P$_M$$_W$$\approx$ 2.8 kW')#+r'p$\approx$ 7.5 mPa')
-    ax2.legend(loc='lower center',bbox_to_anchor=(0.75,-0.4),title='{g}, MW: {mw}, '.format(g=gas,mw=GetMicrowavePower(j)[1])+r'P$_M$$_W$$\approx$ 2.0 kW')#+r'p$\approx$ 7.5 mPa')
+    ax.legend(loc='lower center',bbox_to_anchor=(0.2,-0.4),title='{g}, MW: {mw}, '.format(g=gas,mw=pc.GetMicrowavePower(i)[1])+r'P$_M$$_W$$\approx$ 2.8 kW')#+r'p$\approx$ 7.5 mPa')
+    ax2.legend(loc='lower center',bbox_to_anchor=(0.75,-0.4),title='{g}, MW: {mw}, '.format(g=gas,mw=pc.GetMicrowavePower(j)[1])+r'P$_M$$_W$$\approx$ 2.0 kW')#+r'p$\approx$ 7.5 mPa')
     ax.set_ylim(0)
     ax2.set_xticks([])
     fig1= plt.gcf()
@@ -622,8 +577,8 @@ def CompareBolometerProfiles_two_Series(save=False):
 
 if __name__ == "__main__":
     #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=13228
-    shotnumbers1=(13249,13250,13251,13252,13253,13254)
+    shotnumber=13267
+    shotnumbers1=np.arange(13280,13292)#(13221,13220,13223,13222,13224,13218,13225,13226,13217,13216,13219,13227,13215)
     shotnumbers2=(13098,13104,13106) 
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
 
@@ -631,13 +586,13 @@ if __name__ == "__main__":
     #location=  '/data6/Bolo_Calibration_December/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None] # s
 
-    gas='H'
+    gas='Ar'
     gases=('H','He','Ar','Ne')
-    MW=GetMicrowavePower(shotnumber)[1]
+    MW=pc.GetMicrowavePower(shotnumber)[1]
     Bolometer_amplification_1=100
     Bolometer_amplification_2=1
     Bolometer_timeresolution=100
-    extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber)[0]:.3f}'),p=float(f'{Pressure(gas,shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+    #extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{pc.GetMicrowavePower(shotnumber)[0]:.3f}'),p=float(f'{pc.Pressure(shotnumber,gas):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
     #extratitle=''
 
     #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
@@ -654,18 +609,18 @@ if __name__ == "__main__":
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
     
-    # for s in np.arange(13240,13256):
+    # for s in np.arange(13280,13292):
     #     shotnumber=s
     #     #print(float(f'{GetMicrowavePower(s)[0]:.1f}'))#
     #     #print(float(f'{Pressure(gas,s):.1f}'))
     #     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
     #         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
     #     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    #     extratitle='{g} // Bolometer: x{a}, x{b}, {c}ms // P$_m$$_w$={mw} W // p={p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{GetMicrowavePower(shotnumber)[0]:.3f}'),p=float(f'{Pressure(gas,shotnumber):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+    #     extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{pc.GetMicrowavePower(shotnumber)[0]:.3f}'),p=float(f'{pc.Pressure(shotnumber,gas):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
     #     PlotAllTimeseriesTogether(save=True)
     #     BolometerProfile('Power',save=True)
     #SignalHighLowTime(Plot=True)    
     #BolometerProfile('Power')
     #CompareBolometerProfiles_two_Series(save=True)
-    CompareBolometerProfiles('Power')
+    CompareBolometerProfiles('Power','Power')
 # %%
