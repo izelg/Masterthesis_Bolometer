@@ -33,8 +33,8 @@ else:
     plt.rc('font',size=14)
     plt.rc('figure', titlesize=15)
 #colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#04E762','#89FC00','#03CEA4','#04A777','#537A5A','#FF9B71','#420039','#D81159']
-markers=['o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x']
-colors=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#3C096C','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788']
+colors=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#3C096C','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']
+markers=['o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x','o','v','s']
 
 
 # %%
@@ -75,11 +75,12 @@ def GetMicrowavePower(shotnumber):
     time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None]
     z= LoadData(location)['2 GHz Richtk. forward']
     w= LoadData(location)['8 GHz power']
+
     height_z = abs(max(z)-min(z))
     height_w = abs(max(w)-min(w))
-    if height_w >= 0.1:        #This is the part where the code finds out if 8 or 2GHz MW heating was used. Change the signal height if MW powers used change in the future
+    if height_w >= 0.07:        #This is the part where the code finds out if 8 or 2GHz MW heating was used. Change the signal height if MW powers used change in the future
         MW = '8 GHz'
-    elif height_z >= 0.1: 
+    elif height_z >= 0.07: 
         MW = '2.45 GHz'
     else:
         MW = 'none'
@@ -101,6 +102,7 @@ def GetMicrowavePower(shotnumber):
         a2  = 0.332023
         a3  = 0.458919 
         P= a1 * np.exp(a2 * np.abs(U_in)**a3)
+
         return(np.mean(np.sort(P)[-100:-1]),MW)
     
 #This function extracts the mean values of all timetraces recorded with the 2D probe. 
@@ -236,23 +238,29 @@ def TemperatureProfile(s,Type='',ScanType='',save=False):
         Position, T=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}Te.dat'.format(s=s),unpack=True)
         return(Position,T,np.mean(T))
 
-def CorrectedDensityProfile(shotnumber):
-    Position, char_U, char_I, I_isat,Bolo_sum, Interferometer=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=shotnumber),unpack=True)
-    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    I_isat_fit=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}ne.dat'.format(s=shotnumber),usecols=1,unpack=True)
+def CorrectedDensityProfile(s):
+    Position, char_U, char_I, I_isat,Bolo_sum, Interferometer=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=s),unpack=True)
+    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=s)
+    I_isat_fit=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}ne.dat'.format(s=s),usecols=1,unpack=True)
+    inter_original=LoadData(location)['Interferometer digital']
     inter=savgol_filter((LoadData(location)['Interferometer digital']),100,3)
     time =LoadData(location)['Zeit [ms]'] / 1000
     stop=np.argmin(np.gradient(inter[int(len(inter)*0.2):-1]))+int(len(inter)*0.2)
-    mean_density=np.mean(inter[stop-2000:stop-100])-np.mean(inter[stop+100:-1])
+    mean_1=int(len(inter[0:stop])*0.8)
+    offset=np.mean(inter[stop+50:-1])
+    mean_density=np.mean(inter[mean_1:stop-50])-offset
     if mean_density<0:
-        mean_density=np.mean(inter[stop-2000:stop-100])-(3.6-np.mean(inter[stop+100:-1]))
-    # plt.plot(time[int(len(inter)*0.2):-1],inter[int(len(inter)*0.2):-1],alpha=0.5)
-    # plt.plot(time[stop-2000],inter[stop-2000],'go')
-    # plt.plot(time[stop-10],inter[stop-100],'ro')
-    # plt.plot(time[stop+100],inter[stop+100],'bo')
+        mean_density=np.mean(inter[mean_1:stop-50])-(3.6-np.mean(inter[stop+50:-1]))
+    # plt.plot(np.gradient(inter[int(len(inter)*0.2):-1],time[int(len(inter)*0.2):-1]))
+    # plt.show()
+    # plt.plot(time,inter_original,alpha=0.5)
+    # plt.plot(time[int(len(inter)*0.2):-1],inter[int(len(inter)*0.2):-1])
+    # plt.plot(time[stop-50],inter[stop-50],'go')
+    # plt.plot(time[mean_1],inter[mean_1],'ro')
+    # plt.plot(time[stop+50],inter[stop+50],'bo')
     # plt.show()
     correction,corrected,corrected_fit=[],[],[]
-    for i in Interferometer:
+    for i in [a-offset for a in Interferometer]:
         correction.append(mean_density/i)
     for i,j,k in zip(correction, I_isat,I_isat_fit):
         corrected.append(i*j)
@@ -293,6 +301,7 @@ def DensityProfile(s,Type='',ScanType='',save=False):
             density_profiles=[density_profiles_from[i] for i in np.argsort(mw)]
         if ScanType=='None':
             sortnumbers=shotnumbers
+            density_profiles=density_profiles_from
         for i,c,m,n in zip(sortnumbers,colors,markers,np.arange(0,len(shotnumbers))):
             if ScanType=='Pressure':
                 label='shot n°{s}, p= {p} mPa'.format(s=i,p=float(f'{Pressure(i,gas):.1f}'))
@@ -306,12 +315,12 @@ def DensityProfile(s,Type='',ScanType='',save=False):
             d=(CorrectedDensityProfile(i)[1]*3.88E17)/2
             if density_profiles[n]=='d':
                 Position=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=i),usecols=0)
-                norm=integrate.trapezoid(CorrectedDensityProfile(shotnumber)[0],Position)/abs(Position[-1]-Position[0])
+                norm=integrate.trapezoid(CorrectedDensityProfile(i)[0],Position)/abs(Position[-1]-Position[0])
                 Density=[u*d/norm for u in CorrectedDensityProfile(i)[0]]
                 plt.plot(Position, Density,linewidth=3,color=c,marker=m,label=label)
             if density_profiles[n]=='f':
                 Position=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}ne.dat'.format(s=i),usecols=0,unpack=True)
-                norm=integrate.trapezoid(CorrectedDensityProfile(shotnumber)[2],Position)/abs(Position[-1]-Position[0])
+                norm=integrate.trapezoid(CorrectedDensityProfile(i)[2],Position)/abs(Position[-1]-Position[0])
                 Density=[u*d/norm for u in CorrectedDensityProfile(i)[2]]
                 plt.plot(Position, Density,linewidth=3,color=c,marker=m,label='* '+label)       
         plt.ylim(bottom=0)
@@ -404,11 +413,11 @@ def Densities(s,gas):
       
 # %%
 if __name__ == "__main__":
-    shotnumbers=np.arange(13280,13292)
-    density_profiles_from=['d','f','d','d','f','f','f','f','f','d','d','f']
-    #density_profiles_from=['d'for i in range(len(shotnumbers))]
-    gas='Ar'  
-    shotnumber=13282
+    shotnumbers=[13340,13341,13342,13343,13344,13345,13346,13347,13340,13341,13342,13343,13344,13345,13346,13347]#[13299,13300,13301,13302,13303,13304,13305,13306,13307,13308,13309,13310,13311,13313,13314]#np.arange(13299,13312)
+    density_profiles_from=['d','d','d','d','d','d','d','d','f','f','f','f','f','f','f','f']#['d','d','d','f','f','f','f','f','f','f','f','d','d','d','d']#13280-13291['d','f','d','d','f','f','f','f','f','d','d','f']#13299-13112['d','d','d','f','f','f','f','f','f','f','f','d','d']
+    #density_profiles_from=['f'for i in range(len(shotnumbers))]
+    gas='Ne'  
+    shotnumber=13344
     infile='/data6/shot{s}/kennlinien/auswert/'.format(s=shotnumber)
     #infile='/data6/shot{}/probe2D/'.format(shotnumber)
     outfile='/home/gediz/Results/Plasma_charactersitics/'
@@ -419,14 +428,15 @@ if __name__ == "__main__":
     #ExtractMeanValues()
     #CompareDifferentGases()
     #GetMicrowavePower(shotnumber)
-    #TemperatureProfile(shotnumbers,'Compare','Power',save=True)
+    #TemperatureProfile(shotnumbers,'Compare','Pressure',save=True)
     #PlotMeanValues()
     #FastElectrons()
-    DensityProfile(shotnumbers,'Compare','Power',save=True)
+    #DensityProfile(shotnumbers,'Compare','Pressure',save=True)
     #DensityProfile(shotnumber,'Single')
     #print(Densities(shotnumber)[1])
     #print(TemperatureProfile(shotnumber,'Values')[2])
-    # for s in np.arange(13281,13284):
-    #     DensityProfile(s,'Single')
+    for s in np.arange(13340,13348):
+        DensityProfile(s,'Single')
     #CorrectedDensityProfile(shotnumber)
-#%%
+
+# %%

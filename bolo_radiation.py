@@ -33,8 +33,8 @@ else:
     plt.rc('font',size=14)
     plt.rc('figure', titlesize=15)
 #colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#04E762','#89FC00','#03CEA4','#04A777','#537A5A','#FF9B71','#420039','#D81159']
-colors=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#3C096C','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788']
-markers=['o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x']
+colors=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#3C096C','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']
+markers=['o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x','o','v','s']
 
 #%% --------------------------------------------------------------------------------------------------------
 # Important Functions 
@@ -182,6 +182,7 @@ def SignalHighLowTime(Plot= False, save=False):
     start=np.argwhere(np.array([steps])>0.05)[0][1]
     stop=np.argwhere(np.array([steps])>0.05)[-1][1]
     if Plot== True:
+        print(start)
         plt.show()
         plt.plot(time,y)
         plt.plot(time[start], y[start], marker='o', color='red')
@@ -576,9 +577,9 @@ def CompareBolometerProfiles_two_Series(save=False):
 #Then enter one or several of the above functions according to what you want to analyze and run the script
 
 if __name__ == "__main__":
-    #shotnumber = str(input('Enter a shotnumber here: '))
-    shotnumber=13267
-    shotnumbers1=np.arange(13280,13292)#(13221,13220,13223,13222,13224,13218,13225,13226,13217,13216,13219,13227,13215)
+    #for s in np.arange(1):
+    shotnumber=13331
+    shotnumbers1=np.arange(13331,13340)#(13221,13220,13223,13222,13224,13218,13225,13226,13217,13216,13219,13227,13215)
     shotnumbers2=(13098,13104,13106) 
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
 
@@ -586,14 +587,13 @@ if __name__ == "__main__":
     #location=  '/data6/Bolo_Calibration_December/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None] # s
 
-    gas='Ar'
+    gas='He'
     gases=('H','He','Ar','Ne')
     MW=pc.GetMicrowavePower(shotnumber)[1]
     Bolometer_amplification_1=100
     Bolometer_amplification_2=1
     Bolometer_timeresolution=100
-    #extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{pc.GetMicrowavePower(shotnumber)[0]:.3f}'),p=float(f'{pc.Pressure(shotnumber,gas):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
-    #extratitle=''
+    extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{pc.GetMicrowavePower(shotnumber)[0]:.3f}'),p=float(f'{pc.Pressure(shotnumber,gas):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
 
     #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
     sourcefolder= '/home/gediz/Results/Bolometer_Profiles/combined_shots/shots_50025_to_50018/'   #the folder where the combined shots data should be stored
@@ -603,22 +603,13 @@ if __name__ == "__main__":
     
     outfile='/home/gediz/Results/Bolometer_Profiles/'
     outfile_2='/home/gediz/LaTex/DPG/'
-    
-
 
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
-    
-    # for s in np.arange(13280,13292):
-    #     shotnumber=s
-    #     #print(float(f'{GetMicrowavePower(s)[0]:.1f}'))#
-    #     #print(float(f'{Pressure(gas,s):.1f}'))
-    #     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
-    #         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
-    #     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    #     extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{pc.GetMicrowavePower(shotnumber)[0]:.3f}'),p=float(f'{pc.Pressure(shotnumber,gas):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
-    #     PlotAllTimeseriesTogether(save=True)
-    #     BolometerProfile('Power',save=True)
+
+    #SignalHighLowTime(Plot=True)
+    #PlotAllTimeseriesTogether(save=True)
+    #BolometerProfile('Power',save=True)
     #SignalHighLowTime(Plot=True)    
     #BolometerProfile('Power')
     #CompareBolometerProfiles_two_Series(save=True)

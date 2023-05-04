@@ -23,7 +23,7 @@ c=299792458
 e=1.602E-19
 m=1E-6
 # %% H ADF15
-def h_adf15(spectrum=False,rc=False,T_max=200,res=False):
+def h_adf15(T_max=200,density='avrg',res=False,Spectrum=False):
   wavelengths=[]
   indices=[]
   densities=[]
@@ -40,7 +40,7 @@ def h_adf15(spectrum=False,rc=False,T_max=200,res=False):
     temperatures.append(lines[5]+lines[6]+lines[7]+lines[8])
     densities=[float(dens)*1e6 for dens in (densities[0].replace('\n','')).split() ]
     temperatures=[float(temp) for temp in (temperatures[0].replace('\n','')).split()]
-    t_n=max(np.argwhere(np.array(temperatures)<=T_max))+1
+    t_n=max(np.argwhere(np.array(temperatures)<=T_max))
 
     for line in lines:
       if not line.startswith('C'):
@@ -58,55 +58,7 @@ def h_adf15(spectrum=False,rc=False,T_max=200,res=False):
       globals()[list_name]=[wl]
       for j in np.arange(0,24):
         globals()[list_name].append([float(emis) for emis in (lines[i+8:i+104][j*4]+lines[i+8:i+104][j*4+1]+lines[i+8:i+104][j*4+2]+lines[i+8:i+104][j*4+3]).split()])
-
-  if spectrum==True:
-    ty='EXCIT' #'RECOM', 'ECXIT
-    t=0
-    d=11
-    #for d in np.arange(1,23):
-    w_e=[]
-    s_e=[]
-    w_r=[]
-    s_r=[]
-    for i,j in zip(all_wl,np.arange(0,len(all_wl))):
-      if types[j]=='EXCIT':
-        if globals()[i][0] <=10000:
-          s_e.append(globals()[i][d][t])
-          w_e.append(float(globals()[i][0])*10**(-1))
-      if types[j]=='RECOM':
-        if globals()[i][0] <=10000:
-          s_r.append(globals()[i][d][t])
-          w_r.append(float(globals()[i][0])*10**(-1))
-
-      #plt.bar(w_e,s_e,width=10,label=str(temperatures[t])+'eV')
-    plt.bar(w_e,s_e,width=10,label=str('%.2E' % densities[d])+'m$^-$$^3$')
-      #plt.bar(w_r,s_r,width=10,label=str(temperatures[t])+'eV')
-    plt.xlabel('wavelength [nm]')
-    plt.ylabel('pec [cm$^3$/s]')
-    plt.legend(loc=1,bbox_to_anchor=(1.3,1))
-    #plt.suptitle(r'PEC for H from {ty} with $\rho$= {d} cm$^-$$^3$'.format(ty=ty,d='%.2E' % densities[d]))
-    plt.suptitle(r'PEC for H from {ty} with T= {t} eV'.format(ty=ty,t='%.2E' % temperatures[t]))
-    plt.show()
-    data = np.column_stack([np.array(w_e), np.array(s_e)])
-    np.savetxt('/home/gediz/Results/ADAS_Data/Spectra/H_Spectrum_excit_T_{t}_eV_D_{d}_m-3.txt'.format(t='%.2E' % temperatures[t],d='%.2E' % densities[d]) ,data, delimiter='\t \t',header='PEC from excitation for H \n for density={d} 1/m^3 and temperature={t} eV \n wavelengths [nm] \t pec [cm^3/s]'.format(t='%.2E' % temperatures[t],d='%.2E' % densities[d]) )
-    return(w_e,s_e)
-
-  if rc==True:
-    #plt.figure(figsize=(8,5))
-    pec_d=[]
-    for d in np.arange(1,len(densities)):
-      pec=[]
-      for t in np.arange(0,len(temperatures)):
-        x=[]
-        y=[]
-        a=0
-        for i in np.arange(0,len(all_wl)):
-          if types[i]=='EXCIT':
-            x.append(wavelengths[i])
-            y.append(globals()[all_wl[i]][d][t])
-            a+=((h*c/(x[i]*10**(-10)))*y[i])
-        pec.append(a/e*m)
-      #plt.plot(temperatures[0:t_n[0]],pec[0:t_n[0]],'o--',markersize=10,color=col,alpha=0.4,label=('%.1E' % densities[d-1]) +' m$^-$$^3$')
+  if density=='avrg':
     pec=[]
     for t in np.arange(0,len(temperatures)):
       x=[]
@@ -119,20 +71,32 @@ def h_adf15(spectrum=False,rc=False,T_max=200,res=False):
             y.append(globals()[all_wl[i]][d][t])
           a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
       pec.append(a/e*m)
-    # plt.plot(temperatures[0:t_n[0]],pec[0:t_n[0]],'o--',label='with averaged \n density',color='#1ba1e9')
-    # plt.plot(h_adf11()[0],h_adf11()[1],'bo--',label='data from ADF11')
-    # plt.legend(loc='right',bbox_to_anchor=(1.48,0.5),title='Hydrogen')
-    # plt.xlabel('temperature [eV]',fontsize=25)
-    # plt.ylabel(r'⟨σ$_{ex}$ v$_e$⟩$_{rad}^0$ ⟨E$_{rad}^0$⟩ [eVm$^3$/s]',fontsize=25)
-    # #plt.ylabel('excitation energy \n rate coefficients [eVm$^3$/s]',fontsize=25)
-    # plt.yscale('log')
-    # plt.ylim(8E-15,6E-13)
-    # fig1= plt.gcf()
-    # plt.show()
-    # fig1.savefig('/home/gediz/LaTex/Thesis/Figures/h_adf15
-    #.pdf',bbox_inches='tight')
     return temperatures[0:t_n[0]], pec[0:t_n[0]]
-
+  if type(density)==float and Spectrum==False:
+    pec=[]
+    for t in np.arange(0,len(temperatures)):
+      x=[]
+      a=0
+      for i in np.arange(0,len(all_wl)):
+        if types[i]=='EXCIT':
+          x.append(wavelengths[i])
+          y=[]
+          d=max(np.argwhere(np.array(densities)<=density))
+          y.append(globals()[all_wl[i]][d[0]][t])
+          a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
+      pec.append(a/e*m)
+    return temperatures[0:t_n[0]], pec[0:t_n[0]],densities[d[0]],densities
+  if Spectrum==True:
+    w_e,s_e=[],[]
+    d=max(np.argwhere(np.array(densities)<=density))
+    t=t_n
+    for i,j in zip(all_wl,np.arange(0,len(all_wl))):
+      if globals()[i][0]<=10000:
+        s_e.append(globals()[i][d[0]][t[0]])
+        w_e.append(float(globals()[i][0])*10**(-1))
+    #data = np.column_stack([np.array(w_e), np.array(s_e)])
+    #np.savetxt('/home/gediz/Results/ADAS_Data/Spectra/H_Spectrum_excit_T_{t}_eV_D_{d}_m-3.txt'.format(t='%.2E' % t[0],d='%.2E' % d[0]) ,data, delimiter='\t \t',header='PEC from excitation for H \n for density={d} 1/m^3 and temperature={t} eV \n wavelengths [nm] \t pec [cm^3/s]'.format(t='%.2E' % t[0],d='%.2E' % d[0]) )
+    return w_e,s_e,densities[d[0]],temperatures[t[0]]
 
 # %% H ADF11
 
@@ -177,7 +141,7 @@ def h_adf11(T_max=200):
 
 
 # %% He ADF15
-def he_adf15(data='',T_max=200):
+def he_adf15(data='',T_max=200,density='avrg',Spectrum=False):
   wavelengths=[]
   indices=[]
   densities=[]
@@ -191,7 +155,7 @@ def he_adf15(data='',T_max=200):
       temperatures.append(lines[4]+lines[5])
       densities=[float(dens)*1e6 for dens in (densities[0].replace('\n','')).split() ]
       temperatures=[float(temp) for temp in (temperatures[0].replace('\n','')).split()]
-      t_n=max(np.argwhere(np.array(temperatures)<=T_max))+1
+      t_n=max(np.argwhere(np.array(temperatures)<=T_max))
       for line in lines:
         if not line.startswith('C'):
           if 'A' in line:
@@ -247,21 +211,45 @@ def he_adf15(data='',T_max=200):
         for j in np.arange(0,24):
           globals()[list_name].append([float(emis) for emis in (lines[i+8:i+104][j*4]+lines[i+8:i+104][j*4+1]+lines[i+8:i+104][j*4+2]+lines[i+8:i+104][j*4+3]).split()])
     
-  pec=[]
-  for t in np.arange(0,len(temperatures)):
-    x=[]
-    a=0
-    for i in np.arange(0,len(all_wl)):
-      if types[i]=='EXCIT':
-        x.append(wavelengths[i])
-        y=[]
-        for d in np.arange(1,len(densities)):    
-          y.append(globals()[all_wl[i]][d][t])
-        a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
-    pec.append(a/e*m)
-  return temperatures[0:t_n[0]],pec[0:t_n[0]]
-
-
+  if density=='avrg':
+    pec=[]
+    for t in np.arange(0,len(temperatures)):
+      x=[]
+      a=0
+      for i in np.arange(0,len(all_wl)):
+        if types[i]=='EXCIT':
+          x.append(wavelengths[i])
+          y=[]
+          for d in np.arange(1,len(densities)):    
+            y.append(globals()[all_wl[i]][d][t])
+          a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
+      pec.append(a/e*m)
+    return temperatures[0:t_n[0]], pec[0:t_n[0]]
+  if type(density)==float and Spectrum==False:
+    pec=[]
+    for t in np.arange(0,len(temperatures)):
+      x=[]
+      a=0
+      for i in np.arange(0,len(all_wl)):
+        if types[i]=='EXCIT':
+          x.append(wavelengths[i])
+          y=[]
+          d=max(np.argwhere(np.array(densities)<=density))
+          y.append(globals()[all_wl[i]][d[0]][t])
+          a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
+      pec.append(a/e*m)
+    return temperatures[0:t_n[0]], pec[0:t_n[0]],densities[d[0]],densities
+  if Spectrum==True:
+    w_e,s_e=[],[]
+    d=max(np.argwhere(np.array(densities)<=density))
+    t=t_n
+    for i,j in zip(all_wl,np.arange(0,len(all_wl))):
+      if globals()[i][0]<=10000:
+        s_e.append(globals()[i][d[0]][t[0]])
+        w_e.append(float(globals()[i][0])*10**(-1))
+    #data = np.column_stack([np.array(w_e), np.array(s_e)])
+    #np.savetxt('/home/gediz/Results/ADAS_Data/Spectra/H_Spectrum_excit_T_{t}_eV_D_{d}_m-3.txt'.format(t='%.2E' % t[0],d='%.2E' % d[0]) ,data, delimiter='\t \t',header='PEC from excitation for H \n for density={d} 1/m^3 and temperature={t} eV \n wavelengths [nm] \t pec [cm^3/s]'.format(t='%.2E' % t[0],d='%.2E' % d[0]) )
+    return w_e,s_e,densities[d[0]],temperatures[t[0]]
 
 
 # %% He ADF11 
@@ -420,7 +408,7 @@ def ar_adf11(T_max=200):
 
     return temperatures[0:t_n[0]],globals()[all_rad_d_0[0]][0:t_n[0]],globals()[all_rad_d_1[0]][0:t_n[0]]
 # %% Ar ADF15
-def ar_adf15(data=''):
+def ar_adf15(T_max=200,data='',density='avrg',Spectrum=False):
   wavelengths,indices,densities,temperatures,all_wl=[],[],[],[],[]
 
   if data=='pec40#ar_ca#ar0' or data=='pec40#ar_cl#ar0' or data=='pec40#ar_ic#ar0' or data=='pec40#ar_ls#ar0'or data=='pec40#ar_ic#ar1':
@@ -441,30 +429,61 @@ def ar_adf15(data=''):
         globals()[list_name]=[wl]
         for j in np.arange(0,7):
           globals()[list_name].append([float(emis) for emis in (lines[i+4:i+18][j*2]+lines[i+4:i+18][j*2+1]).split()])  
-  pec=[]
-  for t in np.arange(0,len(temperatures)):
-    x=[]
-    a=0
-    for i in np.arange(0,len(all_wl)):
-      x.append(wavelengths[i])
-      y=[]
-      for d in np.arange(1,len(densities)):    
-        y.append(globals()[all_wl[i]][d][t])
-      a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
-    pec.append(a/e*m)
-  return temperatures[0:-1],pec[0:-1]
+  if density=='avrg':
+    pec=[]
+    for t in np.arange(0,len(temperatures)):
+      x=[]
+      a=0
+      for i in np.arange(0,len(all_wl)):
+          x.append(wavelengths[i])
+          y=[]
+          for d in np.arange(1,len(densities)):    
+            y.append(globals()[all_wl[i]][d][t])
+          a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
+      pec.append(a/e*m)
+    return temperatures, pec
+  if type(density)==float and Spectrum==False:
+    pec=[]
+    for t in np.arange(0,len(temperatures)):
+      x=[]
+      a=0
+      for i in np.arange(0,len(all_wl)):
+          x.append(wavelengths[i])
+          y=[]
+          d=max(np.argwhere(np.array(densities)<=density))
+          y.append(globals()[all_wl[i]][d[0]][t])
+          a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
+      pec.append(a/e*m)
+    return temperatures, pec,densities[d[0]],densities
+  if Spectrum==True:
+    w_e,s_e=[],[]
+    d=max(np.argwhere(np.array(densities)<=density))
+    t=max(np.argwhere(np.array(temperatures)<=T_max))
+    for i,j in zip(all_wl,np.arange(0,len(all_wl))):
+      if globals()[i][0]<=10000:
+        s_e.append(globals()[i][d[0]][t[0]])
+        w_e.append(float(globals()[i][0])*10**(-1))
+    #data = np.column_stack([np.array(w_e), np.array(s_e)])
+    #np.savetxt('/home/gediz/Results/ADAS_Data/Spectra/H_Spectrum_excit_T_{t}_eV_D_{d}_m-3.txt'.format(t='%.2E' % t[0],d='%.2E' % d[0]) ,data, delimiter='\t \t',header='PEC from excitation for H \n for density={d} 1/m^3 and temperature={t} eV \n wavelengths [nm] \t pec [cm^3/s]'.format(t='%.2E' % t[0],d='%.2E' % d[0]) )
+    return w_e,s_e,densities[d[0]],temperatures[t[0]]
 
-  # %%
+
+# %%
 #H--------------------------
 #plt.plot(h_adf11(T_max=201)[0],h_adf11(T_max=201)[1],'v--',label='H, ADF11, unresolved, ion charge=0')
-# plt.plot(h_adf15(rc=True)[0],h_adf15(rc=True)[1],'v--',label='H, ADF15, unresolved, ion charge=0')
-# plt.plot(h_adf15(rc=True,res=True)[0],h_adf15(rc=True,res=True)[1],'v--',label='H, ADF15, resolved, ion charge=0')
+# for de in [1E14,1E15,1E16,1E17,1E18,1E19,1E20,1E21,1E22,1E23]:
+#   plt.plot(h_adf15(density=de)[0],h_adf15(density=de)[1],'v--',label='H, ADF15, unresolved, ion charge=0, density= {d}'.format(d='%.2E'%de))
+# plt.plot(h_adf15(density='avrg')[0],h_adf15(density='avrg')[1],'v--',label='H, ADF15, unresolved, ion charge=0, density= average')
+# plt.plot(h_adf15(res=True)[0],h_adf15(res=True)[1],'v--',label='H, ADF15, resolved, ion charge=0')
 
 #He------------------------
 # plt.plot(he_adf11(res=True)[0],he_adf11(res=True)[1],'o--',label='He, ADF11, resolved, ion charge=0, metastables=1')
 # plt.plot(he_adf11(res=True)[0],he_adf11(res=True)[2],'o--',label='He, ADF11, resolved, ion charge=0,metastables=2')
 #plt.plot(he_adf11(res=False)[0],he_adf11(res=False)[1],'o--',label='He, ADF11, unresolved, ion charge=0')
-# plt.plot(he_adf15(data='pec93#he_pjr#he0')[0],he_adf15(data='pec93#he_pjr#he0')[1],'s--',label='He, ADF15, resolved, ion charge=0, 93')
+# for de in [1e+17, 2e+17, 5e+17, 1e+18, 2e+18, 5e+18, 1e+19, 2e+19, 5e+19, 1e+20, 2e+20, 5e+20]:
+#   plt.plot(he_adf15(data='pec93#he_pjr#he0',density=de)[0],he_adf15(data='pec93#he_pjr#he0',density=de)[1],'s--',label='He, ADF15, resolved, ion charge=0, 93, density= {d}'.format(d='%.2E'%de))
+# print(he_adf15(data='pec93#he_pjr#he0',density=de)[2])
+# plt.plot(he_adf15(data='pec93#he_pjr#he0',density='avrg')[0],he_adf15(data='pec93#he_pjr#he0',density='avrg')[1],'s--',label='He, ADF15, resolved, ion charge=0, 93,density=average')
 # plt.plot(he_adf15(data='pec96#he_pjr#he0')[0],he_adf15(data='pec96#he_pjr#he0')[1],'s--',label='He, ADF15, resolved, ion charge=0, 96')
 # plt.plot(he_adf15(data='pec96#he_pju#he0')[0],he_adf15(data='pec96#he_pju#he0')[1],'s--',label='He, ADF15, unresolved, ion charge=0, 96')
 
@@ -475,17 +494,27 @@ def ar_adf15(data=''):
 # plt.plot(he_adf15(data='pec96#he_bnd#he1')[0],he_adf15(data='pec96#he_bnd#he1')[1],'s--',label='He, ADF15, bnd?, ion charge=1')
 
 #Ar---------------------------------
-plt.plot(ar_adf11()[0],ar_adf11()[1],'D--',label='Ar, ADF11, unresolved, ion charge=0')
-plt.plot(ar_adf15(data='pec40#ar_ic#ar0')[0],ar_adf15(data='pec40#ar_ic#ar0')[1],'D--',label='Ar, ADF15, ion charge=0')
+# plt.plot(ar_adf11()[0],ar_adf11()[1],'D--',label='Ar, ADF11, unresolved, ion charge=0')
 
-plt.plot(ar_adf15(data='pec40#ar_ic#ar1')[0],ar_adf15(data='pec40#ar_ic#ar1')[1],'P--',label='Ar, ADF15, ion charge=1')
-plt.plot(ar_adf11()[0],ar_adf11()[2],'P--',label='Ar, ADF11, unresolved, ion charge=1')
-plt.ylabel('collisional radiative coefficients [eVm$^3$/s]')
-plt.xlabel('temperature [eV]')
-plt.yscale('log')
-plt.ylim(1E-15,1E-11)
-plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.8))
-plt.show()
+# for de in [1e+16, 1e+17, 1e+18, 1e+19, 1e+20, 1e+21, 1e+22]:
+#   plt.plot(ar_adf15(data='pec40#ar_ic#ar0',density=de)[0],ar_adf15(data='pec40#ar_ic#ar0',density=de)[1],'D--',label='Ar, ADF15, ion charge=0, density= {d}'.format(d='%.2E'%de))
+# plt.plot(ar_adf15(data='pec40#ar_ic#ar0',density='avrg')[0],ar_adf15(data='pec40#ar_ic#ar0',density='avrg')[1],'D--',label='Ar, ADF15, ion charge=0')
+
+# # plt.plot(ar_adf15(data='pec40#ar_ic#ar1')[0],ar_adf15(data='pec40#ar_ic#ar1')[1],'P--',label='Ar, ADF15, ion charge=1')
+# # plt.plot(ar_adf11()[0],ar_adf11()[2],'P--',label='Ar, ADF11, unresolved, ion charge=1')
+# plt.ylabel('collisional radiative coefficients [eVm$^3$/s]')
+# plt.xlabel('temperature [eV]')
+# plt.yscale('log')
+# plt.ylim(1E-15,1E-11)
+# plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.8))
+# plt.show()
 
 
 # %%
+
+he_adf15(data='pec93#he_pjr#he0',T_max=10,density=1E17,Spectrum=False)
+
+
+
+# %%
+

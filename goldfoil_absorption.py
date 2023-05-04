@@ -23,6 +23,7 @@ import collections
 from scipy import integrate
 from scipy.interpolate import pchip_interpolate
 import scipy.signal as sig
+import adas_data as adas
 #%% Parameter
 Poster=True
 
@@ -96,7 +97,7 @@ def Gold_Abs():
 
 def Spectrum(lightsource=''):
     if ADAS==True:
-        x,y=np.genfromtxt(str(spectrumdata),skip_header=3,unpack=True)
+        x,y=adasdata[0],adasdata[1]
     else:
         x,y= np.genfromtxt(str(spectrumdata)+'spectrometer_data_of_lightsource_'+lightsource+'.txt', skip_header=2,unpack='true')  
     name='Spectral Data'
@@ -217,15 +218,15 @@ def Reduced_Spectrum(lightsource='', save=False):
         from matplotlib.ticker import ScalarFormatter
 
         y_formatter = ScalarFormatter(useOffset=False)
-        x1= np.sort(Spectrum(lightsource)[0])
-        y1=pchip_interpolate(Gold_Abs()[0],Gold_Abs()[1],np.sort(Spectrum(lightsource)[0]))
+        x1= np.sort(adasdata[0])
+        y1=pchip_interpolate(Gold_Abs()[0],Gold_Abs()[1],np.sort(adasdata[0]))
         x0=Gold_Abs()[0]
         y0=Gold_Abs()[1]
         x=np.arange(0,10E2,1)
         y=pchip_interpolate(x0,y0,x)
-        x2=Spectrum(lightsource)[0]
-        y2=Spectrum(lightsource)[1]*100
-        y3=[a*100 for a in Gold_Fit(lightsource)[0]]
+        x2=adasdata[0]
+        y2=adasdata[1]
+        y3=[a for a in Gold_Fit(lightsource)[0]]
         percentage_integral=Gold_Fit(lightsource)[1]
         percentage_points=Gold_Fit(lightsource)[2]
         fig,ax = plt.subplots(figsize=(8,5))
@@ -235,7 +236,7 @@ def Reduced_Spectrum(lightsource='', save=False):
         ax.set_ylim(0,max(y2)*1.1)
         ax3.plot(x,y,color='#c1121f',linewidth=3)
         ax.yaxis.set_major_formatter(y_formatter)
-        lns1=ax.bar(x2,y2,width=18, label='Hydrogen spectrum\n'+r'T$_e$$\approx$5 eV, n$_e$$\approx$2E-17 m$^-$$^3$',color='#1ba1e9', alpha=0.5)
+        lns1=ax.bar(x2,y2,width=18, label='{g} spectrum\n'.format(g=gas)+r'T$_e$$\approx$ {t} eV, n$_e$$\approx${d} m$^-$$^3$'.format(t=adasdata[3],d='%.E' % adasdata[2]),color='#1ba1e9', alpha=0.5)
         lns2=ax.bar(x2,y3,width=18, label='spectrum reduced to {p}%'.format(p=float(f'{percentage_points:.2f}')), color='#1ba1e9')
         ax.set_xlabel('wavelength [nm]',fontsize=25)
         ax.set_ylabel( r'⟨σ$_{ex}$ v$_e$⟩$_{rad}^0$ [m$^3$/s]',fontsize=25)
@@ -247,8 +248,9 @@ def Reduced_Spectrum(lightsource='', save=False):
         ax.legend(loc=1)
         fig1= plt.gcf()
         plt.show()
-        fig1.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_H.pdf',bbox_inches='tight')
-
+        if save==True:
+            fig1.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_H.pdf',bbox_inches='tight')
+        return percentage_points/100
     else:
         x1=Gold_Abs()[0]
         y1=Gold_Abs()[1]
@@ -298,24 +300,30 @@ if __name__ == "__main__":
     #outfile='/home/gediz/Results/Goldfoil_Absorption/'
     outfile='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
     #spectrumdata='/home/gediz/Measurements/Spectrometer/Spectra_of_Helium_Plasma_15_12_2022/'
-    #spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
-    spectrumdata='/home/gediz/Results/ADAS_Data/Spectra/H_Spectrum_excit_T_5.00E+00_eV_D_2.00E+17_m-3.txt'
+    spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
+    #print possible values for t and d like this:
+    #print(adas.ar_adf15(data='pec40#ar_ic#ar0',density=1E17,Spectrum=False)[0],adas.ar_adf15(data='pec40#ar_ic#ar0',density=1E17,Spectrum=False)[3])
+    gas='Ar'
+    t=10
+    d=1E18
+    if gas=='Ar':
+        adasdata=adas.ar_adf15(data='pec40#ar_ic#ar0',T_max=t,density=d,Spectrum=True)
+    if gas=='H':
+        adasdata=adas.h_adf15(T_max=t,density=d,res=False,Spectrum=True)
+    if gas=='He':
+        adasdata=adas.he_adf15(data='pec96#he_pju#he1',T_max=t,density=d,Spectrum=True)
+        #adasdata=[np.genfromtxt('/home/gediz/Results/ADAS_Data/Spectra/He_Spectrum_excit_T_1.00E+01_eV_D_2.00E+17_m-3.txt',unpack=True)[0],np.genfromtxt('/home/gediz/Results/ADAS_Data/Spectra/He_Spectrum_excit_T_1.00E+01_eV_D_2.00E+17_m-3.txt',unpack=True)[1],10,1E17]
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
     shotnumber=13090
-    gas='H' 
     extratitle='{g} // p={p} mPa// MW={m} W'.format(g=gas,m=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))
     lightsources=('shot13122_sonde_raus','shot13121_sonde_raus','shot13120_sonde_raus')
     ADAS=True
     #CompareSpectra()
-    Reduced_Spectrum()
+    print(Reduced_Spectrum())
     #GoldAbsorptionPlot()
     #Spectrometer_Data('shot13119_sonde_raus',analyze=True)
     #Peak_Analyzer('shot13118_sonde_raus')
     #Gold_Fit('shot13118_sonde_raus_peaks')
-    
-    
-    
-    
     
     
 # %%

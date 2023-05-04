@@ -280,7 +280,7 @@ def Totalpower_from_exp(Type='',save=False,calc=False):
             plt.xlabel('P$_M$$_W$ [W]')
     plt.ylabel('P$_r$$_a$$_d$ total [W]')
     plt.ylim(0)
-    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.2*len(shotnumbers)))
+    plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.2*len(shotnumbers)-0.1))
     fig1= plt.gcf()   
     plt.show()
     if save==True:
@@ -420,8 +420,8 @@ def TopView():
 # %%
 
 shotnumber=13258
-shotnumbers=[np.arange(13242,13256),np.arange(13268,13280)]#[np.arange(13215,13228),np.arange(13256,13268),np.arange(13280,13292)]
-gases=[['H'for i in range(14)],['He'for i in range(12)]]#[['H'for i in range(13)],['He'for i in range(12)],['Ar'for i in range(12)]]
+shotnumbers=[np.arange(13242,13256),np.arange(13268,13280),np.arange(13299,13312),np.arange(13340,13347)]#[np.arange(13256,13267),np.arange(13316,13321),np.arange(13321,13331),np.arange(13331,13340)]#[np.arange(13215,13228),np.arange(13256,13268),np.arange(13280,13292)]#
+gases=[['H'for i in range(14)],['He'for i in range(12)],['Ar'for i in range(13)],['Ne'for i in range(7)]]#[['He'for i in range(11)],['He'for i in range(5)],['He'for i in range(10)],['He'for i in range(9)]]#[['H'for i in range(13)],['He'for i in range(12)],['Ar'for i in range(12)]]#
 gas='He'
 infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
 
@@ -429,11 +429,11 @@ location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumb
 mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
 def gold(g):
     if g=='H':
-        return 1/0.81       #H for 5eV, 2E17m^-3
+        return 1/0.81      
     if g=='He':      
-        return 1/0.33      #He for 10 eV, 2E17m^-3
+        return 1/0.71      
     if g=='Ar':
-        return 1
+        return 1/0.88
     if g=='Ne':
         return 1
 # for shotnumber in np.arange(13256,13268):
@@ -442,10 +442,10 @@ def gold(g):
 #         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
 #     Boloprofile_calc(shotnumber,save=True,plot=True)
-#Totalpower_from_exp('Pressure')
+Totalpower_from_exp('Pressure')
 #Pixelmethod()
-for s in np.arange(13242,13256):
-    Boloprofile_calc(s,save=True,plot=True)
+#for s in np.arange(13242,13256):
+ #   Boloprofile_calc(s,save=True,plot=True)
 #Boloprofile_calc(shotnumber,plot=True)
 #print(Totalpower_from_mean_T(shotnumber)[0],Totalpower_from_mean_T(shotnumber)[1])
 # %%
