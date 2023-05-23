@@ -326,7 +326,7 @@ def SignalHeight(Type="", i=1,  Plot=False, save=False):
     time = LoadData(location)['Zeit [ms]'] / 1000
     x=time
 
-    Type_types =['Bolo', 'Power']
+    Type_types =['Bolo', 'Power','Error']
     if Type not in Type_types:
         raise ValueError("Invalid Type input. Insert one of these arguments {}".format(Type_types))
     if Type == 'Bolo':
@@ -334,10 +334,13 @@ def SignalHeight(Type="", i=1,  Plot=False, save=False):
         ylabel= 'Signal [V]'
         unit = 'V'
     if Type == 'Power':
-        y= PowerTimeSeries(i)
+        y= PowerTimeSeries(i)[0]
         ylabel= 'Power [\u03bcW]'
         unit='\u03bcW'
-
+    if Type == 'Error':
+        y= PowerTimeSeries(i)[1]
+        ylabel= 'Power [\u03bcW]'
+        unit='\u03bcW'
 
     start= SignalHighLowTime(Plot=False)[0]
     stop= SignalHighLowTime(Plot= False)[1]
@@ -351,7 +354,8 @@ def SignalHeight(Type="", i=1,  Plot=False, save=False):
     div1 = lin(x[start], *popt2)-lin(x[start], *popt1)             #Takes the Signal height based on the axial intercept of the fit
     div2 = lin(x[stop], *popt2)-lin(x[stop], *popt1)        #Takes the Signal height a 100 points in front of the falling Signal edge
     div_avrg = float(f'{(div1+div2)/2:.4f}')        #Takes amean value for the Signal height based on the two linear fits
-
+    sd=np.std([div1,div2],ddof=1)
+    sem=sd/np.sqrt(2)
     if Plot==True:
         plt.plot(time, y, alpha=0.5, label='Bolometerdata of channel {c} shot n°{s}'.format(c=i, s= shotnumber))
         plt.plot(x, lin(x, *popt1), color='orange', label= 'Fit to the values with Plasma')
@@ -375,7 +379,7 @@ def SignalHeight(Type="", i=1,  Plot=False, save=False):
     if save==True:
         fig1.savefig(str(outfile)+"shot{n}/shot{n}_signal_height_channel_Bolo{c}.pdf".format(n=shotnumber, c=1), bbox_inches='tight')
             
-    return (div1 , div2, (div1+div2)/2)
+    return (div1 , div2, (div1+div2)/2,sd,sem)
 
 #This function derives the Power time series from the raw Bolometer Voltage Time Series of your choosing
 #It uses the formula (4.21) of Anne Zilchs Diploma Thesis 'Untersuchung von Strahlungsverlusten mittels Bolometrie an einem toroidalen Niedertemperaturplasma' from 2011
@@ -383,10 +387,14 @@ def SignalHeight(Type="", i=1,  Plot=False, save=False):
 def PowerTimeSeries(i=1, Plot=False, save=False):
     def power(g,k,U_ac, t, U_Li):
         return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li)
+    def error(g,k,U_ac, t, U_Li,delta_t,delta_k):
+        return ((np.pi/g) * (2/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li))*delta_k+(np.pi/g) * (2*k/U_ac) * np.gradient(U_Li,time*1000 )*delta_t
     kappa =  [0.460,0.465,0.466,0.469,0.649,0.649,0.637,0.638]
-    kappa_air=[1.226,1.286,1.291,1.381,1.408,1.38,1.369,1.437]
+    kappa_sd=[0.004756282395129851, 0.005959119994689735, 0.007944949478896766, 0.00693221144769512, 0.008273115763993913, 0.023468418495217518, 0.021055746114646355, 0.013834337312964769]
+    kappa_sem=[0.0015,0.0018,0.0025,0.0022,0.0026,0.0074,0.0067,0.0044]
     tau = [0.1204,0.1195,0.1204,0.1214,0.0801,0.0792,0.0779,0.0822]
-    tau_air=[0.045,0.045,0.044,0.045,0.036,0.037,0.037,0.036]
+    tau_sd=[0.0022705848487901844, 0.0018408935028645429, 0.0027162065049951127, 0.0023664319132398457, 0.0017919573407620833, 0.0022997584414213806, 0.002469817807045696, 0.002973961069759394]
+    tau_sem=[0.00072,0.00058,0.00086,0.00075,0.00057,0.00073,0.00078,0.00094]
     corr=[0.703,0.930,1.104,0.728,1.325,1.042,1.438,1.313]
     g1= (10,30,50)
     g2= Bolometer_amplification_1
@@ -398,6 +406,8 @@ def PowerTimeSeries(i=1, Plot=False, save=False):
     k= kappa[i-1]
     t = tau[i-1]
     c=corr[i-1]
+    delta_t=tau_sd[i-1]
+    delta_k=kappa_sd[i-1]
     if Datatype=='Data':
         U_Li= LoadData(location)["Bolo{}".format(i)]
         time = LoadData(location)['Zeit [ms]'] / 1000
@@ -406,10 +416,11 @@ def PowerTimeSeries(i=1, Plot=False, save=False):
         time=np.genfromtxt(str(sourcefolder)+str(sourcefile), usecols=(0), unpack=True)
         U_Li=np.genfromtxt(str(sourcefolder)+str(sourcefile), usecols=(i), unpack=True)
         title='Power data of {s} // Channeln° {n} \n {e}'.format(s=sourcetitle, n=i,e=extratitle)
-
+    
     if Plot==True:
         plt.figure(figsize=(10,5))
-        plt.plot(np.array(time)[:,None],np.array(power(g,k,U_ac, t, U_Li)*1000000)[:,None])
+        #plt.plot(np.array(time)[:,None],np.array(power(g,k,U_ac, t, U_Li)*1000000)[:,None])
+        plt.plot(np.array(time)[:,None],np.array(error(g,k,U_ac, t, U_Li,delta_t,delta_k)*1000000)[:,None])
         plt.suptitle(title)
         plt.xlabel('Time [s]')
         plt.ylabel('Power [\u03bcW]')
@@ -417,7 +428,7 @@ def PowerTimeSeries(i=1, Plot=False, save=False):
         plt.show()
     if save==True:
         fig1.savefig(str(outfile)+"shot{n}/shot{n}_channel_Bolo{c}_power_signal.pdf".format(n=shotnumber, c=i), bbox_inches='tight')
-    return power(g,k,U_ac, t, U_Li)*1000000
+    return power(g,k,U_ac, t, U_Li)*1000000, error(g,k,U_ac, t, U_Li,delta_t,delta_k)*1000000
 
 #This function derives the Signal height of all 8 Time Series using the SignalHeight function
 #It then Plots the Height Values in a row to show the Bolometerprofile
@@ -427,9 +438,7 @@ def PowerTimeSeries(i=1, Plot=False, save=False):
 #Use Type= Cali if you have a combined file like created with CombinedTimeSeries stored outside of the normal shot folders
 def BolometerProfile(Type="", save=False):
     print('This could take a second')
-    x=[]
-    y=[]
-    
+    x,y,error=[],[],[]
     #Activate the parts with z to compare your data with Annes Data of the same shot
     #z= np.loadtxt('/scratch.mv3/koehn/backup_Anne/zilch/results/7680/7680_BCh_jump.dat', usecols=(1,))*1000000
     Type_types =['Bolo', 'Power']
@@ -442,36 +451,25 @@ def BolometerProfile(Type="", save=False):
             #y.append(abs(SignalHeight_rough(Type,i,Plot=True)[0]))  
         else:
             y.append(abs(SignalHeight(Type, i,Plot=False)[2])) #--><--
+            error.append(abs(SignalHeight('Error', i,Plot=False)[2])+abs(SignalHeight(Type, i,Plot=False)[4]))
+           # print('error from tau, kappa:',abs(SignalHeight('Error', i,Plot=False)[2]))
+            #print('error from Signal Height:',abs(SignalHeight(Type, i,Plot=False)[3]))
     if Type == 'Bolo':
         ylabel1= 'signal [V]'
         name='raw data'
         name_='raw_data'
-        #corr=[0.621,0.836,0.965,0.635,1.669,1.307,1.748,1.647] #from calibration in vacuum with wrong AC signal
-        corr=[0.947,1.234,0.779,1.06,1.156,0.852,1.271,0.925]   #from calibration with right signal in air
-        sem_corr=[0.016,0.019,0.024,0.015,0.043,0.029,0.045,0.05]
     if Type == 'Power':
         ylabel1= 'power [\u03bcW]'
         name= 'radiation powers'
         name_='radiation_powers'
-        #corr=[0.703,0.930,1.104,0.728,1.325,1.042,1.438,1.313] #from calibration in vacuum with wron AC signal
-        corr=[0.989,0.924,0.875,0.932,1.335,1.034,0.988,1.042]  #from calibration with right signal in air
-        #sem_corr=[0.021,0.033,0.024,0.023,0.033,0.023,0.044,0.033]
-        sem_corr=[0.005,0.004,0.007,0.005,0.010,0.006,0.004,0.006]  #from calibration with right signal in air
     if Datatype=='Data':
         title= 'Signals of the bolometer channels from {n} of shot n°{s} \n MW used: {m} \n {e}'.format(n=name, s= shotnumber, m=MW, e=extratitle)
     if Datatype=='Source':
         title='Signals of the Bolometerchannels from {n} \n of {e}'.format(n=name,e=extratitle)
-    z=[]
-    zerr=[]
-    for i,j,k in zip(corr,[0,1,2,3,4,5,6,7],sem_corr):
-        z.append(y[j]*i)
-        zerr.append(y[j]*k)
+    
     plt.figure(figsize=(10,5))
     plt.plot(x,y, marker='o', linestyle='dashed', label="Original Bolometerprofile")
-    # colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue']
-    # for i,j,c in zip(x,y,colors):
-    #     plt.plot(i,j,marker='o',color=c,markersize=10)
-    #plt.errorbar(x,z,yerr=zerr, marker='o',capsize=5, linestyle='dashed',label="Corrected Bolometerprofile \n with relative correction")
+    plt.errorbar(x,y,yerr=error,capsize=5)
     plt.ylabel(ylabel1)
     plt.xlabel('bolometer channel')
     plt.ylim(bottom=0)
@@ -480,16 +478,16 @@ def BolometerProfile(Type="", save=False):
     fig1 = plt.gcf()
     plt.show()
     if save == True:
-        data = np.column_stack([np.array(x), np.array(y)])#, np.array(z), np.array(abs(y-z))])
+        data = np.column_stack([np.array(x), np.array(y),np.array(error)])#, np.array(z), np.array(abs(y-z))])
         if Datatype=='Data':
             datafile_path = str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=shotnumber, t=name_)
-            np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. \n Label for plot \n shot n°{s}// {e}\n channeln° \t {u}'.format(n=name, s= shotnumber, m=pc.GetMicrowavePower(shotnumber)[1], u =ylabel1,e=extratitle))
+            np.savetxt(datafile_path , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.5f'], header='Signals of the Bolometerchannels from {n} of shot n°{s}. \n Label for plot \n shot n°{s}// {e}\n channeln° \t {u} \t error'.format(n=name, s= shotnumber, m=pc.GetMicrowavePower(shotnumber)[1], u =ylabel1,e=extratitle))
             fig1.savefig(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.pdf".format(n=shotnumber, t=name_), bbox_inches='tight')
         if Datatype=='Source':
             np.savetxt(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.txt'.format(t=name_,n=sourcetitlesave) , data, delimiter='\t \t', fmt=['%d', '%10.3f'], header='Signals of the Bolometerchannels from {n} of {s} \n  Label for plot \nshot n°{s}, {n}, MW power: {m}, {e}\nchanneln° // {l}'.format(n=name, s= sourcetitle,m=pc.GetMicrowavePower()[1],e=extratitle,l=ylabel1))
             fig1.savefig(str(sourcefolder)+'bolometerprofile_from_{t}_of_{n}.pdf'.format(t=name_,n=sourcetitlesave), bbox_inches='tight')
 
-    return x, y#, z, y-z
+    return x, y,error
 
 #This function can compare the Bolometerprofiles of 4 different shots
 #There must already be a .txt file with the Signals for each channel as created with the function BolometerProfile()
@@ -525,7 +523,7 @@ def CompareBolometerProfiles(Type="", ScanType='',save=False,normalize=False):
         if ScanType=='None':
             label='shot n°{s}, P$_M$$_W$ = {mw} W, p= {p} mPa'.format(s=i,mw=float(f'{pc.GetMicrowavePower(i)[0]*10**(-3):.2f}'),p=float(f'{pc.Pressure(i,gas):.1f}'))
             title= r'{g}, MW= {m}'.format(g=gas,m=pc.GetMicrowavePower(i)[1])
-        shot1=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type),usecols=1)
+        shot1,error=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type),unpack=True,usecols=(1,2))
         if normalize==True:
             norm='normalized values'
             mean=np.mean(shot1)
@@ -533,6 +531,7 @@ def CompareBolometerProfiles(Type="", ScanType='',save=False,normalize=False):
         else:
             norm=''
         plt.plot(x,shot1,linewidth=3,marker=m, linestyle='dashed', label=label,color=c)#open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type), 'r').readlines()[2][3:-1])
+        plt.errorbar(x,shot1,yerr=error, capsize=5,linestyle='None',color=c)
     plt.xlabel('bolometer channel',fontsize=30)
     plt.ylabel(ylabel,fontsize=30)
     plt.legend(loc=1, bbox_to_anchor=(1.8,1),title=title)
@@ -573,13 +572,13 @@ def CompareBolometerProfiles_two_Series(save=False):
         fig1.savefig(str(outfile)+"comparisons_of_shots/{g}/comparison_of_two_series_{a}_{t}_{g}.pdf".format(a=shotnumbers1, t=shotnumbers2,g=gas), bbox_inches='tight')
 
 #%% -------------------------------------------------------------------------------------------------------- 
-#Enter the shotnumber you want to analyze, change the locations of data (but please don't erase the original ones)
+#Enter the shotnumber you want to analyze, change the locations of data 
 #Then enter one or several of the above functions according to what you want to analyze and run the script
 
 if __name__ == "__main__":
-    #for s in np.arange(1):
-    shotnumber=13331
-    shotnumbers1=np.arange(13331,13340)#(13221,13220,13223,13222,13224,13218,13225,13226,13217,13216,13219,13227,13215)
+    #for shotnumber in np.arange(13215,13228):
+    shotnumber=13215
+    shotnumbers1=np.arange(13215,13228)#(13221,13220,13223,13222,13224,13218,13225,13226,13217,13216,13219,13227,13215)
     shotnumbers2=(13098,13104,13106) 
     Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
 
@@ -587,7 +586,7 @@ if __name__ == "__main__":
     #location=  '/data6/Bolo_Calibration_December/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
     #time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None] # s
 
-    gas='He'
+    gas='H'
     gases=('H','He','Ar','Ne')
     MW=pc.GetMicrowavePower(shotnumber)[1]
     Bolometer_amplification_1=100
@@ -606,12 +605,5 @@ if __name__ == "__main__":
 
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
-
-    #SignalHighLowTime(Plot=True)
-    #PlotAllTimeseriesTogether(save=True)
-    #BolometerProfile('Power',save=True)
-    #SignalHighLowTime(Plot=True)    
-    #BolometerProfile('Power')
-    #CompareBolometerProfiles_two_Series(save=True)
     CompareBolometerProfiles('Power','Power')
 # %%

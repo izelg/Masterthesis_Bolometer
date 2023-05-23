@@ -161,16 +161,16 @@ def GetAllOmicCalibration(save=False):
 def CompareTauAndKappa(save=False):
     x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,k1,k2,k3,k4,k5,k6,k7,k8,k9,k10 = ([] for i in range(30))
     for i,j,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10],[k1,k2,k3,k4,k5,k6,k7,k8,k9,k10],[0,1,2,3,4,5,6,7,8,9]):
-        i.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_December/07_12_2022/ohmic_calibration_air_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(0)))
-        j.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_December/07_12_2022/ohmic_calibration_air_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(1)))
-        k.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Air_December/07_12_2022/ohmic_calibration_air_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(2))) 
-    mean_t=[]
-    sem_t=[]
+        i.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(0)))
+        j.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(1)))
+        k.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(2))) 
+    mean_t,sd_t,sem_t=[],[],[]
     for i,j,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10],['red','blue','orange','green','darkcyan','gold','blueviolet','magenta','grey','yellow'],[0,1,2,3,4,5,6,7,8,9]):
         plt.plot(i,j,label='Measurement {} TJ-K'.format(n),marker='o',color=k,alpha=0.3)
     for m in [0,1,2,3,4,5,6,7]:
         val=[t1[0][m],t2[0][m],t3[0][m],t4[0][m],t5[0][m],t6[0][m],t7[0][m],t8[0][m],t9[0][m],t10[0][m]]
         mean_t.append(np.mean(val))
+        sd_t.append(np.std(val,ddof=1))
         sem_t.append(np.std(val,ddof=1)/np.sqrt(len(val)))
         plt.errorbar(m+1,mean_t[m],yerr=sem_t[m],marker='o',linestyle='None', capsize=5,color='red')
     plt.xlabel('Bolometerchannel')
@@ -179,13 +179,13 @@ def CompareTauAndKappa(save=False):
     plt.suptitle('Ohmic calibration in air// Results for Tau')
     fig1=plt.gcf()
     plt.show()
-    mean_k=[]
-    sem_k=[]
+    mean_k,sd_k,sem_k=[],[],[]
     for i,j,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],['red','blue','orange','green','darkcyan','gold','blueviolet','magenta','grey','yellow'],[k1,k2,k3,k4,k5,k6,k7,k8,k9,k10],[0,1,2,3,4,5,6,7,8,9]):
         plt.plot(i,k,label='Measurement {} TJ-K'.format(n),marker='o',color=j,alpha=0.3)
     for m in [0,1,2,3,4,5,6,7]:
         val=[k1[0][m],k2[0][m],k3[0][m],k4[0][m],k5[0][m],k6[0][m],k7[0][m],k8[0][m],k9[0][m],k10[0][m]]
         mean_k.append(np.mean(val))
+        sd_k.append(np.std(val,ddof=1))
         sem_k.append(np.std(val,ddof=1)/np.sqrt(len(val)))
         plt.errorbar(m+1,mean_k[m],yerr=sem_k[m],marker='o',linestyle='None', capsize=5,color='red')
     plt.xlabel('Bolometerchannel')
@@ -194,6 +194,7 @@ def CompareTauAndKappa(save=False):
     plt.suptitle('Ohmic calibration in air// Results for Kappa')
     fig2=plt.gcf()
     plt.show()
+    print(sd_k)
     if save==True:
         data = np.column_stack([np.array([1,2,3,4,5,6,7,8]),np.array(mean_t), np.array(sem_t), np.array(mean_k), np.array(sem_k)])
         np.savetxt(str(outfile)+"ohmic_calibration_air_tau_and_kappa_mean_and_sem.txt" , data, delimiter='\t \t', fmt=['%d', '%10.5f', '%10.5f', '%10.5f', '%10.5f'], header='Values for tau \t sem sau \t kappa \t sem kappa')
@@ -462,7 +463,7 @@ relativecorrection_9='/home/gediz/Results/Calibration/Calibration_Bolometer_Dece
 relativecorrection_10='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_Res 2_using_mean.txt'
 relativecorrection_11='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/relative_calibration_constants_from_Res 3_using_mean.txt'
 
-CompareRelativeCorrections()
+CompareTauAndKappa()
 # %%
 outfile='/home/gediz/Results/Calibration/Calibration_Bolometer_December_2022/calibration_with_resistors_additional_to_AC/'
 plt.rc('font',size=14)

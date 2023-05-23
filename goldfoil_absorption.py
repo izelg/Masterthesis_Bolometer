@@ -303,23 +303,24 @@ if __name__ == "__main__":
     spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
     #print possible values for t and d like this:
     #print(adas.ar_adf15(data='pec40#ar_ic#ar0',density=1E17,Spectrum=False)[0],adas.ar_adf15(data='pec40#ar_ic#ar0',density=1E17,Spectrum=False)[3])
-    gas='Ar'
+    gas='Ne'
     t=10
     d=1E18
     if gas=='Ar':
-        adasdata=adas.ar_adf15(data='pec40#ar_ic#ar0',T_max=t,density=d,Spectrum=True)
+        adasdata=adas.ar_adf15(data='pec40#ar_ic#ar1',T_max=t,density=d,Spectrum=True)
     if gas=='H':
         adasdata=adas.h_adf15(T_max=t,density=d,res=False,Spectrum=True)
     if gas=='He':
-        adasdata=adas.he_adf15(data='pec96#he_pju#he1',T_max=t,density=d,Spectrum=True)
-        #adasdata=[np.genfromtxt('/home/gediz/Results/ADAS_Data/Spectra/He_Spectrum_excit_T_1.00E+01_eV_D_2.00E+17_m-3.txt',unpack=True)[0],np.genfromtxt('/home/gediz/Results/ADAS_Data/Spectra/He_Spectrum_excit_T_1.00E+01_eV_D_2.00E+17_m-3.txt',unpack=True)[1],10,1E17]
+        adasdata=adas.he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)
+    if gas=='Ne':
+        adasdata=adas.ne_adf15(data='pec96#ne_pju#ne1',T_max=t,density=d,Spectrum=True)
     golddata= '/home/gediz/Results/Goldfoil_Absorption/Golddata_interpolated_for_Spectrometer.txt'
-    shotnumber=13090
-    extratitle='{g} // p={p} mPa// MW={m} W'.format(g=gas,m=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))
-    lightsources=('shot13122_sonde_raus','shot13121_sonde_raus','shot13120_sonde_raus')
+    #shotnumber=13090
+    #extratitle='{g} // p={p} mPa// MW={m} W'.format(g=gas,m=float(f'{GetMicrowavePower(shotnumber):.3f}'),p=float(f'{Pressure(shotnumber):.3f}'))
+    #lightsources=('shot13122_sonde_raus','shot13121_sonde_raus','shot13120_sonde_raus')
     ADAS=True
     #CompareSpectra()
-    print(Reduced_Spectrum())
+    Reduced_Spectrum()
     #GoldAbsorptionPlot()
     #Spectrometer_Data('shot13119_sonde_raus',analyze=True)
     #Peak_Analyzer('shot13118_sonde_raus')

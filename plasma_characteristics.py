@@ -413,11 +413,11 @@ def Densities(s,gas):
       
 # %%
 if __name__ == "__main__":
-    shotnumbers=[13340,13341,13342,13343,13344,13345,13346,13347,13340,13341,13342,13343,13344,13345,13346,13347]#[13299,13300,13301,13302,13303,13304,13305,13306,13307,13308,13309,13310,13311,13313,13314]#np.arange(13299,13312)
-    density_profiles_from=['d','d','d','d','d','d','d','d','f','f','f','f','f','f','f','f']#['d','d','d','f','f','f','f','f','f','f','f','d','d','d','d']#13280-13291['d','f','d','d','f','f','f','f','f','d','d','f']#13299-13112['d','d','d','f','f','f','f','f','f','f','f','d','d']
-    #density_profiles_from=['f'for i in range(len(shotnumbers))]
-    gas='Ne'  
-    shotnumber=13344
+    shotnumbers=np.arange(13316,13321)#[13299,13300,13301,13302,13303,13304,13305,13306,13307,13308,13309,13310,13311,13313,13314]#np.arange(13299,13312)
+    #density_profiles_from=['d','d','d','d','d','d','d','d','f','f','f','f','f','f','f','f']#['d','d','d','f','f','f','f','f','f','f','f','d','d','d','d']#13280-13291['d','f','d','d','f','f','f','f','f','d','d','f']#13299-13112['d','d','d','f','f','f','f','f','f','f','f','d','d']
+    density_profiles_from=['f' for i in range(len(shotnumbers))]
+    gas='Ar' 
+    shotnumber=13280
     infile='/data6/shot{s}/kennlinien/auswert/'.format(s=shotnumber)
     #infile='/data6/shot{}/probe2D/'.format(shotnumber)
     outfile='/home/gediz/Results/Plasma_charactersitics/'
@@ -428,15 +428,16 @@ if __name__ == "__main__":
     #ExtractMeanValues()
     #CompareDifferentGases()
     #GetMicrowavePower(shotnumber)
-    #TemperatureProfile(shotnumbers,'Compare','Pressure',save=True)
+    #TemperatureProfile(shotnumbers,'Compare','None',save=True)
     #PlotMeanValues()
     #FastElectrons()
-    #DensityProfile(shotnumbers,'Compare','Pressure',save=True)
+    #DensityProfile(shotnumbers,'Compare','None',save=True)
     #DensityProfile(shotnumber,'Single')
     #print(Densities(shotnumber)[1])
     #print(TemperatureProfile(shotnumber,'Values')[2])
-    for s in np.arange(13340,13348):
-        DensityProfile(s,'Single')
+    # for s in np.arange(13316,13321):
+    #     DensityProfile(s,'Single')
     #CorrectedDensityProfile(shotnumber)
 
+    print(Densities(shotnumber,gas)[3])
 # %%
