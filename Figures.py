@@ -1,15 +1,16 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 import pandas as pd
 from scipy.optimize import curve_fit
 import matplotlib.patches as patches
-import matplotlib
-import plasma_charactristics as pc
+import plasma_characteristics as pc
 import bolo_radiation as br
 
 #%% Parameter
-Poster=True
+Poster=False
+Latex=True
 
 
 if Poster==True:
@@ -17,7 +18,21 @@ if Poster==True:
     plt.rc('xtick',labelsize=20)
     plt.rc('ytick',labelsize=20)
     plt.rcParams['lines.markersize']=12
+    w=10
+    h=7
+elif Latex==True:
+    w=412/72.27
+    h=w*(5**.5-1)/2
+    plt.rcParams['text.usetex']=True
+    plt.rcParams['font.family']='serif'
+    plt.rcParams['axes.labelsize']=10
+    plt.rcParams['font.size']=10
+    plt.rcParams['legend.fontsize']=10
+    plt.rcParams['xtick.labelsize']=10
+    plt.rcParams['ytick.labelsize']=10
 else:
+    w=10
+    h=7
     plt.rc('font',size=14)
     plt.rc('figure', titlesize=15)
 colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
@@ -28,36 +43,36 @@ markers=['o','v','s','P','p','D','*','x']
 #n=np.arange(10E5, 10E35)
 #T=np.arange(10E-2,10E6)
 
-plt.figure(figsize=(10,7))
-plt.hlines(6,5,35,linestyle='dashed',alpha=0.7,color='red')
-plt.plot([25,35],[-2,5.5],linestyle='dashed',alpha=0.7,color='blue')
-plt.plot([22.5,35],[-2,2.1],linestyle='dashed',alpha=0.7,color='green')
-plt.xticks([5,10,15,20,25,30,35],[r'10$^5$',r'10$^{10}$',r'10$^{15}$',r'10$^{20}$',r'10$^{25}$',r'10$^{30}$',r'10$^{35}$'],fontsize=12)
-plt.yticks([-2,0,2,4,6,8],[r'10$^{-2}$',r'10$^0$',r'10$^2$',r'10$^4$',r'10$^6$',''],fontsize=12)
-plt.xlabel(r'density [m$^{-3}$]',fontsize=16)
-plt.ylabel(r'temperature [eV]',fontsize=16)
-plt.annotate('interstellar\n plasmas',(7,-1),fontsize=12)
-plt.annotate('interplanetar\n   plasmas ',(9,1),fontsize=12)
-plt.annotate('flames',(14,-1.5),fontsize=12)
-plt.annotate(' solar\ncenter',(27,3),fontsize=12)
-plt.annotate('magnetic\n  fusion',(22,4.5),fontsize=12)
-plt.annotate('lightning',(24,0.5),fontsize=12)
-plt.annotate(' solar\ncorona',(14,1.7),fontsize=12)
-plt.annotate('e$^-$ gas\nin metal',(29,-1.1),fontsize=12)
-plt.annotate(' white\ndwarfs',(32.8,1),fontsize=12)
-plt.annotate('supernovae',(28,5.5),fontsize=12)
-plt.annotate('TJ-K',(18,1),color='red',fontsize=16)
-plt.annotate('fluorescence\n     light ',(15,-0.5),fontsize=12)
+plt.figure(figsize=(w,h))
+plt.hlines(6,5,37,linestyle='dashed',alpha=0.7,color='red')
+plt.plot([25,37],[-2,5.5],linestyle='dashed',alpha=0.7,color='blue')
+plt.plot([22.5,37],[-2,2.1],linestyle='dashed',alpha=0.7,color='green')
+plt.xticks([5,10,15,20,25,30,35],[r'10$^5$',r'10$^{10}$',r'10$^{15}$',r'10$^{20}$',r'10$^{25}$',r'10$^{30}$',r'10$^{35}$'])
+plt.yticks([-2,0,2,4,6,8],[r'10$^{-2}$',r'10$^0$',r'10$^2$',r'10$^4$',r'10$^6$',''])
+plt.xlabel('density [m$^{-3}$]')
+plt.ylabel('temperature [eV]')
+plt.annotate('interstellar\n plasmas',(7,-1))
+plt.annotate('interplanetar\n   plasmas ',(9,1))
+plt.annotate('flames',(14,-1.5))
+plt.annotate(' solar\ncenter',(27,3))
+plt.annotate('magnetic\n  fusion',(22,4.5))
+plt.annotate('lightning',(23.5,0.5))
+plt.annotate(' solar\ncorona',(14,1.9))
+plt.annotate('e$^-$ gas\nin metal',(28.2,-1.9))
+plt.annotate(' white\ndwarfs',(33,-0.8))
+plt.annotate('supernovae',(28,5.5))
+plt.annotate('TJ-K',(18,1),color='red')
+plt.annotate('fluorescent\n     light ',(15,-0.5))
 
-plt.annotate('relativistic plasmas',(16,6.1),color='red', alpha=0.7,fontsize=12)
-plt.annotate('degenerated plasmas', (30.7,2.1), rotation=58,color='blue',alpha=0.7,fontsize=12)
-plt.annotate('non-ideal plasmas',(27,-0.7),rotation=33,color='green',alpha=0.7,fontsize=12)
+plt.annotate('relativistic plasmas',(16,6.1),color='red', alpha=0.7)
+plt.annotate('degenerated plasmas', (29.1,0.3), rotation=52,color='blue',alpha=0.7)
+plt.annotate('non-ideal plasmas',(27,-1.1),rotation=29,color='green',alpha=0.7)
 plt.grid(True,alpha=0.2)
-plt.xlim(5,35)
+plt.xlim(5,37)
 plt.ylim(-2,7.5)
 fig1= plt.gcf()
 plt.show()
-fig1.savefig('/home/gediz/LaTex/Thesis/Figures/plasmas_in_nature_and_laboratory.pdf')
+fig1.savefig('/home/gediz/LaTex/Thesis/Figures/plasmas_in_nature_and_laboratory.pdf',bbox_inches='tight')
 
 # %% Lines of sight setup-----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -73,7 +88,7 @@ h=2 #height of Bolometerhead [cm]
 z_0=63.9    #middle of flux surfaces
 t=17.5 #radius of vessel [cm]
 
-fig=plt.figure(figsize=(10,10))
+fig=plt.figure(figsize=(w,h))
 plt.rc('xtick',labelsize=20)
 plt.rc('ytick',labelsize=20)
 ax=fig.add_subplot(111)
@@ -195,7 +210,7 @@ h=2 #height of Bolometerhead [cm]
 z_0=63.9    #middle of flux surfaces
 t=17.5 #radius of vessel [cm]
 
-fig=plt.figure(figsize=(10,10))
+fig=plt.figure(figsize=(w,h))
 plt.rc('xtick',labelsize=15)
 plt.rc('ytick',labelsize=15)
 ax=fig.add_subplot(111)
@@ -290,7 +305,7 @@ h=2 #height of Bolometerhead [cm]
 z_0=63.9    #middle of flux surfaces
 t=17.5 #radius of vessel [cm]
 gas='H'
-fig=plt.figure(figsize=(10,7))
+fig=plt.figure(figsize=(w,h))
 
 ax_t_f=fig.add_subplot(122)
 ax_t=ax_t_f.twinx()

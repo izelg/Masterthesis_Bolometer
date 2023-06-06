@@ -406,8 +406,8 @@ def PowerTimeSeries(i=1, Plot=False, save=False):
     k= kappa[i-1]
     t = tau[i-1]
     c=corr[i-1]
-    delta_t=tau_sd[i-1]
-    delta_k=kappa_sd[i-1]
+    delta_t=tau_sem[i-1]
+    delta_k=kappa_sem[i-1]
     if Datatype=='Data':
         U_Li= LoadData(location)["Bolo{}".format(i)]
         time = LoadData(location)['Zeit [ms]'] / 1000
@@ -576,34 +576,34 @@ def CompareBolometerProfiles_two_Series(save=False):
 #Then enter one or several of the above functions according to what you want to analyze and run the script
 
 if __name__ == "__main__":
-    #for shotnumber in np.arange(13215,13228):
-    shotnumber=13215
-    shotnumbers1=np.arange(13215,13228)#(13221,13220,13223,13222,13224,13218,13225,13226,13217,13216,13219,13227,13215)
-    shotnumbers2=(13098,13104,13106) 
-    Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
+    for shotnumber in np.arange(13314,13315):
+        #shotnumber=13291
+        shotnumbers1=np.arange(13311,13315)#(13221,13220,13223,13222,13224,13218,13225,13226,13217,13216,13219,13227,13215)
+        shotnumbers2=(13098,13104,13106) 
+        Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
 
-    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    #location=  '/data6/Bolo_Calibration_December/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
-    #time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None] # s
+        location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+        #location=  '/data6/Bolo_Calibration_December/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
+        #time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None] # s
 
-    gas='H'
-    gases=('H','He','Ar','Ne')
-    MW=pc.GetMicrowavePower(shotnumber)[1]
-    Bolometer_amplification_1=100
-    Bolometer_amplification_2=1
-    Bolometer_timeresolution=100
-    extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{pc.GetMicrowavePower(shotnumber)[0]:.3f}'),p=float(f'{pc.Pressure(shotnumber,gas):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
+        gas='Ar'
+        gases=('H','He','Ar','Ne')
+        MW=pc.GetMicrowavePower(shotnumber)[1]
+        Bolometer_amplification_1=100
+        Bolometer_amplification_2=1
+        Bolometer_timeresolution=100
+        extratitle='{g} // Bolometer: x{a}, x{b}, {c} ms // P$_M$$_W$= {mw} W // p= {p} mPa'.format(g=gas,a=Bolometer_amplification_2,b=Bolometer_amplification_1,c=Bolometer_timeresolution,mw=float(f'{pc.GetMicrowavePower(shotnumber)[0]:.3f}'),p=float(f'{pc.Pressure(shotnumber,gas):.3f}'))      #As a title for your plots specify what the measurement was about. If you don' use this type ''
 
-    #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
-    sourcefolder= '/home/gediz/Results/Bolometer_Profiles/combined_shots/shots_50025_to_50018/'   #the folder where the combined shots data should be stored
-    sourcefile='All_channels_from_shots_50025_to_50018.txt'     #the name of the combined shots file
-    sourcetitle='calibration with green laser in air'
-    sourcetitlesave='calibration_with_green_laser_air'
-    
-    outfile='/home/gediz/Results/Bolometer_Profiles/'
-    outfile_2='/home/gediz/LaTex/DPG/'
+        #if the datatype is source because you want to analyze data not saved direclty from TJ-K use:
+        sourcefolder= '/home/gediz/Results/Bolometer_Profiles/combined_shots/shots_50025_to_50018/'   #the folder where the combined shots data should be stored
+        sourcefile='All_channels_from_shots_50025_to_50018.txt'     #the name of the combined shots file
+        sourcetitle='calibration with green laser in air'
+        sourcetitlesave='calibration_with_green_laser_air'
+        
+        outfile='/home/gediz/Results/Bolometer_Profiles/'
+        outfile_2='/home/gediz/LaTex/DPG/'
 
-    if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
-        os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
-    CompareBolometerProfiles('Power','Power')
+        if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
+            os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
+        BolometerProfile('Power',save=True)
 # %%

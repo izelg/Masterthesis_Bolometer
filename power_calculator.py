@@ -325,7 +325,7 @@ def Totalpower_from_exp(Type='',save=False,calc=False):
     ax02=ax0.twinx()
 
     for j in np.arange(len(shotnumbers)):
-        P_ges_exp,P_ges_calc,P_ges_calc_no_weighing,P_ges_no_weighing,pressures,mw,discrepancies,factors,P_ges_exp_error_min,P_ges_exp_error_max,P_ges_calc_error_min,P_ges_calc_error_max=[],[],[],[],[],[],[],[],[],[],[],[]
+        P_ges_exp,P_ges_calc,P_ges_calc_no_weighing,P_ges_no_weighing,pressures,mw,discrepancies,factors,P_ges_exp_error_min,P_ges_exp_error_max,P_ges_calc_error_min,P_ges_calc_error_max,P_ges_exp_error_bolo=[],[],[],[],[],[],[],[],[],[],[],[],[]
         for s,g in zip(shotnumbers[j],gases[j]):
             pressures.append(pc.Pressure(s,g))
             mw.append(pc.GetMicrowavePower(s)[0])
@@ -335,26 +335,23 @@ def Totalpower_from_exp(Type='',save=False,calc=False):
             sortnumbers=[shotnumbers[j][i] for i in np.argsort(mw)]
         for s,g in zip(sortnumbers,gases[j]):
             weight=Totalpower_from_Profile(s)[0]
-            P_ges_exp_,P_ges_calc_,P_ges_exp_error_min_,P_ges_exp_error_max_,P_ges_calc_error_min_,P_ges_calc_error_max_=[],[],[],[],[],[]
+            P_ges_exp_,P_ges_calc_,P_ges_exp_error_min_,P_ges_exp_error_max_,P_ges_calc_error_min_,P_ges_calc_error_max_,P_ges_exp_error_bolo_=[],[],[],[],[],[],[]
             if not os.path.exists('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=s,g=g)):
-                calc_p,bolo_p=Boloprofile_calc(s,g,save=True,plot=True)
+                calc_p,bolo_p,bolo_err=Boloprofile_calc(s,g,save=True,plot=True)
             else:
-                calc_p,bolo_p=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=s,g=g),unpack=True, usecols=(1,2))
+                calc_p,bolo_p,bolo_err=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=s,g=g),unpack=True, usecols=(1,2,3))
             calc_p=[p*10**(-6)for p in calc_p]
             bolo_p=[p*10**(-6) for p in bolo_p]
+            bolo_err=[p*10**(-6) for p in bolo_err]
             P_ges_no_weighing.append(((4*np.pi*bolo_p[3])/(((c_w*c_h)/10000)*v_i_ges_middle[3]))*V_T_2)
             for i in [0,1,2,3,4,5,6,7]:
                 P_ges_exp_.append(((4*np.pi*bolo_p[i])/(((c_w*c_h)/10000)*v_i_ges_middle[i]))*V_T_2*weight[i])
                 P_ges_exp_error_min_.append(((4*np.pi*bolo_p[i])/(((c_w*c_h)/10000)*v_i_ges_min[i]))*V_T_2*weight[i])
                 P_ges_exp_error_max_.append(((4*np.pi*bolo_p[i])/(((c_w*c_h)/10000)*v_i_ges_max[i]))*V_T_2*weight[i])
-            # fig3=plt.figure()
-            # plt.plot([1,2,3,4,5,6,7,8],P_ges_exp_)
-            # plt.plot([1,2,3,4,5,6,7,8],P_ges_exp_error_min_)
-            # plt.plot([1,2,3,4,5,6,7,8],P_ges_exp_error_max_)
-            # fig3.show()
+                P_ges_exp_error_bolo_.append(((4*np.pi*bolo_err[i])/(((c_w*c_h)/10000)*v_i_ges_middle[i]))*V_T_2*weight[i])
             P_ges_exp.append(np.mean(P_ges_exp_))
-            P_ges_exp_error_min.append(abs(np.mean(P_ges_exp_error_min_)-np.mean(P_ges_exp_)))
-            P_ges_exp_error_max.append(abs(np.mean(P_ges_exp_error_max_)-np.mean(P_ges_exp_)))
+            P_ges_exp_error_min.append(abs(np.mean(P_ges_exp_error_min_)-np.mean(P_ges_exp_)))#+np.mean(P_ges_exp_error_bolo_))
+            P_ges_exp_error_max.append(abs(np.mean(P_ges_exp_error_max_)-np.mean(P_ges_exp_)))#+np.mean(P_ges_exp_error_bolo_))
             if calc==True:
                 P_ges_calc_no_weighing.append(((4*np.pi*calc_p[3])/(((c_w*c_h)/10000)*v_i_ges_middle[3]))*V_T_2)
                 for i in [0,1,2,3,4,5,6,7]:
@@ -382,38 +379,43 @@ def Totalpower_from_exp(Type='',save=False,calc=False):
         if Type=='Pressure':
             title=r'{g}, MW: {mw}, P$_M$$_W$ $\approx$ {m} kW'.format(g=g,mw=pc.GetMicrowavePower(s)[1],m=float(f'{np.mean(mw)*10**(-3):.1f}'))
             lns1=ax.plot(np.sort(pressures),P_ges_exp,marker=markers[j],color=colors[j],linestyle='dashed',label=title)
-            ax.errorbar(np.sort(pressures),P_ges_exp,yerr=(P_ges_exp_error_min,P_ges_exp_error_max),capsize=5)
-            lns2=ax.plot(np.sort(pressures),P_ges_no_weighing,marker=markers[j],color=colors[j],linestyle='dashed',label='ch4, '+title,alpha=0.5)           
+            ax.errorbar(np.sort(pressures),P_ges_exp,yerr=(P_ges_exp_error_min,P_ges_exp_error_max),capsize=5,linestyle='None',color=colors[j])
+            #lns2=ax.plot(np.sort(pressures),P_ges_no_weighing,marker=markers[j],color=colors[j],linestyle='dashed',label='ch4, '+title,alpha=0.5)           
             if calc==True:
                 lns3=ax2.plot(np.sort(pressures),P_ges_calc,marker=markers[j+1],color=colors[j+1],linestyle='dashed',label='calculated, '+title)
                 ax2.errorbar(np.sort(pressures),P_ges_calc,yerr=(P_ges_calc_error_min,P_ges_calc_error_max),capsize=5)
-                lns4=ax2.plot(np.sort(pressures),P_ges_calc_no_weighing,marker=markers[j+1],color=colors[j+1],linestyle='dashed',label='calculated, ch4, '+title, alpha=0.5)
+                #lns4=ax2.plot(np.sort(pressures),P_ges_calc_no_weighing,marker=markers[j+1],color=colors[j+1],linestyle='dashed',label='calculated, ch4, '+title, alpha=0.5)
             ax.set_xlabel('pressure [mPa]')
         if Type=='Power':
             title='{g}, \t MW: {mw}, \t'.format(g=g,mw=pc.GetMicrowavePower(s)[1],)+r'p$\approx$'+'{p} mPa'.format(p=float(f'{np.mean(pressures):.1f}'))
             lns1=ax.plot(np.sort(mw),P_ges_exp,marker=markers[j],color=colors[j],linestyle='dashed',label=title)
-            lns2=ax.plot(np.sort(mw),P_ges_no_weighing,marker=markers[j],color=colors[j],linestyle='dashed',label='ch4, '+title, alpha=0.5)
+            ax.errorbar(np.sort(mw),P_ges_exp,yerr=(P_ges_exp_error_min,P_ges_exp_error_max),capsize=5,linestyle='None',color=colors[j])
+            #lns2=ax.plot(np.sort(mw),P_ges_no_weighing,marker=markers[j],color=colors[j],linestyle='dashed',label='ch4, '+title, alpha=0.5)
             if calc==True:
                 lns3=ax2.plot(np.sort(mw),P_ges_calc,marker=markers[j+1],color=colors[j+1],linestyle='dashed',label='calculated, '+title)           
-                lns4=ax2.plot(np.sort(mw),P_ges_calc_no_weighing,marker=markers[j+1],color=colors[j+1],linestyle='dashed',label='calculated, ch4,  '+title,alpha=0.5)
+                ax2.errorbar(np.sort(mw),P_ges_calc,yerr=(P_ges_calc_error_min,P_ges_calc_error_max),capsize=5)
+                #lns4=ax2.plot(np.sort(mw),P_ges_calc_no_weighing,marker=markers[j+1],color=colors[j+1],linestyle='dashed',label='calculated, ch4,  '+title,alpha=0.5)
             ax.set_xlabel('P$_M$$_W$ [W]')
         ax.set_ylim(0)
+        ax.set_ylabel('P$_r$$_a$$_d$ total exp [W]')
         if calc==True:
             ax2.set_ylim(0)
             leg = lns1 + lns2 + lns3 + lns4
-            ax.set_ylabel('P$_r$$_a$$_d$ total exp [W]',color=colors[j])
             ax.tick_params(axis='y', labelcolor=colors[j])
             ax2.set_ylabel('P$_r$$_a$$_d$ total calc [W]',color=colors[j+1])
+            ax.set_ylabel('P$_r$$_a$$_d$ total exp [W]',color=colors[j])
             ax2.tick_params(axis='y', labelcolor=colors[j+1])
             fig1.patch.set_facecolor('white')
             labs = [l.get_label() for l in leg]
             ax.legend(leg,labs,loc='lower center',bbox_to_anchor=(0.5,-0.45*len(shotnumbers)-0.1))
 
         else:
-            ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.25*len(shotnumbers)-0.1))
-
+            ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.15*len(shotnumbers)-0.1))
+            ax2.set_yticks([])
     fig1.show()
     fig2.show()
+    for s in np.arange(0,len(sortnumbers)):
+        print((P_ges_exp_error_min[s]/P_ges_exp[s])*100)
 
     if save==True:
         fig1.savefig('/home/gediz/Results/Modeled_Data/Tota_P_rad/comparison_{T}_{g}.pdf'.format(T=Type, g=gases), bbox_inches='tight')
@@ -475,23 +477,27 @@ def Boloprofile_calc(s,g,save=False,plot=False):
             flux_rc_2.append(interpol_rc_2)
     P_profile_calc,power_from_ions,power_from_neutrals,error_P_calc=[],[],[],[[],[]]
     for b,e_max,e_min in zip([flux_1,flux_2,flux_3,flux_4,flux_4,flux_3,flux_2,flux_1],[flux_1_max,flux_2_max,flux_3_max,flux_4_max,flux_4_max,flux_3_max,flux_2_max,flux_1_max],[flux_1_min,flux_2_min,flux_3_min,flux_4_min,flux_4_min,flux_3_min,flux_2_min,flux_1_min]):
-        P_0,P_1,P_0_min,P_0_max=0,0,0,0
+        P_0,P_1,P_0_min,P_0_max,P_1_min,P_1_max=0,0,0,0,0,0
         if g=='H':
             for j in np.arange(0,len(flux_d)):
                 P_0+=((flux_rc[j]*flux_d[j]*n_0*b[j])*1.602E-19)*(A_D/(4*np.pi))
                 P_0_min+=((flux_rc[j]*flux_d[j]*n_0*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
                 P_0_max+=((flux_rc[j]*flux_d[j]*n_0*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
-                P_1+=0
+                P_1,P_1_min,P_1_max=0,0,0
         if g=='He' or g=='Ar' or g=='Ne':
             for j in np.arange(0,len(flux_d)):
                 P_0+=((flux_rc[j]*n_e*n_0*b[j])*1.602E-19)*(A_D/(4*np.pi))
+                P_0_min+=((flux_rc[j]*n_e*n_0*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
+                P_0_max+=((flux_rc[j]*n_e*n_0*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
                 P_1+=((flux_rc_2[j]*n_e*flux_d[j]*b[j])*1.602E-19)*(A_D/(4*np.pi))
+                P_1_min+=((flux_rc_2[j]*flux_d[j]*n_e*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
+                P_1_max+=((flux_rc_2[j]*flux_d[j]*n_e*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
         P_profile_calc.append((P_0+P_1)/10**(-6))
-        error_P_calc[0].append(abs(P_0+P_1-P_0_min)/10**(-6))
-        error_P_calc[1].append(abs(P_0+P_1-P_0_max)/10**(-6))
+        error_P_calc[0].append(abs(P_0+P_1-P_0_min-P_1_min)/10**(-6))
+        error_P_calc[1].append(abs(P_0+P_1-P_0_max-P_1_max)/10**(-6))
         power_from_ions.append(P_1/10**(-6))
         power_from_neutrals.append(P_0/10**(-6))
-    print(error_P_calc)
+
     P_profile,error_P_exp=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=s),unpack=True,usecols=(1,2))
     P_profile_corr=[(a/(b/d*gold(g)[0]+c/d*gold(g)[1]))*mesh for a,b,c,d in zip(P_profile,power_from_neutrals,power_from_ions,P_profile_calc)]
     c1='#18a8d1'
@@ -531,10 +537,10 @@ def Boloprofile_calc(s,g,save=False,plot=False):
         outfile='/home/gediz/Results/Modeled_Data/Bolometerprofiles/'
         if not os.path.exists(str(outfile)+'shot{}'.format(s)):
             os.makedirs(str(outfile)+'shot{}'.format(s))
-        data = np.column_stack([np.array([1,2,3,4,5,6,7,8]), np.array(P_profile_calc), np.array(P_profile_corr)])#, np.array(z), np.array(abs(y-z))])
-        np.savetxt(str(outfile)+"shot{n}/shot{n}_modeled_powerprofile_{g}.txt".format(n=s, g=g) , data, delimiter='\t \t', fmt=['%d', '%10.3f','%10.3f'], header='Modeled power data \n {t} \n bolometerchannel \t power modeled [\u03bcW] \t power measured and corrected [\u03bcW]'.format(t=title))
+        data = np.column_stack([np.array([1,2,3,4,5,6,7,8]), np.array(P_profile_calc), np.array(P_profile_corr), np.array(error_P_exp)])#, np.array(z), np.array(abs(y-z))])
+        np.savetxt(str(outfile)+"shot{n}/shot{n}_modeled_powerprofile_{g}.txt".format(n=s, g=g) , data, delimiter='\t \t', fmt=['%d', '%10.3f','%10.3f','%10.3f'], header='Modeled power data \n {t} \n bolometerchannel \t power modeled [\u03bcW] \t power measured and corrected [\u03bcW] \t error for experimental Data [\u03bcW]'.format(t=title))
         #fig1.savefig(str(outfile)+"shot{n}/shot{n}_modeled_powerprofile_{g}.pdf".format(n=s, g=gas), bbox_inches='tight')
-    return P_profile_calc,P_profile_corr
+    return P_profile_calc,P_profile_corr,error_P_exp
 
 def Forward_modeling(s,g):
         
@@ -633,10 +639,10 @@ def TopView():
 # %%
 start=datetime.now()
 print('start:', start)
-shotnumber=13217
-shotnumbers=[np.arange(13340,13348)]
-gases=[['Ne'for i in range(13)]]
-gas='H'
+shotnumber=13340
+shotnumbers=[np.arange(13242,13256),np.arange(13268,13280),np.arange(13299,13312),np.arange(13340,13348)]
+gases=[['H'for i in range(13)],['He'for i in range(12)],['Ar'for i in range(13)],['Ne'for i in range(8)]]
+gas='Ne'
 infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
 
 location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
@@ -652,7 +658,6 @@ def gold(g):
         return [0.67,0.84]
 
 Boloprofile_calc(shotnumber,gas,plot=True)
-
 print('total:',datetime.now()-start)
   # %%
 
