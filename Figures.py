@@ -5,9 +5,10 @@ import matplotlib
 import pandas as pd
 from scipy.optimize import curve_fit
 import matplotlib.patches as patches
+
 import plasma_characteristics as pc
 import bolo_radiation as br
-
+import adas_data as adas
 #%% Parameter
 Poster=False
 Latex=True
@@ -30,6 +31,8 @@ elif Latex==True:
     plt.rcParams['legend.fontsize']=10
     plt.rcParams['xtick.labelsize']=10
     plt.rcParams['ytick.labelsize']=10
+    plt.rcParams['lines.markersize']=6
+
 else:
     w=10
     h=7
@@ -358,5 +361,35 @@ ax_t.legend(loc='lower center',bbox_to_anchor=(0,-0.62),title=r'H, p$\approx$ 7.
 fig1= plt.gcf()
 plt.show()
 #fig1.savefig('/home/gediz/LaTex/Thesis/Figures/fluxsurfaces_with_temperatureprofiles.pdf',bbox_inches='tight')
+
+# %%
+#LR, RR, BR
+T=60
+T_LR,He_0_LR,He_1_LR=adas.he_adf11(data='plt96_he',T_max=T)[0],adas.he_adf11(data='plt96_he',T_max=T)[1],adas.he_adf11(data='plt96_he',T_max=T)[2]
+T_BR_RR,He_0_BR_RR,He_1_BR_RR=adas.he_adf11(data='prb96_he',T_max=T)[0],adas.he_adf11(data='prb96_he',T_max=T)[1],adas.he_adf11(data='prb96_he',T_max=T)[2]
+T_RR_0,He_0_RR=adas.he_adf15(data='pec96#he_pju#he0',T_max=T)[0],adas.he_adf15(data='pec96#he_pju#he0',T_max=T)[1]
+T_RR_1,He_1_RR=adas.he_adf15(data='pec96#he_pju#he1',T_max=T)[0],adas.he_adf15(data='pec96#he_pju#he1',T_max=T)[1]
+
+plt.figure(figsize=(w,h))
+plt.plot(T_LR,He_0_LR,color=colors[0],marker=markers[0],label='He$^0$, excitation, source: ADF11 ')
+plt.plot(T_LR,He_1_LR,color=colors[0],marker=markers[0],label='He${^+1}$, excitation, source: ADF11 ',alpha=0.5)
+
+plt.plot(T_RR_0,He_0_RR,color=colors[2],marker=markers[2],label='He$^0$,recombination, source: ADF15')
+plt.plot(T_RR_1,He_1_RR,color=colors[2],marker=markers[2],label='He$^{+1}$,recombination, source: ADF15',alpha=0.5)
+
+plt.plot(T_BR_RR,He_0_BR_RR,color=colors[1],marker=markers[1],label='He$^0$,Bremsstrahlung and recombination, source: ADF11 ')
+plt.plot(T_BR_RR,He_1_BR_RR,color=colors[1],marker=markers[1],label='He$^{+1}$,Bremsstrahlung and recombination, source: ADF11 ',alpha=0.5)
+
+plt.ylabel('collisional radiative coefficients [eVm$^3$/s]')
+plt.xlabel('temperature [eV]')
+plt.yscale('log')
+plt.ylim(1E-20,1E-12)
+plt.xlim(-1,30)
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.7))
+fig1= plt.gcf()
+plt.show()
+fig1.savefig('/home/gediz/LaTex/Thesis/Figures/lt_br_rr.pdf',bbox_inches='tight')
+
+
 
 # %%

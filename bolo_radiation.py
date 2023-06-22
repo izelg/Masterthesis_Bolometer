@@ -521,7 +521,7 @@ def CompareBolometerProfiles(Type="", ScanType='',save=False,normalize=False):
             label='shot n°{s}, P$_M$$_W$ = {mw} kW'.format(s=i,mw=float(f'{pc.GetMicrowavePower(i)[0]*10**(-3):.2f}'))
             title= r'{g}, MW= {m}, p $\approx$ {p} mPa'.format(g=gas,m=pc.GetMicrowavePower(i)[1],p=float(f'{np.mean(pressure):.1f}'))
         if ScanType=='None':
-            label='shot n°{s}, P$_M$$_W$ = {mw} W, p= {p} mPa'.format(s=i,mw=float(f'{pc.GetMicrowavePower(i)[0]*10**(-3):.2f}'),p=float(f'{pc.Pressure(i,gas):.1f}'))
+            label='shot n°{s}, P$_M$$_W$ = {mw} kW, p= {p} mPa'.format(s=i,mw=float(f'{pc.GetMicrowavePower(i)[0]*10**(-3):.2f}'),p=float(f'{pc.Pressure(i,gas):.1f}'))
             title= r'{g}, MW= {m}'.format(g=gas,m=pc.GetMicrowavePower(i)[1])
         shot1,error=np.loadtxt(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type),unpack=True,usecols=(1,2))
         if normalize==True:
@@ -531,7 +531,7 @@ def CompareBolometerProfiles(Type="", ScanType='',save=False,normalize=False):
         else:
             norm=''
         plt.plot(x,shot1,linewidth=3,marker=m, linestyle='dashed', label=label,color=c)#open(str(outfile)+"shot{n}/shot{n}_bolometerprofile_from_{t}.txt".format(n=i, t=type), 'r').readlines()[2][3:-1])
-        plt.errorbar(x,shot1,yerr=error, capsize=5,linestyle='None',color=c)
+        #plt.errorbar(x,shot1,yerr=error, capsize=5,linestyle='None',color=c)
     plt.xlabel('bolometer channel',fontsize=30)
     plt.ylabel(ylabel,fontsize=30)
     plt.legend(loc=1, bbox_to_anchor=(1.8,1),title=title)
@@ -576,9 +576,9 @@ def CompareBolometerProfiles_two_Series(save=False):
 #Then enter one or several of the above functions according to what you want to analyze and run the script
 
 if __name__ == "__main__":
-    for shotnumber in np.arange(13314,13315):
-        #shotnumber=13291
-        shotnumbers1=np.arange(13311,13315)#(13221,13220,13223,13222,13224,13218,13225,13226,13217,13216,13219,13227,13215)
+    for shotnumber in np.arange(13089,13090):
+        #shotnumber=13088
+        shotnumbers1=np.arange(13089,13097)#(13221,13220,13223,13222,13224,13218,13225,13226,13217,13216,13219,13227,13215)
         shotnumbers2=(13098,13104,13106) 
         Datatype= 'Data' #'Data' if it is saved with TJ-K software like 'shotxxxxx.dat' or 'Source' if it is a selfmade file like 'combined_shots_etc'
 
@@ -586,7 +586,7 @@ if __name__ == "__main__":
         #location=  '/data6/Bolo_Calibration_December/shot{name}.dat'.format(name=shotnumber) #location of calibration measurement
         #time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None] # s
 
-        gas='Ar'
+        gas='H'
         gases=('H','He','Ar','Ne')
         MW=pc.GetMicrowavePower(shotnumber)[1]
         Bolometer_amplification_1=100
@@ -605,5 +605,7 @@ if __name__ == "__main__":
 
         if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
             os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
-        BolometerProfile('Power',save=True)
+        
+        #BolometerProfile('Power',save=True)
+        CompareBolometerProfiles('Power','None')
 # %%

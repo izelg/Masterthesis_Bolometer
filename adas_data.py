@@ -217,12 +217,15 @@ def he_adf15(data='',T_max=200,density='avrg',Spectrum=False):
       x=[]
       a=0
       for i in np.arange(0,len(all_wl)):
-        if types[i]=='EXCIT':
+        if types[i]=='RECOM':
+        #if types[i]=='EXCIT':
           x.append(wavelengths[i])
           y=[]
+          z=int(len(wavelengths)/2)
           for d in np.arange(1,len(densities)):    
             y.append(globals()[all_wl[i]][d][t])
-          a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
+          a+=((h*c/(x[i-z]*10**(-10)))*np.mean(y))
+          #a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
       pec.append(a/e*m)
     return temperatures[0:t_n[0]], pec[0:t_n[0]]
   if type(density)==float and Spectrum==False:
@@ -245,8 +248,9 @@ def he_adf15(data='',T_max=200,density='avrg',Spectrum=False):
     t=t_n
     for i,j in zip(all_wl,np.arange(0,len(all_wl))):
       if globals()[i][0]<=10000:
-        s_e.append(globals()[i][d[0]][t[0]])
-        w_e.append(float(globals()[i][0])*10**(-1))
+        if types[j]=='RECOM':
+          s_e.append(globals()[i][d[0]][t[0]])
+          w_e.append(float(globals()[i][0])*10**(-1))
     #data = np.column_stack([np.array(w_e), np.array(s_e)])
     #np.savetxt('/home/gediz/Results/ADAS_Data/Spectra/H_Spectrum_excit_T_{t}_eV_D_{d}_m-3.txt'.format(t='%.2E' % t[0],d='%.2E' % d[0]) ,data, delimiter='\t \t',header='PEC from excitation for H \n for density={d} 1/m^3 and temperature={t} eV \n wavelengths [nm] \t pec [cm^3/s]'.format(t='%.2E' % t[0],d='%.2E' % d[0]) )
     return w_e,s_e,densities[d[0]],temperatures[t[0]]
@@ -263,12 +267,15 @@ def he_adf11(T_max=200,data=''):
   if data=='plt96_he':
     data0='/home/gediz/ADAS/He/plt96_he.dat'
     all_rad_t_0,all_rad_t_1,all_rad_d_0,all_rad_d_1=[],[],[],[]
+  if data=='prb96_he':
+    data0='/home/gediz/ADAS/He/prb96_he.dat'
+    all_rad_t_0,all_rad_t_1,all_rad_d_0,all_rad_d_1=[],[],[],[]
   if data=='plt96r_he':
     data0='/home/gediz/ADAS/He/plt96r_he.dat'
     all_rad_t_1_1,all_rad_t_1_2,all_rad_t_2_2,all_rad_d_1_1,all_rad_d_1_2,all_rad_d_2_2=[],[],[],[],[],[]
   with open(data0, 'r') as f:
     lines=f.readlines()
-    if data=='plt96_he':
+    if data=='plt96_he' or data=='prb96_he':
       densities.append(lines[2]+lines[3]+lines[4])
       temperatures.append(lines[5]+lines[6]+lines[7]+lines[8])
     if data=='plt89_he':
@@ -315,7 +322,7 @@ def he_adf11(T_max=200,data=''):
 
       return temperatures[0:t_n[0]],globals()[all_rad_d_0[0]][0:t_n[0]],globals()[all_rad_d_1[0]][0:t_n[0]]
     
-    if data=='plt96_he':
+    if data=='plt96_he' or data=='prb96_he':
       o=0
       for i in np.arange(1,31):
         t_name='rad_t_0_'+str(i)
@@ -728,7 +735,7 @@ def ne_adf15(data='',T_max=200,density='avrg',Spectrum=False):
 if __name__ == "__main__":
   T=50
   #H--------------------------
-  plt.plot(h_adf11(T_max=T)[0],h_adf11(T_max=T)[1],'bv--',label='H, ADF11, unresolved, ion charge=0')
+ # plt.plot(h_adf11(T_max=T)[0],h_adf11(T_max=T)[1],'bv--',label='H, ADF11, unresolved, ion charge=0')
   # for de in [1E14,1E15,1E16,1E17,1E18,1E19,1E20,1E21,1E22,1E23]:
   #   plt.plot(h_adf15(density=de)[0],h_adf15(density=de)[1],'v--',label='H, ADF15, unresolved, ion charge=0, density= {d}'.format(d='%.2E'%de))
   # plt.plot(h_adf15(density='avrg')[0],h_adf15(density='avrg')[1],'v--',label='H, ADF15, unresolved, ion charge=0, density= average')
@@ -738,14 +745,15 @@ if __name__ == "__main__":
   # plt.plot(he_adf11(res=True)[0],he_adf11(res=True)[1],'o--',label='He, ADF11, resolved, ion charge=0, metastables=1')
   # plt.plot(he_adf11(res=True)[0],he_adf11(res=True)[2],'o--',label='He, ADF11, resolved, ion charge=0,metastables=2')
   #plt.plot(he_adf11(data='plt89_he')[0],he_adf11(data='plt89_he')[1],'ro--',label='He, ADF11, unresolved, ion charge=0, 89')
-  plt.plot(he_adf11(data='plt96_he',T_max=T)[0],he_adf11(data='plt96_he',T_max=T)[1],'ro--',label='He, ADF11, unresolved, ion charge=0, 96')
+  plt.plot(he_adf11(data='plt96_he',T_max=T)[0],he_adf11(data='plt96_he',T_max=T)[1],'ro--',label='He, ADF11, unresolved, ion charge=0, 96, excitation')
+  plt.plot(he_adf11(data='prb96_he',T_max=T)[0],he_adf11(data='prb96_he',T_max=T)[1],'ro--',label='He, ADF11, unresolved, ion charge=0, 96, bremsstahlung and recombination')
 
   # for de in [1e+17, 2e+17, 5e+17, 1e+18, 2e+18, 5e+18, 1e+19, 2e+19, 5e+19, 1e+20, 2e+20, 5e+20]:
   #   plt.plot(he_adf15(data='pec93#he_pjr#he0',density=de)[0],he_adf15(data='pec93#he_pjr#he0',density=de)[1],'s--',label='He, ADF15, resolved, ion charge=0, 93, density= {d}'.format(d='%.2E'%de))
   # print(he_adf15(data='pec93#he_pjr#he0',density=de)[2])
   # plt.plot(he_adf15(data='pec93#he_pjr#he0',density='avrg')[0],he_adf15(data='pec93#he_pjr#he0',density='avrg')[1],'s--',label='He, ADF15, resolved, ion charge=0, 93,density=average')
   # plt.plot(he_adf15(data='pec96#he_pjr#he0')[0],he_adf15(data='pec96#he_pjr#he0')[1],'s--',label='He, ADF15, resolved, ion charge=0, 96')
-  # plt.plot(he_adf15(data='pec96#he_pju#he0')[0],he_adf15(data='pec96#he_pju#he0')[1],'s--',label='He, ADF15, unresolved, ion charge=0, 96')
+  plt.plot(he_adf15(data='pec96#he_pju#he0')[0],he_adf15(data='pec96#he_pju#he0')[1],'s--',label='He, ADF15, unresolved, ion charge=0, 96')
 
   # plt.plot(he_adf11(res=True)[0],he_adf11(res=True)[3],'o--',label='He, ADF11, resolved, ion charge=1,metastables=1')
   #plt.plot(he_adf11(data='plt89_he')[0],he_adf11(data='plt89_he')[2],'rs--',label='He, ADF11, unresolved, ion charge=1, 89')
@@ -755,7 +763,7 @@ if __name__ == "__main__":
   # plt.plot(he_adf15(data='pec96#he_bnd#he1')[0],he_adf15(data='pec96#he_bnd#he1')[1],'s--',label='He, ADF15, bnd?, ion charge=1')
 
   #Ar---------------------------------
-  plt.plot(ar_adf11(T_max=T)[0],ar_adf11(T_max=T)[1],'gD--',label='Ar, ADF11, unresolved, ion charge=0')
+  #plt.plot(ar_adf11(T_max=T)[0],ar_adf11(T_max=T)[1],'gD--',label='Ar, ADF11, unresolved, ion charge=0')
 
   # for de in [1e+16, 1e+17, 1e+18, 1e+19, 1e+20, 1e+21, 1e+22]:
   #   plt.plot(ar_adf15(data='pec40#ar_ic#ar0',density=de)[0],ar_adf15(data='pec40#ar_ic#ar0',density=de)[1],'D--',label='Ar, ADF15, ion charge=0, density= {d}'.format(d='%.2E'%de))
@@ -765,7 +773,7 @@ if __name__ == "__main__":
   #plt.plot(ar_adf11()[0],ar_adf11()[2],'rP--',label='Ar, ADF11, unresolved, ion charge=1')
 
   #Ne---------------------------------------------------------------------
-  plt.plot(ne_adf11(data='plt96_ne',T_max=T)[0],ne_adf11(data='plt96_ne',T_max=T)[1],'ys--',label='Ne, ADF11, unresolved, ion charge=0, 96')
+  #plt.plot(ne_adf11(data='plt96_ne',T_max=T)[0],ne_adf11(data='plt96_ne',T_max=T)[1],'ys--',label='Ne, ADF11, unresolved, ion charge=0, 96')
   #plt.plot(ne_adf11(data='plt89_ne')[0],ne_adf11(data='plt89_ne')[1],'ro--',label='Ne, ADF11, unresolved, ion charge=0, 89')
   #plt.plot(ne_adf11(data='plt96r_ne')[0],ne_adf11(data='plt96r_ne')[1],'go--',label='Ne, ADF11, resolved, ion charge=0, 96')
   #plt.plot(ne_adf11(data='plt96_ne')[0],ne_adf11(data='plt96_ne')[2],'bs--',label='Ne, ADF11, unresolved, ion charge=1, 96')
@@ -781,18 +789,15 @@ if __name__ == "__main__":
   plt.ylabel('collisional radiative coefficients [eVm$^3$/s]')
   plt.xlabel('temperature [eV]')
   plt.yscale('log')
-  plt.ylim(1E-15,1E-12)
+  plt.ylim(1E-20,1E-12)
   plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.8))
   plt.show()
 
 
-  # %%
+# %%
+  plt.bar(he_adf15(data='pec96#he_pju#he0',density=5e+17,Spectrum=True)[0],he_adf15(data='pec96#he_pju#he0',density=5e+17,Spectrum=True)[1],5)
 
-  he_adf15(data='pec93#he_pjr#he0',T_max=10,density=1E17,Spectrum=False)
-
-
-
-  # %%
-  print(h_adf11(T_max=201)[0],h_adf11(T_max=201)[1])
-
+# %%
+  print(he_adf11(data='prb96_he')[1][8])
+  print(he_adf15(data='pec96#he_pju#he0')[1][13])
 # %%

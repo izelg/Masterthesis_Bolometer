@@ -34,7 +34,8 @@ if Poster==True:
 else:
     plt.rc('font',size=14)
     plt.rc('figure', titlesize=15)
-colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
+#colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
+colors=['#1bbbe9','#023047','#023047','#ffb703','#ffb703','#fb8500','#c1121f','#780000','#fb8500','#c1121f','#780000']
 markers=['o','v','s','P','p','D','8','*','x']
 
 #%%
@@ -413,7 +414,7 @@ def Totalpower_from_exp(Type='',save=False,calc=False):
             ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.15*len(shotnumbers)-0.1))
             ax2.set_yticks([])
     fig1.show()
-    fig2.show()
+    #fig2.show()
     for s in np.arange(0,len(sortnumbers)):
         print((P_ges_exp_error_min[s]/P_ges_exp[s])*100)
 
@@ -640,8 +641,8 @@ def TopView():
 start=datetime.now()
 print('start:', start)
 shotnumber=13340
-shotnumbers=[np.arange(13242,13256),np.arange(13268,13280),np.arange(13299,13312),np.arange(13340,13348)]
-gases=[['H'for i in range(13)],['He'for i in range(12)],['Ar'for i in range(13)],['Ne'for i in range(8)]]
+shotnumbers=[np.arange(13242,13255),np.arange(13299,13311),[13098,13099,13100,13101,13102,13103,13104,13105,13106],np.arange(13340,13348),[13079,13080,13081,13082,13083,13084],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095]]
+gases=[['H'for i in range(13)],['Ar'for i in range(13)],['Ar'for i in range(9)],['Ne'for i in range(8)],['Ne'for i in range(7)],['H'for i in range(8)],['Ar'for i in range(8)],['Ne'for i in range(8)]]
 gas='Ne'
 infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
 
@@ -657,7 +658,8 @@ def gold(g):
     if g=='Ne':
         return [0.67,0.84]
 
-Boloprofile_calc(shotnumber,gas,plot=True)
+#Boloprofile_calc(shotnumber,gas,plot=True)
+Totalpower_from_exp('Pressure')
 print('total:',datetime.now()-start)
   # %%
 

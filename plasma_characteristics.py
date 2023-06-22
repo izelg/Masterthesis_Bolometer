@@ -209,7 +209,7 @@ def TemperatureProfile(s,Type='',ScanType='',save=False):
                 label='shot n°{s}, P$_M$$_W$ = {mw} kW'.format(s=i,mw=float(f'{GetMicrowavePower(i)[0]*10**(-3):.2f}'))
                 title= r'{g}, MW= {m}, p $\approx$ {p} mPa'.format(g=gas,m=GetMicrowavePower(i)[1],p=float(f'{np.mean(pressure):.1f}'))
             if ScanType=='None':
-                label='shot n°{s}, P$_M$$_W$ = {mw} W, p= {p} mPa'.format(s=i,mw=float(f'{GetMicrowavePower(i)[0]*10**(-3):.2f}'),p=float(f'{Pressure(i,gas):.1f}'))
+                label='shot n°{s}, P$_M$$_W$ = {mw} kW, p= {p} mPa'.format(s=i,mw=float(f'{GetMicrowavePower(i)[0]*10**(-3):.2f}'),p=float(f'{Pressure(i,gas):.1f}'))
                 title= r'{g}, MW= {m}'.format(g=gas,m=GetMicrowavePower(i)[1])
             Position, T=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}Te.dat'.format(s=i),unpack=True)
             plt.plot(Position, T,linewidth=3,color=c,marker=m,label=label)#
@@ -310,7 +310,7 @@ def DensityProfile(s,Type='',ScanType='',save=False):
                 label='shot n°{s}, P$_M$$_W$ = {mw} kW'.format(s=i,mw=float(f'{GetMicrowavePower(i)[0]*10**(-3):.2f}'))
                 title= r'{g}, MW= {m}, p $\approx$ {p} mPa'.format(g=gas,m=GetMicrowavePower(i)[1],p=float(f'{np.mean(pressure):.1f}'))
             if ScanType=='None':
-                label='shot n°{s}, P$_M$$_W$ = {mw} W, p= {p} mPa'.format(s=i,mw=float(f'{GetMicrowavePower(i)[0]*10**(-3):.2f}'),p=float(f'{Pressure(i,gas):.1f}'))
+                label='shot n°{s}, P$_M$$_W$ = {mw} kW, p= {p} mPa'.format(s=i,mw=float(f'{GetMicrowavePower(i)[0]*10**(-3):.2f}'),p=float(f'{Pressure(i,gas):.1f}'))
                 title= r'{g}, MW= {m}'.format(g=gas,m=GetMicrowavePower(i)[1])
             d=(CorrectedDensityProfile(i)[1]*3.88E17)/2
             if density_profiles[n]=='d':
@@ -413,11 +413,11 @@ def Densities(s,gas):
       
 # %%
 if __name__ == "__main__":
-    shotnumbers=np.arange(13316,13321)#[13299,13300,13301,13302,13303,13304,13305,13306,13307,13308,13309,13310,13311,13313,13314]#np.arange(13299,13312)
+    shotnumbers=[13221,13220,13223,13225]#[13299,13300,13301,13302,13303,13304,13305,13306,13307,13308,13309,13310,13311,13313,13314]#np.arange(13299,13312)
     #density_profiles_from=['d','d','d','d','d','d','d','d','f','f','f','f','f','f','f','f']#['d','d','d','f','f','f','f','f','f','f','f','d','d','d','d']#13280-13291['d','f','d','d','f','f','f','f','f','d','d','f']#13299-13112['d','d','d','f','f','f','f','f','f','f','f','d','d']
-    density_profiles_from=['f' for i in range(len(shotnumbers))]
-    gas='Ar' 
-    shotnumber=13280
+    density_profiles_from=['d' for i in range(len(shotnumbers))]
+    gas='H' 
+    shotnumber=13299
     infile='/data6/shot{s}/kennlinien/auswert/'.format(s=shotnumber)
     #infile='/data6/shot{}/probe2D/'.format(shotnumber)
     outfile='/home/gediz/Results/Plasma_charactersitics/'
@@ -428,16 +428,16 @@ if __name__ == "__main__":
     #ExtractMeanValues()
     #CompareDifferentGases()
     #GetMicrowavePower(shotnumber)
-    #TemperatureProfile(shotnumbers,'Compare','None',save=True)
+    TemperatureProfile(shotnumbers,'Compare','Power')
     #PlotMeanValues()
     #FastElectrons()
-    #DensityProfile(shotnumbers,'Compare','None',save=True)
+    DensityProfile(shotnumbers,'Compare','Power')
     #DensityProfile(shotnumber,'Single')
-    #print(Densities(shotnumber)[1])
+    #print(Densities(shotnumber,gas)[1])
     #print(TemperatureProfile(shotnumber,'Values')[2])
     # for s in np.arange(13316,13321):
     #     DensityProfile(s,'Single')
     #CorrectedDensityProfile(shotnumber)
 
-    print(Densities(shotnumber,gas)[3])
+    #print(Densities(shotnumber,gas)[3])
 # %%
