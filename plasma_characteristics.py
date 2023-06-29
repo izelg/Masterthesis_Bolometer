@@ -416,8 +416,8 @@ if __name__ == "__main__":
     shotnumbers=[13221,13220,13223,13225]#[13299,13300,13301,13302,13303,13304,13305,13306,13307,13308,13309,13310,13311,13313,13314]#np.arange(13299,13312)
     #density_profiles_from=['d','d','d','d','d','d','d','d','f','f','f','f','f','f','f','f']#['d','d','d','f','f','f','f','f','f','f','f','d','d','d','d']#13280-13291['d','f','d','d','f','f','f','f','f','d','d','f']#13299-13112['d','d','d','f','f','f','f','f','f','f','f','d','d']
     density_profiles_from=['d' for i in range(len(shotnumbers))]
-    gas='H' 
-    shotnumber=13299
+    gas='He' 
+    shotnumber=13228
     infile='/data6/shot{s}/kennlinien/auswert/'.format(s=shotnumber)
     #infile='/data6/shot{}/probe2D/'.format(shotnumber)
     outfile='/home/gediz/Results/Plasma_charactersitics/'
@@ -428,10 +428,11 @@ if __name__ == "__main__":
     #ExtractMeanValues()
     #CompareDifferentGases()
     #GetMicrowavePower(shotnumber)
-    TemperatureProfile(shotnumbers,'Compare','Power')
+    print(TemperatureProfile(shotnumber,'Values','Power')[2])
+    print(Densities(shotnumber,gas)[1],Densities(shotnumber,gas)[3])
     #PlotMeanValues()
     #FastElectrons()
-    DensityProfile(shotnumbers,'Compare','Power')
+    #DensityProfile(shotnumbers,'Compare','Power')
     #DensityProfile(shotnumber,'Single')
     #print(Densities(shotnumber,gas)[1])
     #print(TemperatureProfile(shotnumber,'Values')[2])

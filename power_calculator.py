@@ -641,8 +641,8 @@ def TopView():
 start=datetime.now()
 print('start:', start)
 shotnumber=13340
-shotnumbers=[np.arange(13242,13255),np.arange(13299,13311),[13098,13099,13100,13101,13102,13103,13104,13105,13106],np.arange(13340,13348),[13079,13080,13081,13082,13083,13084],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095]]
-gases=[['H'for i in range(13)],['Ar'for i in range(13)],['Ar'for i in range(9)],['Ne'for i in range(8)],['Ne'for i in range(7)],['H'for i in range(8)],['Ar'for i in range(8)],['Ne'for i in range(8)]]
+shotnumbers=[[13228]]#[np.arange(13242,13255),np.arange(13299,13311),[13098,13099,13100,13101,13102,13103,13104,13105,13106],np.arange(13340,13348),[13079,13080,13081,13082,13083,13084],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095]]
+gases=[['He']]#[['H'for i in range(13)],['Ar'for i in range(13)],['Ar'for i in range(9)],['Ne'for i in range(8)],['Ne'for i in range(7)],['H'for i in range(8)],['Ar'for i in range(8)],['Ne'for i in range(8)]]
 gas='Ne'
 infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
 
@@ -659,7 +659,7 @@ def gold(g):
         return [0.67,0.84]
 
 #Boloprofile_calc(shotnumber,gas,plot=True)
-Totalpower_from_exp('Pressure')
+Totalpower_from_exp('Pressure',calc=True)
 print('total:',datetime.now()-start)
   # %%
 
