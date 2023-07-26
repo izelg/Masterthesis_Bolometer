@@ -200,20 +200,20 @@ fig1= plt.gcf()
 plt.show()
 fig1.savefig('/home/gediz/LaTex/Thesis/Figures/lines_of_sight_in_TJ-K_with_fluxsurfaces.pdf',bbox_inches='tight')
 
-# %% Lines of sight
+# %% Lines of sight measurement
 a=60+32.11+3.45 #Position of Bolometerheadmiddle [cm]
 b=3.45 #Distance of Bolometerhead Middle to  Slit [cm]
 s_w=1.4 #Width of the slit [cm]
 s_h=0.5 #Height of the slit [cm]
 alpha=13 #Angle of the Bolometerhead to plane [°]
 c_w=0.38 #Channelwidth of Goldsensor [cm]
-c_h=0.176 #HChannelheight of Goldsensor [cm]
+c_h=0.13 #HChannelheight of Goldsensor [cm]
 c_d=0.225 #depth of Goldsensor [cm]
 h=2 #height of Bolometerhead [cm]
 z_0=63.9    #middle of flux surfaces
 t=17.5 #radius of vessel [cm]
 
-fig=plt.figure(figsize=(w,h))
+fig=plt.figure(figsize=(w,w))
 plt.rc('xtick',labelsize=15)
 plt.rc('ytick',labelsize=15)
 ax=fig.add_subplot(111)
@@ -294,6 +294,78 @@ plt.ylim(-20,20)
 fig1= plt.gcf()
 plt.show()
 fig1.savefig('/home/gediz/LaTex/Thesis/Figures/lines_of_sight_measurement.pdf')
+# %% Lines of sight calculation
+a=60+32.11+3.45 #Position of Bolometerheadmiddle [cm]
+b=3.45 #Distance of Bolometerhead Middle to  Slit [cm]
+s_w=1.4 #Width of the slit [cm]
+s_h=0.5 #Height of the slit [cm]
+alpha=13 #Angle of the Bolometerhead to plane [°]
+c_w=0.38 #Channelwidth of Goldsensor [cm]
+c_h=0.13 #HChannelheight of Goldsensor [cm]
+c_d=0.225 #depth of Goldsensor [cm]
+h=2 #height of Bolometerhead [cm]
+z_0=63.9    #middle of flux surfaces
+t=17.5 #radius of vessel [cm]
+
+fig=plt.figure(figsize=(w,w))
+plt.rc('xtick',labelsize=15)
+plt.rc('ytick',labelsize=15)
+ax=fig.add_subplot(111)
+x=np.arange(40,a,0.1)
+
+
+plt.xlabel('R [cm]',fontsize=18)
+plt.ylabel('r [cm]',fontsize=18)
+f1=0.14 #Distance first channel to edge [cm]
+f2=0.40 #Distance between channels [cm]
+h=[-2+f1,-2+f1+c_h,-2+f1+c_h+f2,-2+f1+c_h*2+f2,-2+f1+c_h*2+f2*2,-2+f1+c_h*3+f2*2,-2+f1+c_h*3+f2*3,-2+f1+c_h*4+f2*3,f1,f1+c_h,f1+c_h+f2,f1+c_h*2+f2,f1+c_h*2+f2*2,f1+c_h*3+f2*2,f1+c_h*3+f2*3,f1+c_h*4+f2*3,f1*2+c_h*4+f2*3]
+x_b=[]
+y_b=[]
+for i in h:
+    x_b.append(-abs(np.sin((alpha)*np.pi/180)*i)+a+c_d)
+    y_b.append(-np.cos((alpha)*np.pi/180)*i)
+
+def lin(x,d,e):
+    return d*x+e
+
+lines=[0,2,4,6,8,10,12,14]
+
+
+
+#lines of sight
+for i,j in zip(lines,colors):
+    plt.plot([x_b[i],x_b[i+1]],[y_b[i],y_b[i+1]],color='red')
+    popt1,pcov1=curve_fit(lin,[x_b[i],a-b],[y_b[i],-s_h/2])
+    popt2,pcov2=curve_fit(lin,[x_b[i+1],a-b],[y_b[i+1],s_h/2])
+    plt.plot(np.arange(40,x_b[i],0.1),lin(np.arange(40,x_b[i],0.1),*popt1),color=j,linestyle='dashed')
+    plt.plot(np.arange(40,x_b[i+1],0.1),lin(np.arange(40,x_b[i+1],0.1),*popt2),color=j,linestyle='dashed')
+
+
+
+#slit
+plt.plot([a-b,a-b],[-12,-s_h/2],[a-b,a-b],[12,s_h/2],color='grey',linewidth=3,alpha=0.5,linestyle='dashed')
+plt.annotate('slit',(a-b,0),xytext=(a-b-10,-25),arrowprops=dict(facecolor='grey',edgecolor='none',alpha=0.5,width=3),color='grey',fontsize=15)
+bolovessel=patches.Rectangle((60+21.8,-12),20.8,24,edgecolor='grey',facecolor='none',linewidth=3, alpha=0.5)
+#bolometerhead
+ts=ax.transData
+coords1=[-abs(np.cos((90-alpha)*np.pi/180)*(-2))+a,-2]
+coords2=[-abs(np.cos((90-alpha)*np.pi/180)*(0))+a,0]
+tr1 = matplotlib.transforms.Affine2D().rotate_deg_around(coords1[0],coords1[1], -alpha)
+tr2 = matplotlib.transforms.Affine2D().rotate_deg_around(coords2[0],coords2[1],alpha)
+bolohead1=patches.Rectangle((-abs(np.cos((90-alpha)*np.pi/180)*(-2))+a,-2),2,2,edgecolor='grey',facecolor='grey',linewidth=3, alpha=0.5,transform=tr1+ts)
+bolohead2=patches.Rectangle((-abs(np.cos((90-alpha)*np.pi/180)*(0))+a,0),2,2,edgecolor='grey',facecolor='grey',linewidth=3, alpha=0.5,transform=tr2+ts)
+
+ax.add_patch(bolovessel)
+ax.add_patch(bolohead1)
+ax.add_patch(bolohead2)
+
+#plt.xlim(60,100)
+#plt.ylim(-20,20)
+plt.xlim(a-3,a+3)
+plt.ylim(-3,3)
+fig1= plt.gcf()
+plt.show()
+fig1.savefig('/home/gediz/LaTex/Thesis/Figures/lines_of_sight_calculation.pdf')
 # %%  Fluxsurfaces and Temperature, Density
 a=60+32.11+3.45 #Position of Bolometerheadmiddle [cm]
 b=3.45 #Distance of Bolometerhead Middle to  Slit [cm]
@@ -563,12 +635,32 @@ plt.show()
 
 h=4.135E-15
 c=299792458
-E,R_1=np.genfromtxt('/home/gediz/Results/Goldfoil_Absorption/Gold_Foiles.txt',unpack=True,delimiter=',',usecols=(0,1))
 fig,ax=plt.subplots()
 l,R=np.genfromtxt('/home/gediz/Results/Goldfoil_Absorption/gold_abs_Anne.txt',unpack=True)
-ax.semilogx([(h*c)/(x*10**(-9)) for x in l],R,'ro')
-ax.semilogx(E,1-R_1,'bo')
+#ax.semilogx([(h*c)/(x*10**(-9)) for x in l],R,'ro')
+#ax.semilogx(E,1-R_1,'bo')
+# #plt.show()
+E_P,n_P,k_P=np.genfromtxt('/home/gediz/Results/Goldfoil_Absorption/Gold_Palik.txt',unpack=True,usecols=(0,1,2),delimiter=',')
+E_F,n_F,k_F,R_F=np.genfromtxt('/home/gediz/Results/Goldfoil_Absorption/Gold_Foiles.txt',unpack=True,usecols=(0,1,2,3),delimiter=',')
+E_O,n_O,k_O=np.genfromtxt('/home/gediz/Results/Goldfoil_Absorption/Gold_Ordal.txt',unpack=True,usecols=(0,1,2),delimiter=',')
+
+#plt.xlim(0,10)
+#plt.plot(E_P,n_P,'bo')
+#plt.plot(E_P,k_P,'ro')
+#ax.semilogx(np.flip(E_P),[1-(((a-1)**2+(b-1)**2)/((1+a)**2+(1+b)**2)) for a,b in zip(n_P,k_P)],'gx')
+ax.semilogx(E_P,n_P,'ro',alpha=0.1)
+ax.semilogx(E_P,k_P,'bo',alpha=0.1)
+ax.semilogx(E_F,n_F,'rx',alpha=0.7)
+ax.semilogx(E_F,k_F,'bx',alpha=0.7)
+ax.semilogx([h*c/(x*10**(-6)) for x in E_O],n_O,'rs')
+ax.semilogx([h*c/(x*10**(-6)) for x in E_O],k_O,'bs')
+ax1=ax.twinx()
+ax1.semilogx(E_F,1-R_F,'go')
+ax1.semilogx([(h*c)/(x*10**(-9)) for x in l],R,'g.')
+ax1.semilogx(E_F,[1-(((a-1)**2+(b-1)**2)/((1+a)**2+(1+b)**2)) for a,b in zip(k_F,n_F)],'gx')
 plt.show()
+
+
 # %%  Ohmic Calibrations Signal
 time,U_sq,U_b_n,U_b= np.genfromtxt('/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/10_11_2022/NewFile20.csv',delimiter=',',unpack=True, usecols=(0,1,2,3),skip_header=2)
 fig,ax1=plt.subplots(figsize=(h,h))
@@ -577,11 +669,12 @@ ax2=ax1.twinx()
 def I_func(t,I_0, Delta_I, tau):
     return I_0+Delta_I*(1-np.exp(-t/tau))
 I_b=U_b_n/100
-ref=30
+ref1=20
+ref2=60
 start= np.argmax(np.gradient(U_sq, time))+2
 stop= np.argmin(np.gradient(U_sq, time))-2
-lns1=ax1.plot(time[start-ref:stop+ref], U_sq[start-ref:stop+ref],color=colors2[12],label='square pulse')
-lns2=ax2.plot(time[start-ref:stop+ref],U_b_n[start-ref:stop+ref]*10,color=colors2[5],label='bolometer response')
+lns1=ax1.plot(time[start-ref1:stop+ref2], U_sq[start-ref1:stop+ref2],color=colors2[12],label='square pulse')
+lns2=ax2.plot(time[start-ref1:stop+ref2],U_b_n[start-ref1:stop+ref2]*10,color=colors2[5],label='bolometer response')
 ax1.set_ylabel('$U_{\mathrm{square}}$ [V]',color=colors2[12])
 ax2.set_ylabel('$I_{\mathrm{meas.}}$ [mA]',color=colors2[5])
 ax1.set(xlabel='time [s]')
@@ -592,9 +685,14 @@ time_cut=time[start:stop]-time[start]
 I_b_cut= I_b[start:stop]*1000
 popt, pcov = curve_fit(I_func, time_cut,I_b_cut)
 lns3=ax2.plot(time_cut, I_func(time_cut, *popt),lw=3,color=colors2[10], label='exponential fit')
+plt.hlines(I_b_cut[0],time_cut[0],time_cut[90],color=colors2[10],ls='dashed')
+plt.annotate('$I (0)$',(time_cut[100],I_b_cut[0]-0.02),color=colors2[10])
+plt.hlines(I_b_cut[-5],time_cut[-1],time_cut[-1]+0.07,color=colors2[10],ls='dashed')
+plt.annotate('$I (\infty)$',(time_cut[-1]+0.07,I_b_cut[-5]-0.02),color=colors2[10])
+
 leg = lns1 + lns2 +lns3
 labs = [l.get_label() for l in leg]
-ax1.legend(leg, labs, loc='lower center')
+ax1.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.45,0))
 
 fig= plt.gcf()
 plt.show()
@@ -642,5 +740,23 @@ plt.show()
 print(mean_k,sem_k)
 fig2.savefig('/home/gediz/LaTex/Thesis/Figures/ohmic_calibration_kappa.pdf',bbox_inches='tight')
 
+
+# %% Laser Scan
+plt.figure(figsize=(w,h))
+location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot60038.dat'
+cut=1000
+time = br.LoadData(location)['Zeit [ms]'][cut:-1] / 1000
+for i in [1,2,3,4,5,6,7,8]:
+    y= br.LoadData(location)["Bolo{}".format(i)][cut:-1]
+    background=np.mean(y[-500:-1])
+    y_1=y-background
+    plt.plot(time,-y_1,color=colors2[i+1], label='sensor {}'.format(i))
+plt.xlabel('time [s]')
+plt.ylabel('sensor signal [V]')
+plt.legend()
+plt.xlim(-10,120)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/Laser_scan.pdf',bbox_inches='tight')
 
 # %%
