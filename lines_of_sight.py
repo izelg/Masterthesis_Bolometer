@@ -143,7 +143,7 @@ def BoloDataWholeSweep(save=False):
         height.append(max(amp_origin))
         fwhm1_list.append(fwhm1)
         fwhm2_list.append(fwhm2)
-    print(fwhm1_list,fwhm2_list)
+    print(position)
     plt.xlabel('Time [s]')
     plt.ylabel('Signal [V]/ Maximum')
     plt.legend(loc=1, bbox_to_anchor=(1.3,1) )
