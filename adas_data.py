@@ -795,8 +795,15 @@ if __name__ == "__main__":
 
 
 # %%
-  plt.bar(he_adf15(data='pec96#he_pju#he0',density=5e+17,Spectrum=True)[0],he_adf15(data='pec96#he_pju#he0',density=5e+17,Spectrum=True)[1],5)
+d=5e+17
+t=10
+h=h_adf15(T_max=t,density=d,Spectrum=True)
+print(max(h[1]))
+plt.bar(h[0],[a/max(h[1]) for a in h[1]],10,color='red',alpha=0.5)
+# he=max(he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)[1])
+# plt.bar(he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)[0],[a/he for a in he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)[1]],10,color='blue',alpha=0.5)
 
+plt.show()
 # %%
 print(he_adf11(data='prb96_he')[1][8])
 print(he_adf11(data='plt96_he')[1][8])

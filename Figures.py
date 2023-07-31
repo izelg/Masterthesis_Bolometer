@@ -7,6 +7,8 @@ from scipy.optimize import curve_fit
 import matplotlib.patches as patches
 from scipy.signal import savgol_filter
 from scipy.interpolate import pchip_interpolate
+from scipy import integrate
+from scipy import signal
 
 import plasma_characteristics as pc
 import bolo_radiation as br
@@ -25,7 +27,8 @@ c_d=0.225 #depth of Goldsensor [cm]
 h=2 #height of Bolometerhead [cm]
 z_0=63.9    #middle of flux surfaces
 t=17.5 #radius of vessel [cm]
-
+h1=4.135E-15
+c=299792458
 if Poster==True:
     plt.rc('font',size=20)
     plt.rc('xtick',labelsize=20)
@@ -36,7 +39,7 @@ if Poster==True:
 elif Latex==True:
     w=412/72.27
     h=w*(5**.5-1)/2
-    n=1
+    n=1.5
     plt.rcParams['text.usetex']=True
     plt.rcParams['font.family']='serif'
     plt.rcParams['axes.labelsize']=11*n
@@ -323,7 +326,7 @@ fig1.savefig('/home/gediz/LaTex/Thesis/Figures/lines_of_sight_measurement_horizo
 # %% Lines of sight calculation
 alpha=13
 b=3.45 #Distance of Bolometerhead Middle to  Slit [cm]
-zoom=True
+zoom=False
 fig=plt.figure(figsize=(w,w))
 plt.rc('xtick')
 plt.rc('ytick')
@@ -357,7 +360,7 @@ for j,var in zip(colors2[12:-1],[0.1,0.2,-0.1,-0.2]):
     plt.plot(np.arange(40,x_b[i],0.01),lin(np.arange(40,x_b[i],0.01),*popt1),color=j,linestyle='dashed')
     plt.plot(np.arange(40,x_b[i+1],0.01),lin(np.arange(40,x_b[i+1],0.01),*popt2),color=j,linestyle='dashed')
     plt.plot([a-b,a-b],[-12,-s_h/2],[a-b,a-b],[12,s_h/2],color=j,linewidth=2,alpha=0.5,linestyle='dashed')
-
+    print(var,np.arcsin((lin(a-b,*popt1)-lin(80,*popt1))/(a-b-80))*180/np.pi)
 i=14
 if zoom==True:
     vars=[-0.2,0,0.5]
@@ -689,13 +692,13 @@ E_H,R_H=np.genfromtxt('/home/gediz/Results/Goldfoil_Absorption/Gold_Hagemann.txt
 i=0
 
 energy=np.arange(10E-4,10E5,0.1)
-all_energy= list(E_H)+list(E_F)+[(h1*c)/(x*10**(-9)) for x in l]
-all_abs=list(100-R_H)+list(100-R_F*100)+list(R*100)
+all_energy= list(E_H)+list(E_F)#+[(h1*c)/(x*10**(-9)) for x in l]
+all_abs=list(100-R_H)+list(100-R_F*100)#+list(R*100)
 all_energy,all_abs=(list(t) for t in zip(*sorted(zip(all_energy,all_abs))))
 fitted=pchip_interpolate(all_energy,all_abs,energy)
 ax.semilogx(E_F,100-R_F*100,marker='o',color=colors2[i],alpha=0.7,ls='None',label='Foiles (1985)')
 ax.semilogx(E_H,100-R_H,marker='s',color=colors2[i+2],alpha=0.7,ls='None',label='Hagemann (1974)')
-ax.semilogx([(h1*c)/(x*10**(-9)) for x in l],R*100,marker='d',color=colors2[i+1],alpha=0.7,ls='None',label='Ordal (1983), Palik (1985)')
+ax.semilogx([(h1*c)/(x*10**(-9)) for x in l],R*100,marker='d',color=colors2[i+1],alpha=0.7,ls='None',label='Palik (1985)')
 ax.semilogx(energy,fitted, color=colors2[i+5],label='fit to all data')
 ax.set_xlim(0.0011,140000)
 ax.minorticks_off()
@@ -721,8 +724,17 @@ ax.set_ylabel('absorption [\%]')
 ax.legend(loc='lower right')
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/Gold_Absorption.pdf',bbox_inches='tight')
+#fig.savefig('/home/gediz/LaTex/Thesis/Figures/Gold_Absorption.pdf',bbox_inches='tight')
 
+# plt.figure()
+# #plt.xscale('log')
+# plt.plot(energy,fitted)
+# plt.show()
+# plt.figure()
+# #plt.xscale('log')
+# l=lambda x: ((h1*c)/x)*10**(-9)
+# plt.plot([l(a) for a in energy],fitted)
+# plt.show()
 
 
 # %%  Ohmic Calibrations Signal
@@ -865,5 +877,264 @@ plt.xlim(0,250)
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/UV_scan_horizontal.pdf',bbox_inches='tight')
+
+# %% Spectra working gases
+plt.figure(figsize=(h,h))
+d=5e+17
+t=10
+al=0.8
+k=1.13
+l2e=lambda x:(h1*c)/(x*10**(-9))
+hdata=adas.h_adf15(T_max=t,density=d,Spectrum=True)
+plt.bar([l2e(a) for a in hdata[0]],[a/max(hdata[1]) for a in hdata[1]],k,color=colors2[9],alpha=al,label='H$^0$')
+hedata=adas.he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)
+plt.bar([l2e(a) for a in hedata[0]],[a/max(hedata[1]) for a in hedata[1]],k,color=colors2[1],alpha=al,label='He$^0$')
+nedata=adas.ne_adf15(data='pec96#ne_pju#ne0',T_max=t,density=d,Spectrum=True)
+plt.bar([l2e(a) for a in nedata[0]],[a/max(nedata[1]) for a in nedata[1]],k,color=colors2[5],alpha=al,label='Ne$^0$')
+ardata=adas.ar_adf15(data='pec40#ar_ls#ar0',T_max=t,density=d,Spectrum=True)
+plt.bar([l2e(a) for a in ardata[0]],[a/max(ardata[1]) for a in ardata[1]],k,color=colors2[12],alpha=al,label='Ar$^0$')
+plt.plot(energy,fitted/100,color='red',ls='dotted',alpha=0.5)
+plt.xlim(-1,75)
+plt.ylabel('normalized pec [m$^3$/s]')
+plt.xlabel('photon energy [eV]')
+plt.legend(loc='lower right', title='ADAS data \n for spectral \n lines at  \n $T_e=$10 eV, \n $n_e$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation \n of neutrals ')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/spectra_neutrals.pdf',bbox_inches='tight')
+
+k=1.5
+plt.figure(figsize=(h,h))
+hedata=adas.he_adf15(data='pec96#he_pju#he1',T_max=t,density=d,Spectrum=True)
+plt.bar([l2e(a) for a in hedata[0]],[a/max(hedata[1]) for a in hedata[1]],k,color=colors2[2],alpha=al,label='He$^1$')
+nedata=adas.ne_adf15(data='pec96#ne_pju#ne1',T_max=t,density=d,Spectrum=True)
+plt.bar([l2e(a) for a in nedata[0]],[a/max(nedata[1]) for a in nedata[1]],k,color=colors2[6],alpha=al,label='Ne$^1$')
+ardata=adas.ar_adf15(data='pec40#ar_ic#ar1',T_max=t,density=d,Spectrum=True)
+plt.bar([l2e(a) for a in ardata[0]],[a/max(ardata[1]) for a in ardata[1]],k,color=colors2[13],alpha=al,label='Ar$^1$')
+plt.plot(energy,fitted/100,color='red',ls='dotted',alpha=0.5)
+
+plt.xlim(-1,100)
+plt.ylabel('normalized pec [m$^3$/s]')
+plt.xlabel('photon energy [eV]')
+plt.legend(loc='lower right', title='ADAS data \n for spectral \n lines at  \n $T_e=$10 eV, \n $n_e$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation \n of ions')
+
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/spectra_ions.pdf',bbox_inches='tight')
+# %% Reduced Spectrum
+d=5e+17
+t=10
+fig,ax=plt.subplots(figsize=(h,h))
+ax2=ax.twinx()
+l2e=lambda x:(h1*c)/(x*10**(-9))
+hdata=adas.h_adf15(T_max=t,density=d,Spectrum=True)
+energy=[round(l2e(a),3) for a in hdata[0]]
+pec=[a/max(hdata[1]) for a in hdata[1]]
+gold_energy=np.arange(0,round(energy[0],2)+5,0.001)
+gold=pchip_interpolate(all_energy,all_abs,gold_energy)
+reduced_pec=[]
+for i,j in zip(energy,pec):
+    indice= int(round(i,3)*1000)
+    reduced_pec.append(j*gold[indice]/100)
+ax.bar(energy,pec,0.5,color=colors2[2],label='ADAS data for spectral lines at \n$T_e=$10 eV,$n_e$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation of H$^0$ ')   
+ax.bar(energy,reduced_pec,0.5,color=colors2[1],label='reduced spectrum:\n {}\% absorbed by gold foil'.format(float(f'{np.sum(reduced_pec)/np.sum(pec)*100:.2f}')))
+ax2.plot(gold_energy,gold,color=colors2[5],ls='dotted',label='gold absorption \n characteristic \n fit to data')
+ax.set_ylabel('normalized pec [m$^3$/s]')
+ax.set_xlabel('photon energy [eV]')
+ax2.set_ylabel('absorption gold [\%]',color=colors2[5])
+ax2.tick_params(axis='y', labelcolor=colors2[5])
+ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.9))
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_H.pdf',bbox_inches='tight')
+
+
+fig,ax=plt.subplots(figsize=(h,h))
+ax2=ax.twinx()
+l2e=lambda x:(h1*c)/(x*10**(-9))
+wl,counts=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/spectrometer_data_of_lightsource_Weißlichtquelle_Wellenlängenmessung.txt',unpack=True)
+energy=[round(l2e(a),3) for a in wl]
+gold_energy=np.arange(0,round(energy[0],2),0.001)
+gold=pchip_interpolate(all_energy,all_abs,gold_energy)
+reduced_counts=[]
+for i,j in zip(energy,counts):
+    indice= int(round(i,3)*1000)
+    reduced_counts.append(j*gold[indice]/100)
+lns1=ax.plot(energy,counts,color=colors2[2],label='specrometer data for a \n white light source ')   
+lns2=ax.plot(energy,reduced_counts,color=colors2[1],label='reduced spectrum:\n {}\% absorbed by gold foil'.format(float(f'{integrate.trapezoid(reduced_counts,energy)/integrate.trapezoid(counts,energy)*100:.2f}')))
+ax2.plot(gold_energy,gold,color=colors2[5],ls='dotted')
+ax.set_ylabel('counts')
+ax.set_xlabel('photon energy [eV]')
+ax2.set_ylabel('absorption gold [\%]',color=colors2[5])
+ax2.tick_params(axis='y', labelcolor=colors2[5])
+leg = lns1 + lns2 
+labs = [l.get_label() for l in leg]
+ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.8))
+ax.set_xlim(0,4)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_white.pdf',bbox_inches='tight')
+
+
+# %% electrical signals
+fig1,ax1=plt.subplots(figsize=(h,h))
+ax1.axhline(y=0,color='black',lw=1)
+t = np.linspace(0, 2, 1000, endpoint=True)
+frequ=1.7777
+squ=signal.square(2 * np.pi * frequ * t+np.pi)
+sine=7*np.sin(t*frequ*2*np.pi)
+antisine=np.sin(t*frequ*2*np.pi+np.pi)
+ax1.plot(t,sine,color=colors2[2],lw=2,label='1.77 kHz offset signal \nfrom bolometer')
+ax1.plot(t, squ*3,color=colors2[6],lw=2,label='1.77 kHz compensation signal')
+ax1.plot(t, squ*1,color=colors2[6],lw=2,alpha=0.5)
+ax1.plot(t, squ*5,color=colors2[6],lw=2,alpha=0.5)
+
+ax1.set_xlabel('time [ms]')
+ax1.set_ylabel('amplitude [mV]')
+#ax1.legend(loc='lower center',bbox_to_anchor=(0.5,-0.7))
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/e_sig_with_square.pdf',bbox_inches='tight')
+
+
+fig2,ax2=plt.subplots(figsize=(h,h))
+ax2.axhline(y=0,color='black',lw=1)
+ax2.plot(t,squ*3+sine,color=colors2[12],lw=2,label='resulting signal \nafter summarizer')
+ax2.plot(t,squ*1+sine,color=colors2[12],lw=2,alpha=0.5)
+ax2.plot(t,squ*5+sine,color=colors2[12],lw=2,alpha=0.5)
+
+ax2.set_xlabel('time [ms]')
+ax2.set_ylabel('amplitude [mV]')
+ax2.set_ylim(ax1.get_ylim())
+#ax2.legend(loc='lower center',bbox_to_anchor=(0.5,-0.55))
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/e_sig_with_square_result.pdf',bbox_inches='tight')
+
+
+fig1,ax1=plt.subplots(figsize=(h,h))
+ax1.axhline(y=0,color='black',lw=1)
+t = np.linspace(0, 2, 1000, endpoint=True)
+frequ=1.7777
+antisine=np.sin(t*frequ*2*np.pi+np.pi)
+sine=7*np.sin(t*frequ*2*np.pi+0.005*np.pi)
+antisine=np.sin(t*frequ*2*np.pi+np.pi)
+ax1.plot(t,sine,color=colors2[2],lw=2,label='1.77 kHz offset signal \nfrom bolometer')
+ax1.plot(t, antisine*7,color=colors2[6],lw=2,label='1.77 kHz compensation signal')
+ax1.plot(t, antisine*3,color=colors2[6],lw=2,alpha=0.5)
+ax1.plot(t, antisine*5,color=colors2[6],lw=2,alpha=0.5)
+
+ax1.set_xlabel('time [ms]')
+ax1.set_ylabel('amplitude [mV]')
+ax1.legend(loc='lower center',bbox_to_anchor=(0.5,-0.7))
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/e_sig_with_sine.pdf',bbox_inches='tight')
+
+
+fig2,ax2=plt.subplots(figsize=(h,h))
+ax2.axhline(y=0,color='black',lw=1)
+ax2.plot(t,antisine*7+sine,color=colors2[12],lw=2,label='resulting signal \nafter summarizer')
+ax2.plot(t,antisine*5+sine,color=colors2[12],lw=2,alpha=0.5)
+ax2.plot(t,antisine*3+sine,color=colors2[12],lw=2,alpha=0.5)
+
+ax2.set_xlabel('time [ms]')
+ax2.set_ylabel('amplitude [mV]')
+ax2.set_ylim(ax1.get_ylim())
+ax2.legend(loc='lower center',bbox_to_anchor=(0.5,-0.55))
+
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/e_sig_with_sine_result.pdf',bbox_inches='tight')
+
+# %% Sensor resistances
+path=['/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated.txt','/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_second_set.txt','/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_third_set.txt']
+x=[1,2,3,4,5,6,7,8]
+i=0
+plt.figure(figsize=(h,h))
+mean,sem=[],[]
+for s in x:
+    M1=[]
+    for p in path:
+        RM1=np.genfromtxt(p,unpack=True, delimiter=',',usecols=(1))
+        M1.append(RM1[s-1])
+        plt.plot(s,RM1[s-1],color=colors[i+0],marker=markers[i+0],ls='None',alpha=0.5)
+    mean.append(np.mean(M1))
+    sem.append(np.std(M1,ddof=1)/np.sqrt(len(M1)))
+plt.errorbar(x,mean,yerr=sem,ls='None',color=colors[i+0],marker=markers[i+0],capsize=5,label='$R_\mathrm{M1}$')
+print(mean,sem)
+plt.xticks(x)
+plt.xlabel('sensor number')
+plt.ylabel('resistivity [$\Omega$]')
+plt.ylim(1170,1230)
+plt.legend(loc='lower left')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_m1.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(h,h))
+mean,sem=[],[]
+for s in x:
+    M2=[]
+    for p in path:
+        RM2=np.genfromtxt(p,unpack=True, delimiter=',',usecols=(2))
+        M2.append(RM2[s-1])
+        plt.plot(s,RM2[s-1],color=colors[i+1],marker=markers[i+1],ls='None',alpha=0.5)
+    mean.append(np.mean(M2))
+    sem.append(np.std(M2,ddof=1)/np.sqrt(len(M2)))
+plt.errorbar(x,mean,yerr=sem,color=colors[i+1],marker=markers[i+1],capsize=5,ls='None',label='$R_\mathrm{M2}$')
+print(mean)
+print(sem)
+plt.xticks(x)
+plt.xlabel('sensor number')
+plt.ylabel('resistivity [$\Omega$]')
+plt.ylim(1170,1230)
+plt.legend(loc='lower left')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_m2.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(h,h))
+mean,sem=[],[]
+for s in x:
+    R1=[]
+    for p in path:
+        RR1=np.genfromtxt(p,unpack=True, delimiter=',',usecols=(3))
+        R1.append(RR1[s-1])
+        plt.plot(s,RR1[s-1],color=colors[i+2],marker=markers[i+2],ls='None',alpha=0.5)
+    mean.append(np.mean(R1))
+    sem.append(np.std(R1,ddof=1)/np.sqrt(len(R1)))
+plt.errorbar(x,mean,yerr=sem,color=colors[i+2],marker=markers[i+2],capsize=5,ls='None',label='$R_\mathrm{R1}$')
+print(mean)
+print(sem)
+plt.xticks(x)
+plt.xlabel('sensor number')
+plt.ylabel('resistivity [$\Omega$]')
+plt.ylim(1170,1230)
+plt.legend(loc='lower left')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_r1.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(h,h))
+mean,sem=[],[]
+for s in x:
+    R2=[]
+    for p in path:
+        RR2=np.genfromtxt(p,unpack=True, delimiter=',',usecols=(4))
+        R2.append(RR2[s-1])
+        plt.plot(s,RR2[s-1],color=colors[i+3],marker=markers[i+3],ls='None',alpha=0.5)
+    mean.append(np.mean(R2))
+    sem.append(np.std(R2,ddof=1)/np.sqrt(len(R2)))
+plt.errorbar(x,mean,yerr=sem,color=colors[i+3],marker=markers[i+3],capsize=5,ls='None',label='$R_\mathrm{R2}$')
+print(mean)
+print(sem)
+plt.xticks(x)
+plt.xlabel('sensor number')
+plt.ylabel('resistivity [$\Omega$]')
+plt.ylim(1170,1230)
+plt.legend(loc='lower left')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_r2.pdf',bbox_inches='tight')
 
 # %%
