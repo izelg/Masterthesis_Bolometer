@@ -39,7 +39,7 @@ if Poster==True:
 elif Latex==True:
     w=412/72.27
     h=w*(5**.5-1)/2
-    n=1.5
+    n=1.4
     plt.rcParams['text.usetex']=True
     plt.rcParams['font.family']='serif'
     plt.rcParams['axes.labelsize']=11*n
@@ -172,7 +172,7 @@ plt.plot([a-b-20,a-b-10.3],[-12.5,-12.5],[a-b-20,a-b-10.3],[12.5,12.5],[a-b-10.3
 plt.annotate('outer\n port',(73,22),color=c)
 #slit
 plt.plot([a-b,a-b],[-12,-s_h/2],[a-b,a-b],[12,s_h/2],color='grey',linewidth=3,alpha=0.5,linestyle='dashed')
-plt.annotate('slit',(a-b-0.1,-0.5),xytext=(a-b-20,-25),arrowprops=dict(facecolor=c,edgecolor='none',alpha=0.5,width=2),color=c)
+plt.annotate('slit',(a-b-0.1,-0.5),xymath=(a-b-20,-25),arrowprops=dict(facecolor=c,edgecolor='none',alpha=0.5,width=2),color=c)
 bolovessel=patches.Rectangle((60+21.8,-12),20.8,24,edgecolor='grey',facecolor='none',linewidth=3, alpha=0.5)
 plt.annotate('bolometer\n  vessel',(83,22),color=c)
 #bolometerhead
@@ -183,7 +183,7 @@ tr1 = matplotlib.transforms.Affine2D().rotate_deg_around(coords1[0],coords1[1], 
 tr2 = matplotlib.transforms.Affine2D().rotate_deg_around(coords2[0],coords2[1],alpha)
 bolohead1=patches.Rectangle((-abs(np.cos((90-alpha)*np.pi/180)*(-2))+a,-2),2,2,edgecolor='grey',facecolor='grey',linewidth=3, alpha=0.5,transform=tr1+ts)
 bolohead2=patches.Rectangle((-abs(np.cos((90-alpha)*np.pi/180)*(0))+a,0),2,2,edgecolor='grey',facecolor='grey',linewidth=3, alpha=0.5,transform=tr2+ts)
-plt.annotate('bolometer\n   heads',(a,-2),xytext=(a-15,-27),arrowprops=dict(facecolor=c,edgecolor='none',alpha=0.5,width=2),color=c)
+plt.annotate('bolometer\n   heads',(a,-2),xymath=(a-15,-27),arrowprops=dict(facecolor=c,edgecolor='none',alpha=0.5,width=2),color=c)
 ax.add_patch(vessel)
 ax.add_patch(bolovessel)
 ax.add_patch(bolohead1)
@@ -241,9 +241,9 @@ for i,j in zip(lines,channels):
 
 #measurements
 plt.vlines([a-b-22.9,a-b-19.5,a-b-12.4],-30,30,color='grey',linestyle='dotted',alpha=0.7,linewidth=3)
-plt.annotate('',xy=(a-b,-19.6),xytext=(a-b-22.9,-19.6), arrowprops=dict(arrowstyle='<->',color='grey',alpha=0.7,linewidth=2))
-plt.annotate('',xy=(a-b,-17.3),xytext=(a-b-19.5,-17.3), arrowprops=dict(arrowstyle='<->',color='grey',alpha=0.7,linewidth=2))
-plt.annotate('',xy=(a-b,-15),xytext=(a-b-12.4,-15), arrowprops=dict(arrowstyle='<->',color='grey',alpha=0.7,linewidth=2))
+plt.annotate('',xy=(a-b,-19.6),xymath=(a-b-22.9,-19.6), arrowprops=dict(arrowstyle='<->',color='grey',alpha=0.7,linewidth=2))
+plt.annotate('',xy=(a-b,-17.3),xymath=(a-b-19.5,-17.3), arrowprops=dict(arrowstyle='<->',color='grey',alpha=0.7,linewidth=2))
+plt.annotate('',xy=(a-b,-15),xymath=(a-b-12.4,-15), arrowprops=dict(arrowstyle='<->',color='grey',alpha=0.7,linewidth=2))
 plt.annotate('$z_3$',xy=(a-b-11,-19.4),color='grey')
 plt.annotate('$z_2$',xy=(a-b-10,-17.1),color='grey')
 plt.annotate('$z_1$',xy=(a-b-9,-14.8),color='grey')
@@ -299,8 +299,8 @@ plt.plot(np.arange(40,a,0.1),lin(np.arange(40,a,0.1),*popt4),color=c)
 
 #measurements
 plt.vlines([a-b-13.7,a-b-17.7],-30,30,color='grey',linestyle='dotted',alpha=0.7,linewidth=3)
-plt.annotate('',xy=(a-b,-15),xytext=(a-b-13.7,-15), arrowprops=dict(arrowstyle='<->',color='grey',alpha=0.7,linewidth=2))
-plt.annotate('',xy=(a-b,-17.2),xytext=(a-b-17.7,-17.2), arrowprops=dict(arrowstyle='<->',color='grey',alpha=0.7,linewidth=2))
+plt.annotate('',xy=(a-b,-15),xymath=(a-b-13.7,-15), arrowprops=dict(arrowstyle='<->',color='grey',alpha=0.7,linewidth=2))
+plt.annotate('',xy=(a-b,-17.2),xymath=(a-b-17.7,-17.2), arrowprops=dict(arrowstyle='<->',color='grey',alpha=0.7,linewidth=2))
 plt.annotate('$z_4$',xy=(a-b-10,-14.8),color='grey')
 plt.annotate('$z_5$',xy=(a-b-11,-17),color='grey')
 
@@ -718,7 +718,7 @@ ax2.spines['bottom'].set_position(('outward', 36))
 ax2.set_xlabel('wavelength [nm]')
 ax2.set_xlim(ax.get_xlim())
 ax.axvspan(1.6528557517733333,3.099104534575,facecolor=colors2[6], alpha=0.5)
-ax.annotate('visible\nlight',xy=(1.5,70),xytext=(0.05,80),color=colors2[5],arrowprops=dict(facecolor=colors2[6],edgecolor='none',width=1,headwidth=5))
+ax.annotate('visible\nlight',xy=(1.5,70),xymath=(0.05,80),color=colors2[5],arrowprops=dict(facecolor=colors2[6],edgecolor='none',width=1,headwidth=5))
 ax.set_xlabel('photon energy [eV]')
 ax.set_ylabel('absorption [\%]')
 ax.legend(loc='lower right')
@@ -829,8 +829,8 @@ for i in [1,2,3,4,5,6,7,8]:
     plt.plot(time,-y_1,color=colors2[i+1], label='sensor {}'.format(i))
 plt.xlabel('time [s]')
 plt.ylabel('sensor signal [V]')
-plt.annotate('1',(22,0.01),xytext=(15,0.15),arrowprops=dict(facecolor='#008e0c',edgecolor='none',alpha=0.5,width=1,headwidth=5), bbox={"boxstyle" : "circle","facecolor":'None','edgecolor':'#008e0c'},color='#008e0c')
-plt.annotate('2',(35,0.01),xytext=(32,0.15),arrowprops=dict(facecolor='#008e0c',edgecolor='none',alpha=0.5,width=1,headwidth=5), bbox={"boxstyle" : "circle","facecolor":'None','edgecolor':'#008e0c'},color='#008e0c')
+plt.annotate('1',(22,0.01),xymath=(15,0.15),arrowprops=dict(facecolor='#008e0c',edgecolor='none',alpha=0.5,width=1,headwidth=5), bbox={"boxstyle" : "circle","facecolor":'None','edgecolor':'#008e0c'},color='#008e0c')
+plt.annotate('2',(35,0.01),xymath=(32,0.15),arrowprops=dict(facecolor='#008e0c',edgecolor='none',alpha=0.5,width=1,headwidth=5), bbox={"boxstyle" : "circle","facecolor":'None','edgecolor':'#008e0c'},color='#008e0c')
 
 plt.legend(fontsize=9)
 plt.xlim(-10,120)
@@ -1137,4 +1137,119 @@ fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_r2.pdf',bbox_inches='tight')
 
+# %%Lamp spectra
+plt.figure(figsize=(h,h))
+e2l=lambda x:((h1*c)/x)/10**(-9)
+
+wl_UV254,UV254=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_lamps_17_08_2022/spectrometer_data_of_lightsource_254.txt',unpack=True)
+wl_UV350,UV350=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_lamps_17_08_2022/spectrometer_data_of_lightsource_350.txt', unpack=True)
+wl_white,white=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_lamps_17_08_2022/spectrometer_data_of_lightsource_breite_Weißlichtquelle_scaled.txt',unpack=True)
+wl_red,red=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/spectrometer_data_of_lightsource_Weißlichtquelle_Wellenlängenmessung_rote_folie.txt',unpack=True)
+wl_green,green=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/spectrometer_data_of_lightsource_Weißlichtquelle_Wellenlängenmessung_grüne_folie.txt',unpack=True)
+wl_laser,laser=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/spectrometer_data_of_lightsource_grüner_laser_rand.txt',unpack=True)
+i=0
+plt.plot(wl_UV254[0:600],[a/max(UV254) for a in UV254][0:600],color=colors2[9],label='UV lamp 254 nm')
+plt.plot(wl_UV350,[a/max(UV350) for a in UV350],color=colors2[10],label='UV lamp 350 nm')
+plt.plot(wl_white,[a/max(white) for a in white],color=colors2[2],label='white light')
+plt.plot(wl_green,[a/max(green) for a in green],color=colors2[13],label='white light with green foil')
+plt.plot(wl_red,[a/max(red) for a in red],color=colors2[5],label='white light with red foil')
+plt.plot(wl_laser,[a/max(laser) for a in laser],color=colors2[11],label='green laser',lw=3)
+plt.plot([e2l(x) for x in energy],fitted/100,color=colors2[5],ls='dotted',label='gold absorption characteristic')
+plt.xlim(200,800)
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.15))
+plt.xlabel('wavelength [nm]')
+plt.ylabel('normalized counts')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/spectra_lamps.pdf',bbox_inches='tight')
+
+# %% Optical calibration
+s,laser1=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot70001/shot70001_bolometerprofile_from_radiation_powers.txt',unpack=True, usecols=(0,1))
+s,laser2=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot70003/shot70003_bolometerprofile_from_radiation_powers.txt',unpack=True, usecols=(0,1))
+s,uv=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot70025/shot70025_bolometerprofile_from_radiation_powers.txt',unpack=True, usecols=(0,1))
+s,uv350=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot70034/shot70034_bolometerprofile_from_radiation_powers.txt',unpack=True, usecols=(0,1))
+s,uv254=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot70035/shot70035_bolometerprofile_from_radiation_powers.txt',unpack=True, usecols=(0,1))
+plt.plot(s,[a/np.mean(laser1) for a in laser1])
+plt.plot(s,[a/np.mean(laser2) for a in laser2])
+plt.plot(s,[a/np.mean(uv) for a in uv])
+plt.plot(s,[a/np.mean(uv350) for a in uv350])
+plt.plot(s,[a/np.mean(uv254) for a in uv254])
+plt.show()
+# %% Voltage Time trace
+shotnumber=13257
+plt.figure(figsize=(h,h))
+location=  '/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+time = np.array(br.LoadData(location)['Zeit [ms]'] / 1000)[:,None]
+for i,c in zip(np.arange(1,9),colors):
+    bolo_raw_data = np.array(br.LoadData(location)["Bolo{}".format(i)])[:,None]
+    m=min(bolo_raw_data)
+    bolo_raw_data=[(k-m)+i*0.05 for k in bolo_raw_data]
+    plt.plot(time,  bolo_raw_data, label="sensor {}".format(i),color=c )
+plt.xlabel('time [s]')
+plt.ylabel('$U_{\mathrm{out}}$ [V]')
+plt.legend(loc='center right',bbox_to_anchor=(1.5,0.5),title='shot n$^\circ$13257,\nHe,\nMW= 2.45 GHz,\n$P_{\mathrm{MW}}$= 2.97 kW,\np= 21 mPa')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/voltage_time_trace.pdf',bbox_inches='tight')
+
+
+
+# %% Power time trace with height
+shotnumber=13257
+plt.figure(figsize=(h,h))
+i=1
+location=  '/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+time,U_Li =br.LoadData(location)['Zeit [ms]'] / 1000, br.LoadData(location)["Bolo{}".format(i)]
+def power(g,k,U_ac, t, U_Li):
+    return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li)
+def error(g,k,U_ac, t, U_Li,delta_t,delta_k):
+    return ((np.pi/g) * (2/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li))*delta_k+(np.pi/g) * (2*k/U_ac) * np.gradient(U_Li,time*1000 )*delta_t
+tau,tau_sem,kappa,kappa_sem=np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_mean_and_sem.txt',unpack=True,usecols=(1,2,3,4))
+g1,g2,g3= 30,1,100
+g=g1*g2*g3
+U_ac,k,t,delta_t,delta_k=8,kappa[i-1],tau[i-1],tau_sem[i-1],kappa_sem[i-1]
+power=[a/10**(-6) for a in power(g,k,U_ac, t, U_Li)]
+steps=[]
+for i in np.arange(0, len(power)-10):
+    step= (power[i]-power[i+10])
+    steps.append(abs(step))
+start,stop=np.argwhere(np.array([steps])>0.5)[0][1],np.argwhere(np.array([steps])>0.5)[-1][1]
+x1,y1,x2,y2 = time[start:stop],power[start:stop],np.concatenate((time[0:start],time[stop:-1])),np.concatenate((power[0:start],power[stop:-1]))
+def lin (x,a,b):
+    return a*x + b
+popt1, pcov1 = curve_fit(lin,x1,y1)
+popt2, pcov2 = curve_fit(lin,x2,y2)
+div1 = lin(time[start], *popt2)-lin(time[start], *popt1)
+div2 = lin(time[stop], *popt2)-lin(time[stop], *popt1)
+div_avrg = abs(float(f'{(div1+div2)/2:.4f}'))
+sd=np.std([div1,div2],ddof=1)
+sem=sd/np.sqrt(2)
+plt.figure(figsize=(h,h))
+plt.plot(time[start+15],power[start+15],marker='x',color=colors[1])
+plt.plot(time[stop],power[stop],marker='x',color=colors[1])
+plt.plot(time,power,color=colors[0],label='sensor 1')
+plt.plot(np.arange(0,240),lin(np.arange(0,240),*popt1),color=colors[3],label='fit to $P_{\mathrm{rad}} (t_{\mathrm{plasma \ on}})$')
+plt.plot(np.arange(0,240),lin(np.arange(0,240),*popt2),color=colors[4],label='fit to $P_{\mathrm{rad}} (t_{\mathrm{plasma \ off}})$')
+plt.annotate('',xy=(50,lin(50,*popt1)),xytext=(50,lin(50,*popt2)), arrowprops=dict(arrowstyle='<->',color=colors[1],alpha=0.7,linewidth=2))
+plt.annotate('$\Delta P_{\mathrm{rad}} \cdot a_{\mathrm{abs}}$='+str(f'{div_avrg:.2f}')+'$\mu$W',xy=(55,2.5),color=colors[1])
+plt.xlabel('time [s]')
+plt.ylabel('$P_{\mathrm{rad}}$  [$\mu$W]')
+plt.legend(loc='lower right')
+plt.ylim(-0.3)
+plt.xlim(-10,249)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/power_time_trace.pdf',bbox_inches='tight')
+
+
+# %% Bolometer profile
+plt.figure(figsize=(h,h))
+for shotnumber,i in zip([13265,13263,13261,13259,13257],[0,1,2,3,4]):
+    s,p,e=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=shotnumber),unpack=True)
+    plt.errorbar(s,p,yerr=e,marker=markers[0+i],color=colors[0+i],capsize=5,label='shot n$^\circ$'+str(shotnumber) +', $P_{\mathrm{MW}}$='+str(f'{pc.GetMicrowavePower(shotnumber)[0]:.3f}') +'mW')
+plt.ylim(0)
+plt.xticks(s)
+plt.xlabel('sensor number')
+plt.ylabel('$\Delta P_{\mathrm{rad}}$ [$\mu$W]')
+plt.show()
 # %%
