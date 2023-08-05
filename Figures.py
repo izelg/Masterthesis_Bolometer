@@ -13,6 +13,7 @@ from scipy import signal
 import plasma_characteristics as pc
 import bolo_radiation as br
 import adas_data as adas
+import power_calculator as poca
 #%% Parameter
 Poster=False
 Latex=True
@@ -718,7 +719,7 @@ ax2.spines['bottom'].set_position(('outward', 36))
 ax2.set_xlabel('wavelength [nm]')
 ax2.set_xlim(ax.get_xlim())
 ax.axvspan(1.6528557517733333,3.099104534575,facecolor=colors2[6], alpha=0.5)
-ax.annotate('visible\nlight',xy=(1.5,70),xymath=(0.05,80),color=colors2[5],arrowprops=dict(facecolor=colors2[6],edgecolor='none',width=1,headwidth=5))
+ax.annotate('visible\nlight',xy=(1.5,70),xytext=(0.05,80),color=colors2[5],arrowprops=dict(facecolor=colors2[6],edgecolor='none',width=1,headwidth=5))
 ax.set_xlabel('photon energy [eV]')
 ax.set_ylabel('absorption [\%]')
 ax.legend(loc='lower right')
@@ -926,14 +927,15 @@ t=10
 fig,ax=plt.subplots(figsize=(h,h))
 ax2=ax.twinx()
 l2e=lambda x:(h1*c)/(x*10**(-9))
-hdata=adas.h_adf15(T_max=t,density=d,Spectrum=True)
+hdata=adas.he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)
 energy=[round(l2e(a),3) for a in hdata[0]]
 pec=[a/max(hdata[1]) for a in hdata[1]]
-gold_energy=np.arange(0,round(energy[0],2)+5,0.001)
+gold_energy=np.arange(0,round(max(energy),2)+5,0.001)
 gold=pchip_interpolate(all_energy,all_abs,gold_energy)
 reduced_pec=[]
 for i,j in zip(energy,pec):
     indice= int(round(i,3)*1000)
+    print(i,int(round(i,3)*1000))
     reduced_pec.append(j*gold[indice]/100)
 ax.bar(energy,pec,0.5,color=colors2[2],label='ADAS data for spectral lines at \n$T_e=$10 eV,$n_e$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation of H$^0$ ')   
 ax.bar(energy,reduced_pec,0.5,color=colors2[1],label='reduced spectrum:\n {}\% absorbed by gold foil'.format(float(f'{np.sum(reduced_pec)/np.sum(pec)*100:.2f}')))
@@ -945,34 +947,34 @@ ax2.tick_params(axis='y', labelcolor=colors2[5])
 ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.9))
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_H.pdf',bbox_inches='tight')
+#fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_H.pdf',bbox_inches='tight')
 
 
-fig,ax=plt.subplots(figsize=(h,h))
-ax2=ax.twinx()
-l2e=lambda x:(h1*c)/(x*10**(-9))
-wl,counts=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/spectrometer_data_of_lightsource_Weißlichtquelle_Wellenlängenmessung.txt',unpack=True)
-energy=[round(l2e(a),3) for a in wl]
-gold_energy=np.arange(0,round(energy[0],2),0.001)
-gold=pchip_interpolate(all_energy,all_abs,gold_energy)
-reduced_counts=[]
-for i,j in zip(energy,counts):
-    indice= int(round(i,3)*1000)
-    reduced_counts.append(j*gold[indice]/100)
-lns1=ax.plot(energy,counts,color=colors2[2],label='specrometer data for a \n white light source ')   
-lns2=ax.plot(energy,reduced_counts,color=colors2[1],label='reduced spectrum:\n {}\% absorbed by gold foil'.format(float(f'{integrate.trapezoid(reduced_counts,energy)/integrate.trapezoid(counts,energy)*100:.2f}')))
-ax2.plot(gold_energy,gold,color=colors2[5],ls='dotted')
-ax.set_ylabel('counts')
-ax.set_xlabel('photon energy [eV]')
-ax2.set_ylabel('absorption gold [\%]',color=colors2[5])
-ax2.tick_params(axis='y', labelcolor=colors2[5])
-leg = lns1 + lns2 
-labs = [l.get_label() for l in leg]
-ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.8))
-ax.set_xlim(0,4)
-fig= plt.gcf()
-plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_white.pdf',bbox_inches='tight')
+# fig,ax=plt.subplots(figsize=(h,h))
+# ax2=ax.twinx()
+# l2e=lambda x:(h1*c)/(x*10**(-9))
+# wl,counts=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/spectrometer_data_of_lightsource_Weißlichtquelle_Wellenlängenmessung.txt',unpack=True)
+# energy=[round(l2e(a),3) for a in wl]
+# gold_energy=np.arange(0,round(energy[0],2),0.001)
+# gold=pchip_interpolate(all_energy,all_abs,gold_energy)
+# reduced_counts=[]
+# for i,j in zip(energy,counts):
+#     indice= int(round(i,3)*1000)
+#     reduced_counts.append(j*gold[indice]/100)
+# lns1=ax.plot(energy,counts,color=colors2[2],label='specrometer data for a \n white light source ')   
+# lns2=ax.plot(energy,reduced_counts,color=colors2[1],label='reduced spectrum:\n {}\% absorbed by gold foil'.format(float(f'{integrate.trapezoid(reduced_counts,energy)/integrate.trapezoid(counts,energy)*100:.2f}')))
+# ax2.plot(gold_energy,gold,color=colors2[5],ls='dotted')
+# ax.set_ylabel('counts')
+# ax.set_xlabel('photon energy [eV]')
+# ax2.set_ylabel('absorption gold [\%]',color=colors2[5])
+# ax2.tick_params(axis='y', labelcolor=colors2[5])
+# leg = lns1 + lns2 
+# labs = [l.get_label() for l in leg]
+# ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.8))
+# ax.set_xlim(0,4)
+# fig= plt.gcf()
+# plt.show()
+# fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_white.pdf',bbox_inches='tight')
 
 
 # %% electrical signals
@@ -1246,10 +1248,36 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/power_time_trace.pdf',bbox_inches=
 plt.figure(figsize=(h,h))
 for shotnumber,i in zip([13265,13263,13261,13259,13257],[0,1,2,3,4]):
     s,p,e=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=shotnumber),unpack=True)
-    plt.errorbar(s,p,yerr=e,marker=markers[0+i],color=colors[0+i],capsize=5,label='shot n$^\circ$'+str(shotnumber) +', $P_{\mathrm{MW}}$='+str(f'{pc.GetMicrowavePower(shotnumber)[0]:.3f}') +'mW')
+    plt.errorbar(s,p,yerr=e,marker=markers[0+i],color=colors[0+i],capsize=5,alpha=0.1)
+for shotnumber,i in zip([13265,13263,13261,13259,13257],[0,1,2,3,4]):
+    s,c,p,e=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_He.txt'.format(s=shotnumber),unpack=True)
+    plt.errorbar(s,p,yerr=e,marker=markers[0+i],color=colors[0+i],capsize=5,label='shot n$^\circ$'+str(shotnumber) +', $P_{\mathrm{MW}}$='+str(f'{pc.GetMicrowavePower(shotnumber)[0]/1000:.1f}') +'kW')
 plt.ylim(0)
 plt.xticks(s)
 plt.xlabel('sensor number')
 plt.ylabel('$\Delta P_{\mathrm{rad}}$ [$\mu$W]')
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.0),title='He, MW=2.45 GHz, p=21 mPa')
+fig= plt.gcf()
 plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/radiation_profiles.pdf',bbox_inches='tight')
+
+# %% Total Power
+plt.figure(figsize=(h,h))
+shotnumbers=[[13265,13263,13261,13259,13257]]
+gases=[['He'for i in range(5)]]
+mw,p,emi,ema,c,ecma,ecmi=poca.Totalpower_from_exp(shotnumbers,gases,'Power')
+plt.plot(mw,p,ls='dashed',label='He, MW=2.45 GHz, p=21 mPa')
+for i,j,k,m,a in zip(mw,p,emi,ema,[0,1,2,3,4]):
+    plt.plot(i,j,marker=markers[0+a],color=colors[0+a])
+    plt.errorbar(i,j,yerr=[[k],[m]],capsize=5,linestyle='None',color=colors[0+a])
+    plt.annotate(str(f'{(j/i)*100:.1f}')+'\%',xy=(i,j),xytext=(i-300,j+60),color=colors[0+a])
+plt.xlabel('$P_{\mathrm{MW}}$ [W]')
+plt.ylabel('$P_{\mathrm{rad,\ net}}$ [W]')
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.45))
+plt.xlim(0,3100)
+plt.ylim(0,650)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/net_power_loss.pdf',bbox_inches='tight')
+
 # %%

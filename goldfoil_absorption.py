@@ -303,9 +303,9 @@ if __name__ == "__main__":
     spectrumdata='/home/gediz/Results/Spectrometer/Spectra_of_He_plasma_15_12_2022/'
     #print possible values for t and d like this:
     #print(adas.ar_adf15(data='pec40#ar_ic#ar0',density=1E17,Spectrum=False)[0],adas.ar_adf15(data='pec40#ar_ic#ar0',density=1E17,Spectrum=False)[3])
-    gas='Ne'
+    gas='He'
     t=10
-    d=1E18
+    d=5E17
     if gas=='Ar':
         adasdata=adas.ar_adf15(data='pec40#ar_ic#ar1',T_max=t,density=d,Spectrum=True)
     if gas=='H':
