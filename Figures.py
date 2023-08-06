@@ -1,7 +1,8 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
+#import matplotlib 
+from matplotlib.patches import Rectangle
 import pandas as pd
 from scipy.optimize import curve_fit
 import matplotlib.patches as patches
@@ -1279,5 +1280,59 @@ plt.ylim(0,650)
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/net_power_loss.pdf',bbox_inches='tight')
+
+# %% Modelling Code
+
+# fig=plt.figure(figsize=(w,w))
+# ax=fig.add_subplot(111)
+# x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position_extended.csv',sep=',',engine='python'),dtype=np.float64)
+# y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
+# for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
+#     x=np.array(x_.iloc[i])
+#     y=np.array(y_.iloc[i])
+#     plt.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors2[i],linewidth=2,marker=markers[0],markersize=4,alpha=0.5)
+
+# plt.ylabel('Z [cm]')
+# plt.xlabel('R [cm]')
+# fig= plt.gcf()
+# plt.show()
+# fig.savefig('/home/gediz/LaTex/Thesis/Figures/flux_surfaces_extended.pdf',bbox_inches='tight')
+
+fig=plt.figure(figsize=(w,w))
+ax=fig.add_subplot(111)
+x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position_extended.csv',sep=',',engine='python'),dtype=np.float64)
+y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
+def lin (x,a,b):
+    return a*x + b
+for k,m in zip(np.arange(60.5,62.5,0.1),np.arange(3,5,0.1)):
+    ax.hlines(m,60.5,62.5,color='gray',alpha=0.3)
+    ax.vlines(k,3,5,color='gray',alpha=0.3)
+for i in [2,3]:
+    x=np.array(x_.iloc[i])
+    y=np.array(y_.iloc[i])
+    ax.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors2[i],ls='None',marker=markers[0],markersize=6)
+    for j in np.arange(0,len(x)-1):
+        popt,pcov=curve_fit(lin,[x[j],x[j+1]],[y[j],y[j+1]])
+        alpha=np.arctan(abs(y[j+1]-y[j])/abs(x[j+1]-x[j]))
+        extra=abs(np.cos(alpha))*0.15
+        range=np.arange(np.sort([x[j],x[j+1]])[0]-extra,np.sort([x[j],x[j+1]])[1]+extra,0.0001)
+        ax.plot(range,lin(range,*popt),color=colors2[i],alpha=0.5)
+        ax.plot(61.55,4.05,color=colors2[5],marker='x',markersize=10)
+        popt,pcov=curve_fit(lin,[z_0,61.55],[0,4.05])
+        ax.plot(np.arange(60.5,62.5,0.1),lin(np.arange(60.5,62.5,0.1),*popt),color=colors2[5])
+ax.add_patch(Rectangle((61.5,4),0.1,0.1,color=colors2[5],alpha=0.5))
+    #poptm,pcovm=curve_fit(lin,[z_0,m],[0,n])
+    #diff=abs(lin(range,*popt)-lin(range,*poptm))
+
+plt.ylabel('Z [cm]')
+plt.xlabel('R [cm]')
+plt.xlim(60.5,62.5)
+plt.ylim(3,5)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/flux_surfaces_extended_zoom.pdf',bbox_inches='tight')
+
+
+
 
 # %%
