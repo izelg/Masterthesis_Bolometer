@@ -23,7 +23,8 @@ from sympy.abc import x
 import plasma_characteristics as pc
 import adas_data as adas
 #%% Parameter
-Poster=True
+Latex=True
+Poster=False
 
 
 if Poster==True:
@@ -31,11 +32,26 @@ if Poster==True:
     plt.rc('xtick',labelsize=25)
     plt.rc('ytick',labelsize=25)
     plt.rcParams['lines.markersize']=18
+elif Latex==True:
+    w=412/72.27
+    h=w*(5**.5-1)/2
+    n=1.4
+    plt.rcParams['text.usetex']=True
+    plt.rcParams['font.family']='serif'
+    plt.rcParams['axes.labelsize']=11*n
+    plt.rcParams['font.size']=11*n
+    plt.rcParams['legend.fontsize']=11*n
+    plt.rcParams['xtick.labelsize']=11*n
+    plt.rcParams['ytick.labelsize']=11*n
+    plt.rcParams['lines.markersize']=6
+
 else:
     plt.rc('font',size=14)
     plt.rc('figure', titlesize=15)
 #colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
-colors=['#1bbbe9','#023047','#023047','#ffb703','#ffb703','#fb8500','#c1121f','#780000','#fb8500','#c1121f','#780000']
+colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
+colors2=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#3C096C','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']
+
 markers=['o','v','s','P','p','D','8','*','x']
 
 #%%
@@ -141,10 +157,11 @@ def Pixelmethod():
     #-----------------------------------------------------#-
     #!!! Enter here which channels lines of sight you want to have analyzed(1 to 8), what pixel-resolution you need (in cm) and  which flux surfaces (0 to 7) should be modeled. 
     #note that more channels, a smaller resolution and more fluxsurfaces result in longer computation times
-    bolo_channel=[8] #1 to 8
-    res=0.3
+    bolo_channel=[5] #1 to 8
+    Bolo= False
+    res=0.5
     fluxsurfaces=[0,1,2,3,4,5,6,7,8,9,10,11]
-    err='Max'
+    err='None'
     #-----------------------------------------------------#-
     if err=='None':
         x_err=0
@@ -159,14 +176,14 @@ def Pixelmethod():
         
 
     for bol in bolo_channel:
-        fig=plt.figure(figsize=(10,10))
+        fig=plt.figure(figsize=(w,w))
         ax=fig.add_subplot(111)
         x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position_extended.csv',sep=',',engine='python'),dtype=np.float64)
         y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
 
 
-        plt.xlabel('R [cm]',fontsize=30)
-        plt.ylabel('z [cm]',fontsize=30)
+        plt.xlabel('R [cm]')
+        plt.ylabel('Z [cm]')
 
         #Derive the exact positions of the bolometerchannels
         #I derive the x and y positions of the four upper channels lower and upper edge
@@ -205,25 +222,28 @@ def Pixelmethod():
         m_=list(p+0.01 for p in (np.arange(int(min(x_.iloc[12]))-1,int(max(x_.iloc[12]))+1,res)))
         n_=list(o+0.01 for o in (np.arange(int(min(y_.iloc[12]))-1,int(max(y_.iloc[12]))+1,res)))
         inside_line=[[],[],[],[],[],[],[],[]]
-        lines=[0,2,4,6,8,10,12,14]
-        #colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue','blue','green','gold','magenta']
-        #here the desired line of sight is plotted from the experimental data. To see the calculate lines of sight activate the dashed lines plot
-        #now the points of interest(the ones in a square of the rough size of the outer most fluxsurface) are tested for their position relative to the line of sight
-        #If the point lies inside the two lines describing the line of sight of that channel, its coordinates are added to "inside_line"
-        plt.plot([x_b[lines[bol-1]],x_b[lines[bol-1]+1]],[y_b[lines[bol-1]],y_b[lines[bol-1]+1]],color='red')
-        popt3,pcov3=curve_fit(lin,[a-b+x_err,a-b-12.4+x_err,a-b-19.5+x_err,a-b-22.9+x_err],[-s_h/2,ex_1[lines[bol-1]]-y_err,ex_2[lines[bol-1]]-y_err,ex_3[lines[bol-1]]-y_err])
-        popt4,pcov4=curve_fit(lin,[a-b+x_err,a-b-12.4+x_err,a-b-19.5+x_err,a-b-22.9+x_err],[s_h/2,ex_1[lines[bol-1]+1]+y_err,ex_2[lines[bol-1]+1]+y_err,ex_3[lines[bol-1]+1]+y_err])
-        #popt3,pcov3=curve_fit(lin,[a-b+x_err,a-b-22.9+x_err],[-s_h/2,ex_3[lines[bol-1]]-y_err])
-        #popt4,pcov4=curve_fit(lin,[a-b+x_err,a-b-22.9+x_err],[s_h/2,ex_3[lines[bol-1]+1]+y_err])
-        plt.plot(x,lin(x,*popt3),color=colors[bol-1],linewidth=4)
-        plt.plot(x,lin(x,*popt4),color=colors[bol-1],linewidth=4)
-        plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[lines[bol-1]],ex_2[lines[bol-1]],ex_3[lines[bol-1]]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=colors[bol-1])
-        plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[lines[bol-1]+1],ex_2[lines[bol-1]+1],ex_3[lines[bol-1]+1]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=colors[bol-1])
+        if Bolo==True:
+            lines=[0,2,4,6,8,10,12,14]
+            #colors=['red','blue','green','gold','magenta','darkcyan','blueviolet','orange','darkblue','blue','green','gold','magenta']
+            #here the desired line of sight is plotted from the experimental data. To see the calculate lines of sight activate the dashed lines plot
+            #now the points of interest(the ones in a square of the rough size of the outer most fluxsurface) are tested for their position relative to the line of sight
+            #If the point lies inside the two lines describing the line of sight of that channel, its coordinates are added to "inside_line"
+            plt.plot([x_b[lines[bol-1]],x_b[lines[bol-1]+1]],[y_b[lines[bol-1]],y_b[lines[bol-1]+1]],color='red')
+            popt3,pcov3=curve_fit(lin,[a-b+x_err,a-b-12.4+x_err,a-b-19.5+x_err,a-b-22.9+x_err],[-s_h/2,ex_1[lines[bol-1]]-y_err,ex_2[lines[bol-1]]-y_err,ex_3[lines[bol-1]]-y_err])
+            popt4,pcov4=curve_fit(lin,[a-b+x_err,a-b-12.4+x_err,a-b-19.5+x_err,a-b-22.9+x_err],[s_h/2,ex_1[lines[bol-1]+1]+y_err,ex_2[lines[bol-1]+1]+y_err,ex_3[lines[bol-1]+1]+y_err])
+            #popt3,pcov3=curve_fit(lin,[a-b+x_err,a-b-22.9+x_err],[-s_h/2,ex_3[lines[bol-1]]-y_err])
+            #popt4,pcov4=curve_fit(lin,[a-b+x_err,a-b-22.9+x_err],[s_h/2,ex_3[lines[bol-1]+1]+y_err])
+            plt.plot(x,lin(x,*popt3),color=colors[bol-1])
+            plt.plot(x,lin(x,*popt4),color=colors[bol-1])
+            plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[lines[bol-1]],ex_2[lines[bol-1]],ex_3[lines[bol-1]]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=colors[bol-1])
+            plt.errorbar([a-b-12.4,a-b-19.5,a-b-22.9],[ex_1[lines[bol-1]+1],ex_2[lines[bol-1]+1],ex_3[lines[bol-1]+1]],yerr=0.4,xerr=0.4,marker='o', linestyle='None',capsize=5,color=colors[bol-1])
 
         for m in m_:
             for n in n_:
-                if n< lin(m,*popt4) and n>(lin(m,*popt3)):
-                    #ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=colors[bol-1],alpha=0.4,linewidth=0))
+                if Bolo==True:
+                    if n< lin(m,*popt4) and n>(lin(m,*popt3)):
+                        inside_line[bol-1].append((m,n))
+                else:
                     inside_line[bol-1].append((m,n))
         plt.plot([60+a-b,60+a-b],[s_h/2,-s_h/2],color='blue')
 
@@ -241,41 +261,44 @@ def Pixelmethod():
         vol=[[],[],[],[],[],[],[],[],[],[],[],[],[]]
         v_i=[[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]]
         for f in fluxsurfaces:
+            x=np.array(x_.iloc[f])
+            y=np.array(y_.iloc[f])
+            plt.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors2[f],linewidth=2,marker=markers[0],markersize=4,alpha=0.5)
+
         #m_=list(p+0.01 for p in (np.arange(int(min(x_.iloc[i+1])),int(max(x_.iloc[i+1]))+1,res)))
         #n_=list(b+0.01 for b in (np.arange(int(min(y_.iloc[i+1])),int(max(y_.iloc[i+1]))+1,res)))
             for (m,n) in inside_line[bol-1]:
                 if (m,n) not in inside_:
-                    plt.plot(m,n,marker='.',color=colors[f])
                     if n<0:
                         half=np.concatenate((np.arange(-1,0),np.arange(32,63)))
                     else:
                         half=np.arange(0,32)
                     x=np.array(x_.iloc[f])
                     y=np.array(y_.iloc[f])
-                    plt.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors[f])
                     ideal=intersections(half)[0]
                     x_inner=intersections([ideal])[2][intersections([ideal])[1]]
                     y_inner=lin(x_inner,*(intersections([ideal])[4]))
                     x=np.array(x_.iloc[f+1])
                     y=np.array(y_.iloc[f+1])
-                    #plt.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors[f+1])
                     ideal=intersections(half)[0]
                     x_outer=intersections([ideal])[2][intersections([ideal])[1]]
                     y_outer=lin(x_outer,*(intersections([ideal])[4]))
                     if f==0:
                         if abs(y_inner)>=abs(n) and abs(x_inner-z_0)>=abs(m-z_0):
-                            ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color='grey',alpha=0.4,linewidth=0))
+                            ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=colors2[f],alpha=0.4,linewidth=0))
                             inside[f].append((m,n))
-                            plt.plot(m,n,marker='o',color='Grey')
                         if abs(y_outer)>=abs(n) and abs(x_outer-z_0)>=abs(m-z_0) and abs(y_inner)<=abs(n) and abs(x_inner-z_0)<=abs(m-z_0):
-                            ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=colors[f],alpha=0.4,linewidth=0))
+                            ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=colors2[f+1],alpha=0.4,linewidth=0))
                             inside[f+1].append((m,n))
                     else:
                         if abs(y_outer)>=abs(n) and abs(x_outer-z_0)>=abs(m-z_0) and abs(y_inner)<=abs(n) and abs(x_inner-z_0)<=abs(m-z_0):
-                            ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=colors[f],alpha=0.4,linewidth=0))
+                            ax.add_patch(mpl.patches.Rectangle((m-res/2,n-res/2),res,res,color=colors2[f+1],alpha=0.4,linewidth=0))
                             inside[f+1].append((m,n))
                 inside_.extend(inside[f])
-        
+        x=np.array(x_.iloc[12])
+        y=np.array(y_.iloc[12])
+        plt.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors2[12],linewidth=2,marker=markers[0],markersize=4,alpha=0.5)
+
         for v in np.append(fluxsurfaces, fluxsurfaces[-1]+1):  
             #derive the volume in each fluxsurface the channel occupies with the horizontal line of sight       
             x_horiz=[a-b,a-b-13.7,a-b-17.7]
@@ -288,15 +311,22 @@ def Pixelmethod():
                 x_test=inside[v][g][0]
                 len_.append(lin(x_test,*popt5)-lin(x_test,*popt6))
                 v_i[v]+=(len_[g]*res**2)/(a-inside[v][g][0])**2
-        
-            vol[v]=np.sum(len_)*res**2
-            print("The {n} Fluxsurface covers a space of ~ {s} cm\u00b3 in channel {c} line of sight which is v_i={d}cm.".format(n=v,s=float(f'{vol[v]:.2f}'),d=float(f'{v_i[v][0]:.2e}'),c=bol))
-            
-        plt.ylim(min(y_.iloc[f+1])-res,max(y_.iloc[f+1])+res)
-        plt.xlim(z_0+min(y_.iloc[f+1])-res,80)
+
+            if Bolo==True:
+                vol[v]=np.sum(len_)*res**2
+                print("The {n} Fluxsurface covers a space of ~ {s} cm\u00b3 in channel {c} line of sight which is v_i={d}cm.".format(n=v,s=float(f'{vol[v]:.2f}'),d=float(f'{v_i[v][0]:.2e}'),c=bol))
+            else:
+                vol[v]=len(len_)*res**3
+                print("The {n} Fluxsurface covers a space of ~ {s} cm\u00b3  which is v_i={d}cm.".format(n=v,s=float(f'{vol[v]:.2f}'),d=float(f'{v_i[v][0]:.2e}')))
+
+        #plt.ylim(min(y_.iloc[f+1])-res,max(y_.iloc[f+1])+res)
+        #plt.xlim(z_0+min(y_.iloc[f+1])-res,80)
+        plt.xlim(47,78)
+        plt.ylim(-15.5,15.5)
         fig1= plt.gcf()
         plt.show()
-        fig1.savefig('/home/gediz/Results/Modeled_Data/Fluxsurfaces_and_Lines_of_sight/flux_{f1}_to_{f2}_channel_{b}.pdf'.format(f1=fluxsurfaces[0],f2=fluxsurfaces[-1],b=bolo_channel[0]))
+        fig1.savefig('/home/gediz/LaTex/Thesis/Figures/pixelmethod_sensor_5.pdf',bbox_inches='tight')
+        #fig1.savefig('/home/gediz/Results/Modeled_Data/Fluxsurfaces_and_Lines_of_sight/flux_{f1}_to_{f2}_channel_{b}.pdf'.format(f1=fluxsurfaces[0],f2=fluxsurfaces[-1],b=bolo_channel[0]))
 
         vol_ges=0
         v_i_ges=0
@@ -307,7 +337,11 @@ def Pixelmethod():
                 v_i_ges+=v_i[k][0]
         vol_ges=vol_ges/1000000
         v_i_ges=v_i_ges/100
-        print('Volume Observed by channel {c}: {v}m\u00b3'.format(c=bol,v=float(f'{vol_ges:.5f}')))
+        if Bolo==True:
+            print('Volume Observed by channel {c}: {v}m\u00b3'.format(c=bol,v=float(f'{vol_ges:.5f}')))
+        else:
+            print('Volume of Plasma Cross-section * {c}: {v}m\u00b3, and v_i_ges={vi}'.format(c=res,v=float(f'{vol_ges:.5f}'),vi=float(f'{v_i_ges:.5f}')) )
+
     print('total:',datetime.now()-start)
 
 #Total Power from Channel 4
@@ -357,9 +391,6 @@ def Totalpower_from_exp(s,g,Type='',save=False,calc=False,plot=False):
                 P_ges_exp_error_min_.append(((4*np.pi*bolo_p[i])/(((c_w*c_h)/10000)*v_i_ges_min[i]))*V_T_2*weight[i])
                 P_ges_exp_error_max_.append(((4*np.pi*bolo_p[i])/(((c_w*c_h)/10000)*v_i_ges_max[i]))*V_T_2*weight[i])
                 P_ges_exp_error_bolo_.append(((4*np.pi*bolo_err[i])/(((c_w*c_h)/10000)*v_i_ges_middle[i]))*V_T_2*weight[i])
-            plt.plot([1,2,3,4,5,6,7,8],[a*V_T_2 for a in p_rad])
-            plt.plot([1,2,3,4,5,6,7,8],[a*V_T_2/b for a,b in zip(p_rad,weight)])
-            plt.show()
             P_ges_exp.append(np.mean(P_ges_exp_))
             P_ges_exp_error_min.append(abs(np.mean(P_ges_exp_error_min_)-np.mean(P_ges_exp_)))#+np.mean(P_ges_exp_error_bolo_))
             P_ges_exp_error_max.append(abs(np.mean(P_ges_exp_error_max_)-np.mean(P_ges_exp_)))#+np.mean(P_ges_exp_error_bolo_))
@@ -653,28 +684,25 @@ def TopView():
 if __name__ == "__main__":
     start=datetime.now()
     print('start:', start)
-    #for shotnumber in [13265,13263,13261,13259,13257]:
-    shotnumber=13257
-    shotnumbers=[[13261]]#[np.arange(13242,13255),np.arange(13299,13311),[13098,13099,13100,13101,13102,13103,13104,13105,13106],np.arange(13340,13348),[13079,13080,13081,13082,13083,13084],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095]]
-    gases=[['He'for i in range(1)]]#[['H'for i in range(13)],['Ar'for i in range(13)],['Ar'for i in range(9)],['Ne'for i in range(8)],['Ne'for i in range(7)],['H'for i in range(8)],['Ar'for i in range(8)],['Ne'for i in range(8)]]
-    gas='He'
-    infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
+    for shotnumber in [13265,13263,13261,13259,13257]:
+        #shotnumber=13257
+        shotnumbers=[[13261]]#[np.arange(13242,13255),np.arange(13299,13311),[13098,13099,13100,13101,13102,13103,13104,13105,13106],np.arange(13340,13348),[13079,13080,13081,13082,13083,13084],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095]]
+        gases=[['He'for i in range(1)]]#[['H'for i in range(13)],['Ar'for i in range(13)],['Ar'for i in range(9)],['Ne'for i in range(8)],['Ne'for i in range(7)],['H'for i in range(8)],['Ar'for i in range(8)],['Ne'for i in range(8)]]
+        gas='He'
+        infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
 
-    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
-    def gold(g):
-        if g=='H':
-            return [0.76 ,0]     
-        if g=='He':      
-            return [0.35 ,0.90]     
-        if g=='Ar':
-            return [0.84,0.80]
-        if g=='Ne':
-            return [0.61,0.78]
-
-    #Boloprofile_calc(shotnumber,gas,plot=True,save=True)
-    #Totalpower_from_exp(shotnumbers,gases,'Power')
-    Totalpower_from_Profile(shotnumber)
+        location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+        mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
+        def gold(g):
+            if g=='H':
+                return [0.76 ,0]     
+            if g=='He':      
+                return [0.50 ,0.92]     
+            if g=='Ar':
+                return [0.84,0.80]
+            if g=='Ne':
+                return [0.61,0.78]
+        Boloprofile_calc(shotnumber,gas,save=True)
     print('total:',datetime.now()-start)
   # %%
 

@@ -8,7 +8,7 @@ from scipy.optimize import curve_fit
 import matplotlib.patches as patches
 from scipy.signal import savgol_filter
 from scipy.interpolate import pchip_interpolate
-from scipy import integrate
+from matplotlib.ticker import ScalarFormatter
 from scipy import signal
 
 import plasma_characteristics as pc
@@ -36,12 +36,12 @@ if Poster==True:
     plt.rc('xtick',labelsize=20)
     plt.rc('ytick',labelsize=20)
     plt.rcParams['lines.markersize']=12
-    w=10
-    h=7
+    width=10
+    height=7
 elif Latex==True:
-    w=412/72.27
-    h=w*(5**.5-1)/2
-    n=1.4
+    width=412/72.27
+    height=width*(5**.5-1)/2
+    n=1
     plt.rcParams['text.usetex']=True
     plt.rcParams['font.family']='serif'
     plt.rcParams['axes.labelsize']=11*n
@@ -59,13 +59,12 @@ else:
 colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
 markers=['o','v','s','P','p','D','*','x']
 colors2=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#3C096C','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']
-
 #%% Plasmatypes and regimes
 
 #n=np.arange(10E5, 10E35)
 #T=np.arange(10E-2,10E6)
 
-plt.figure(figsize=(w,h))
+plt.figure(figsize=(width,height))
 plt.hlines(6,5,37,linestyle='dashed',alpha=0.7,color='red')
 plt.plot([25,37],[-2,5.5],linestyle='dashed',alpha=0.7,color='blue')
 plt.plot([22.5,37],[-2,2.1],linestyle='dashed',alpha=0.7,color='green')
@@ -99,7 +98,7 @@ fig1.savefig('/home/gediz/LaTex/Thesis/Figures/plasmas_in_nature_and_laboratory.
 # %% Lines of sight setup
 
 
-fig=plt.figure(figsize=(w,w))
+fig=plt.figure(figsize=(width,width))
 ax=fig.add_subplot(111)
 x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position.csv',sep=',',engine='python'),dtype=np.float64)
 y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii.csv',sep=',',engine='python')
@@ -202,7 +201,7 @@ fig1.savefig('/home/gediz/LaTex/Thesis/Figures/lines_of_sight_in_TJ-K_with_fluxs
 
 # %% Lines of sight measurement vertical
 
-fig=plt.figure(figsize=(w,w))
+fig=plt.figure(figsize=(width,width))
 plt.rc('xtick')
 plt.rc('ytick')
 ax=fig.add_subplot(111)
@@ -274,7 +273,7 @@ fig1.savefig('/home/gediz/LaTex/Thesis/Figures/lines_of_sight_measurement_vertic
 
 # %% Lines of sight measurement horizontal
 
-fig=plt.figure(figsize=(w,w))
+fig=plt.figure(figsize=(width,width))
 plt.rc('xtick')
 plt.rc('ytick')
 ax=fig.add_subplot(111)
@@ -329,7 +328,7 @@ fig1.savefig('/home/gediz/LaTex/Thesis/Figures/lines_of_sight_measurement_horizo
 alpha=13
 b=3.45 #Distance of Bolometerhead Middle to  Slit [cm]
 zoom=False
-fig=plt.figure(figsize=(w,w))
+fig=plt.figure(figsize=(width,width))
 plt.rc('xtick')
 plt.rc('ytick')
 ax=fig.add_subplot(111)
@@ -422,7 +421,7 @@ h=2 #height of Bolometerhead [cm]
 z_0=63.9    #middle of flux surfaces
 t=17.5 #radius of vessel [cm]
 gas='H'
-fig=plt.figure(figsize=(w,h))
+fig=plt.figure(figsize=(width,height))
 
 ax_t_f=fig.add_subplot(122)
 ax_t=ax_t_f.twinx()
@@ -483,7 +482,7 @@ T_BR_RR,He_0_BR_RR,He_1_BR_RR=adas.he_adf11(data='prb96_he',T_max=T)[0],adas.he_
 T_RR_0,He_0_RR=adas.he_adf15(data='pec96#he_pju#he0',T_max=T)[0],adas.he_adf15(data='pec96#he_pju#he0',T_max=T)[1]
 T_RR_1,He_1_RR=adas.he_adf15(data='pec96#he_pju#he1',T_max=T)[0],adas.he_adf15(data='pec96#he_pju#he1',T_max=T)[1]
 
-plt.figure(figsize=(w,h))
+plt.figure(figsize=(width,height))
 plt.plot(T_LR,He_0_LR,color=colors[0],marker=markers[0],label='He$^0$, excitation, source: ADF11 ')
 plt.plot(T_LR,He_1_LR,color=colors[0],marker=markers[0],label='He${^+1}$, excitation, source: ADF11 ',alpha=0.5)
 
@@ -517,7 +516,7 @@ y_0=np.genfromtxt('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle0_r
 x_30=np.genfromtxt('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position.txt')
 y_30=np.genfromtxt('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii.txt')
 
-size=w/4 
+size=width/4 
 fig0=plt.figure(figsize=(size,size))
 ax0=fig0.add_subplot(111)
 for i in [0,1,2,3,4,5,6,7,8,9]:
@@ -578,7 +577,7 @@ fig3= plt.gcf()
 plt.show()
 fig3.savefig('/home/gediz/LaTex/Thesis/Figures/bottom_port.pdf',bbox_inches='tight')
 # %% I-V curve
-fig,ax=plt.subplots(figsize=(w,h))
+fig,ax=plt.subplots(figsize=(width,height))
 fig.patch.set_visible(False)
 ax.axis('off')
 lw=2
@@ -628,7 +627,7 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/i_v_curve.pdf',bbox_inches='tight')
 
 # %% I-V fit
-fig=plt.figure(figsize=(w/2,h))
+fig=plt.figure(figsize=(width/2,height))
 ax=fig.add_subplot(111)
 x,y,z=np.genfromtxt('/data2/shot6421/kennlinien/000001.dat',unpack=True)
 l=5120
@@ -678,7 +677,7 @@ plt.show()
 
 h1=4.135E-15
 c=299792458
-fig,ax=plt.subplots(figsize=(w,h))
+fig,ax=plt.subplots(figsize=(width,height))
 l,R=np.genfromtxt('/home/gediz/Results/Goldfoil_Absorption/gold_abs_Anne.txt',unpack=True)
 E_P,n_P,k_P=np.genfromtxt('/home/gediz/Results/Goldfoil_Absorption/Gold_Palik.txt',unpack=True,usecols=(0,1,2),delimiter=',')
 E_F,n_F,k_F,R_F=np.genfromtxt('/home/gediz/Results/Goldfoil_Absorption/Gold_Foiles.txt',unpack=True,usecols=(0,1,2,3),delimiter=',')
@@ -741,7 +740,7 @@ plt.show()
 
 # %%  Ohmic Calibrations Signal
 time,U_sq,U_b_n,U_b= np.genfromtxt('/home/gediz/Measurements/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/10_11_2022/NewFile20.csv',delimiter=',',unpack=True, usecols=(0,1,2,3),skip_header=2)
-fig,ax1=plt.subplots(figsize=(h,h))
+fig,ax1=plt.subplots(figsize=(height,height))
 fig.patch.set_facecolor('white')
 ax2=ax1.twinx()
 def I_func(t,I_0, Delta_I, tau):
@@ -783,7 +782,7 @@ for i,j,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[t1,t2,t3,t4,t5,t6,t7,t8,t9,
     j.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(1)))
     k.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(2))) 
 mean_t,sd_t,sem_t=[],[],[]
-fig1=plt.figure(figsize=(h,h))
+fig1=plt.figure(figsize=(height,height))
 for i,j,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10],[0,1,2,3,4,5,6,7,8,9]):
     plt.plot(i,j,label='Measurement {} TJ-K'.format(n),marker='o',color=colors[3],alpha=0.3)
 for m in [0,1,2,3,4,5,6,7]:
@@ -800,7 +799,7 @@ plt.show()
 print(mean_t,sem_t)
 fig1.savefig('/home/gediz/LaTex/Thesis/Figures/ohmic_calibration_tau.pdf',bbox_inches='tight')
 
-fig2=plt.figure(figsize=(h,h))
+fig2=plt.figure(figsize=(height,height))
 mean_k,sd_k,sem_k=[],[],[]
 for i,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[k1,k2,k3,k4,k5,k6,k7,k8,k9,k10],[0,1,2,3,4,5,6,7,8,9]):
     plt.plot(i,k,label='Measurement {} TJ-K'.format(n),marker='o',color=colors[0],alpha=0.3)
@@ -820,7 +819,7 @@ fig2.savefig('/home/gediz/LaTex/Thesis/Figures/ohmic_calibration_kappa.pdf',bbox
 
 
 # %% Laser Scan
-plt.figure(figsize=(w*0.75,h))
+plt.figure(figsize=(width*0.75,height))
 location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot60038.dat'
 cut=1000
 time = br.LoadData(location)['Zeit [ms]'][cut:-1] / 1000
@@ -841,7 +840,7 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/Laser_scan.pdf',bbox_inches='tight')
 
 # %% UV scan
-plt.figure(figsize=(w,h))
+plt.figure(figsize=(width,height))
 location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot60078_cropped.dat'
 cut=0
 c=0
@@ -881,7 +880,7 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/UV_scan_horizontal.pdf',bbox_inches='tight')
 
 # %% Spectra working gases
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 d=5e+17
 t=10
 al=0.8
@@ -897,7 +896,7 @@ ardata=adas.ar_adf15(data='pec40#ar_ls#ar0',T_max=t,density=d,Spectrum=True)
 plt.bar([l2e(a) for a in ardata[0]],[a/max(ardata[1]) for a in ardata[1]],k,color=colors2[12],alpha=al,label='Ar$^0$')
 plt.plot(energy,fitted/100,color='red',ls='dotted',alpha=0.5)
 plt.xlim(-1,75)
-plt.ylabel('normalized pec [m$^3$/s]')
+plt.ylabel('normalized PEC [m$^3$/s]')
 plt.xlabel('photon energy [eV]')
 plt.legend(loc='lower right', title='ADAS data \n for spectral \n lines at  \n $T_e=$10 eV, \n $n_e$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation \n of neutrals ')
 fig= plt.gcf()
@@ -905,17 +904,17 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/spectra_neutrals.pdf',bbox_inches='tight')
 
 k=1.5
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 hedata=adas.he_adf15(data='pec96#he_pju#he1',T_max=t,density=d,Spectrum=True)
-plt.bar([l2e(a) for a in hedata[0]],[a/max(hedata[1]) for a in hedata[1]],k,color=colors2[2],alpha=al,label='He$^1$')
+plt.bar([l2e(a) for a in hedata[0]],[a/max(hedata[1]) for a in hedata[1]],k,color=colors2[2],alpha=al,label='He$^{+1}$')
 nedata=adas.ne_adf15(data='pec96#ne_pju#ne1',T_max=t,density=d,Spectrum=True)
-plt.bar([l2e(a) for a in nedata[0]],[a/max(nedata[1]) for a in nedata[1]],k,color=colors2[6],alpha=al,label='Ne$^1$')
+plt.bar([l2e(a) for a in nedata[0]],[a/max(nedata[1]) for a in nedata[1]],k,color=colors2[6],alpha=al,label='Ne$^{+1}$')
 ardata=adas.ar_adf15(data='pec40#ar_ic#ar1',T_max=t,density=d,Spectrum=True)
-plt.bar([l2e(a) for a in ardata[0]],[a/max(ardata[1]) for a in ardata[1]],k,color=colors2[13],alpha=al,label='Ar$^1$')
+plt.bar([l2e(a) for a in ardata[0]],[a/max(ardata[1]) for a in ardata[1]],k,color=colors2[13],alpha=al,label='Ar$^{+1}$')
 plt.plot(energy,fitted/100,color='red',ls='dotted',alpha=0.5)
 
 plt.xlim(-1,100)
-plt.ylabel('normalized pec [m$^3$/s]')
+plt.ylabel('normalized PEC [m$^3$/s]')
 plt.xlabel('photon energy [eV]')
 plt.legend(loc='lower right', title='ADAS data \n for spectral \n lines at  \n $T_e=$10 eV, \n $n_e$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation \n of ions')
 
@@ -925,10 +924,10 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/spectra_ions.pdf',bbox_inches='tig
 # %% Reduced Spectrum
 d=5e+17
 t=10
-fig,ax=plt.subplots(figsize=(h,h))
+fig,ax=plt.subplots(figsize=(height,height))
 ax2=ax.twinx()
 l2e=lambda x:(h1*c)/(x*10**(-9))
-hdata=adas.he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)
+hdata=adas.h_adf15(T_max=t,density=d,Spectrum=True)
 energy=[round(l2e(a),3) for a in hdata[0]]
 pec=[a/max(hdata[1]) for a in hdata[1]]
 gold_energy=np.arange(0,round(max(energy),2)+5,0.001)
@@ -941,17 +940,17 @@ for i,j in zip(energy,pec):
 ax.bar(energy,pec,0.5,color=colors2[2],label='ADAS data for spectral lines at \n$T_e=$10 eV,$n_e$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation of H$^0$ ')   
 ax.bar(energy,reduced_pec,0.5,color=colors2[1],label='reduced spectrum:\n {}\% absorbed by gold foil'.format(float(f'{np.sum(reduced_pec)/np.sum(pec)*100:.2f}')))
 ax2.plot(gold_energy,gold,color=colors2[5],ls='dotted',label='gold absorption \n characteristic \n fit to data')
-ax.set_ylabel('normalized pec [m$^3$/s]')
+ax.set_ylabel('normalized PEC [m$^3$/s]')
 ax.set_xlabel('photon energy [eV]')
 ax2.set_ylabel('absorption gold [\%]',color=colors2[5])
 ax2.tick_params(axis='y', labelcolor=colors2[5])
 ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.9))
 fig= plt.gcf()
 plt.show()
-#fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_H.pdf',bbox_inches='tight')
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_H.pdf',bbox_inches='tight')
 
 
-# fig,ax=plt.subplots(figsize=(h,h))
+# fig,ax=plt.subplots(figsize=(height,height))
 # ax2=ax.twinx()
 # l2e=lambda x:(h1*c)/(x*10**(-9))
 # wl,counts=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/spectrometer_data_of_lightsource_Weißlichtquelle_Wellenlängenmessung.txt',unpack=True)
@@ -979,7 +978,7 @@ plt.show()
 
 
 # %% electrical signals
-fig1,ax1=plt.subplots(figsize=(h,h))
+fig1,ax1=plt.subplots(figsize=(height,height))
 ax1.axhline(y=0,color='black',lw=1)
 t = np.linspace(0, 2, 1000, endpoint=True)
 frequ=1.7777
@@ -999,7 +998,7 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/e_sig_with_square.pdf',bbox_inches='tight')
 
 
-fig2,ax2=plt.subplots(figsize=(h,h))
+fig2,ax2=plt.subplots(figsize=(height,height))
 ax2.axhline(y=0,color='black',lw=1)
 ax2.plot(t,squ*3+sine,color=colors2[12],lw=2,label='resulting signal \nafter summarizer')
 ax2.plot(t,squ*1+sine,color=colors2[12],lw=2,alpha=0.5)
@@ -1014,7 +1013,7 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/e_sig_with_square_result.pdf',bbox_inches='tight')
 
 
-fig1,ax1=plt.subplots(figsize=(h,h))
+fig1,ax1=plt.subplots(figsize=(height,height))
 ax1.axhline(y=0,color='black',lw=1)
 t = np.linspace(0, 2, 1000, endpoint=True)
 frequ=1.7777
@@ -1034,7 +1033,7 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/e_sig_with_sine.pdf',bbox_inches='tight')
 
 
-fig2,ax2=plt.subplots(figsize=(h,h))
+fig2,ax2=plt.subplots(figsize=(height,height))
 ax2.axhline(y=0,color='black',lw=1)
 ax2.plot(t,antisine*7+sine,color=colors2[12],lw=2,label='resulting signal \nafter summarizer')
 ax2.plot(t,antisine*5+sine,color=colors2[12],lw=2,alpha=0.5)
@@ -1053,7 +1052,7 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/e_sig_with_sine_result.pdf',bbox_i
 path=['/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated.txt','/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_second_set.txt','/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_third_set.txt']
 x=[1,2,3,4,5,6,7,8]
 i=0
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 mean,sem=[],[]
 for s in x:
     M1=[]
@@ -1074,7 +1073,7 @@ fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_m1.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 mean,sem=[],[]
 for s in x:
     M2=[]
@@ -1096,7 +1095,7 @@ fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_m2.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 mean,sem=[],[]
 for s in x:
     R1=[]
@@ -1118,7 +1117,7 @@ fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_r1.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 mean,sem=[],[]
 for s in x:
     R2=[]
@@ -1141,7 +1140,7 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_r2.pdf',bbox_inches='tight')
 
 # %%Lamp spectra
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 e2l=lambda x:((h1*c)/x)/10**(-9)
 
 wl_UV254,UV254=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_lamps_17_08_2022/spectrometer_data_of_lightsource_254.txt',unpack=True)
@@ -1180,7 +1179,7 @@ plt.plot(s,[a/np.mean(uv254) for a in uv254])
 plt.show()
 # %% Voltage Time trace
 shotnumber=13257
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 location=  '/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
 time = np.array(br.LoadData(location)['Zeit [ms]'] / 1000)[:,None]
 for i,c in zip(np.arange(1,9),colors):
@@ -1199,7 +1198,7 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/voltage_time_trace.pdf',bbox_inche
 
 # %% Power time trace with height
 shotnumber=13257
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 i=1
 location=  '/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
 time,U_Li =br.LoadData(location)['Zeit [ms]'] / 1000, br.LoadData(location)["Bolo{}".format(i)]
@@ -1246,7 +1245,7 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/power_time_trace.pdf',bbox_inches=
 
 
 # %% Bolometer profile
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 for shotnumber,i in zip([13265,13263,13261,13259,13257],[0,1,2,3,4]):
     s,p,e=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=shotnumber),unpack=True)
     plt.errorbar(s,p,yerr=e,marker=markers[0+i],color=colors[0+i],capsize=5,alpha=0.1)
@@ -1263,7 +1262,7 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/radiation_profiles.pdf',bbox_inches='tight')
 
 # %% Total Power
-plt.figure(figsize=(h,h))
+plt.figure(figsize=(height,height))
 shotnumbers=[[13265,13263,13261,13259,13257]]
 gases=[['He'for i in range(5)]]
 mw,p,emi,ema,c,ecma,ecmi=poca.Totalpower_from_exp(shotnumbers,gases,'Power')
@@ -1276,27 +1275,35 @@ plt.xlabel('$P_{\mathrm{MW}}$ [W]')
 plt.ylabel('$P_{\mathrm{rad,\ net}}$ [W]')
 plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.45))
 plt.xlim(0,3100)
-plt.ylim(0,650)
+plt.ylim(0,460)
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/net_power_loss.pdf',bbox_inches='tight')
 
 # %% Modelling Code
 
-# fig=plt.figure(figsize=(w,w))
-# ax=fig.add_subplot(111)
-# x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position_extended.csv',sep=',',engine='python'),dtype=np.float64)
-# y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
-# for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
-#     x=np.array(x_.iloc[i])
-#     y=np.array(y_.iloc[i])
-#     plt.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors2[i],linewidth=2,marker=markers[0],markersize=4,alpha=0.5)
+fig=plt.figure(figsize=(width,width))
+ax=fig.add_subplot(111)
+x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position_extended.csv',sep=',',engine='python'),dtype=np.float64)
+y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
+for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
+    x=np.array(x_.iloc[i])
+    y=np.array(y_.iloc[i])
+    plt.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors2[i],linewidth=2,marker=markers[0],markersize=4,alpha=0.5)
+ax.add_patch(Rectangle((60.5,3),2,2,edgecolor=colors2[2],facecolor='None',lw=4))
+ax.plot(61.55,4.05,color=colors2[5],marker='x',ms=10,mew=3)
+ax.plot(z_0,0,color=colors2[5],marker='x',ms=10,mew=3)
 
-# plt.ylabel('Z [cm]')
-# plt.xlabel('R [cm]')
-# fig= plt.gcf()
-# plt.show()
-# fig.savefig('/home/gediz/LaTex/Thesis/Figures/flux_surfaces_extended.pdf',bbox_inches='tight')
+popt,pcov=curve_fit(lin,[z_0,61.55],[0,4.05])
+ax.plot(np.arange(50,75,0.1),lin(np.arange(50,75,0.1),*popt),color=colors2[5],lw=2)
+
+plt.ylabel('Z [cm]')
+plt.xlabel('R [cm]')
+plt.xlim(47,78)
+plt.ylim(-15.5,15.5)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/flux_surfaces_extended.pdf',bbox_inches='tight')
 
 fig=plt.figure(figsize=(w,w))
 ax=fig.add_subplot(111)
@@ -1305,22 +1312,28 @@ y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_rad
 def lin (x,a,b):
     return a*x + b
 for k,m in zip(np.arange(60.5,62.5,0.1),np.arange(3,5,0.1)):
-    ax.hlines(m,60.5,62.5,color='gray',alpha=0.3)
-    ax.vlines(k,3,5,color='gray',alpha=0.3)
+    ax.hlines(m,60.5,62.5,color='gray',alpha=0.2)
+    ax.vlines(k,3,5,color='gray',alpha=0.2)
 for i in [2,3]:
     x=np.array(x_.iloc[i])
     y=np.array(y_.iloc[i])
-    ax.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors2[i],ls='None',marker=markers[0],markersize=6)
+    ax.plot(np.append(x,x[0]),np.append(y,y[0]),color=colors2[i],ls='None',marker=markers[0],markersize=10)
     for j in np.arange(0,len(x)-1):
         popt,pcov=curve_fit(lin,[x[j],x[j+1]],[y[j],y[j+1]])
         alpha=np.arctan(abs(y[j+1]-y[j])/abs(x[j+1]-x[j]))
         extra=abs(np.cos(alpha))*0.15
         range=np.arange(np.sort([x[j],x[j+1]])[0]-extra,np.sort([x[j],x[j+1]])[1]+extra,0.0001)
-        ax.plot(range,lin(range,*popt),color=colors2[i],alpha=0.5)
-        ax.plot(61.55,4.05,color=colors2[5],marker='x',markersize=10)
-        popt,pcov=curve_fit(lin,[z_0,61.55],[0,4.05])
-        ax.plot(np.arange(60.5,62.5,0.1),lin(np.arange(60.5,62.5,0.1),*popt),color=colors2[5])
+        if j==20:
+            ax.plot(range,lin(range,*popt),color=colors2[i])
+        else:
+            ax.plot(range,lin(range,*popt),color=colors2[i],alpha=0.5,ls='dashed')
+ax.plot(61.55,4.05,color=colors2[5],marker='x',ms=10,mew=3)
+popt,pcov=curve_fit(lin,[z_0,61.55],[0,4.05])
+ax.plot(np.arange(60.5,62.5,0.1),lin(np.arange(60.5,62.5,0.1),*popt),color=colors2[5],lw=2)
+
 ax.add_patch(Rectangle((61.5,4),0.1,0.1,color=colors2[5],alpha=0.5))
+ax.add_patch(Rectangle((60.52,3.02),1.96,1.96,edgecolor=colors2[2],facecolor='None',lw=6))
+
     #poptm,pcovm=curve_fit(lin,[z_0,m],[0,n])
     #diff=abs(lin(range,*popt)-lin(range,*poptm))
 
@@ -1334,5 +1347,152 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/flux_surfaces_extended_zoom.pdf',b
 
 
 
+
+# %% ADF11
+temperatures=adas.h_adf11()[2]
+densities=[a*10**6 for a in adas.h_adf11()[3]]
+
+plt.figure(figsize=(height,height))
+for i,c in zip([3,5,9,11,15,17,23,29],[0,1,2,3,4,5,6,7]):
+    t_name='rad_t_'+str(i)
+    d_dep_h=adas.h_adf11(T_max=temperatures[-1],wish=t_name)[5]
+    plt.plot(densities,d_dep_h[1],color=colors2[c],marker='o',ms=5,label='$T_e$ = {} eV'.format('%.1f' %d_dep_h[0]))
+plt.xscale('log')
+plt.xlabel('density [m$^{-3}$]')
+plt.ylabel(r'$\left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eVm$^3$/s]')
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.2))
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf11_H_pec_from_d.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(height,height))
+for i,c in zip([2,5,8,11,14,17,20,23],[0,1,2,3,4,5,6,7]):
+    d_name='rad_d_'+str(i)
+    t_dep_h=adas.h_adf11(T_max=temperatures[-1],wish=d_name)[5]
+    plt.plot(temperatures,t_dep_h,color=colors2[c],marker='o',ms=5,label='$n_e$ = '+str('%.0E' % densities[i-1] )+' m$^{-3}$')
+plt.xscale('log')
+plt.xlabel('temperature [eV]')
+plt.ylabel(r'$\left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eVm$^3$/s]')
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.25))
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf11_H_pec_from_t.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(height,height))
+for i,c in zip([7,8,10,11,13,14,16],[1,2,3,4,5,6,7]):
+    d_name='rad_d_'+str(i)
+    t_dep_h=adas.h_adf11(T_max=temperatures[-1],wish=d_name)[5]
+    plt.plot(temperatures,t_dep_h,color=colors2[c],label='$n_e$ = '+str('%.0E' % densities[i-1] )+' m$^{-3}$',marker='o',ms=5,alpha=0.5)
+plt.plot(temperatures, adas.h_adf11(T_max=temperatures[-1])[1], label='averaged density',marker='o',ms=10,color=colors2[2])
+plt.yscale('log')
+plt.gca().yaxis.set_major_formatter(ScalarFormatter())
+plt.gca().yaxis.set_minor_formatter(ScalarFormatter())
+plt.ticklabel_format(axis='y',style='sci',scilimits=(0,0))
+plt.ylim(1E-13,6E-13)
+plt.xlim(0,100)
+plt.xlabel('temperature [eV]')
+plt.ylabel(r'$\left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eVm$^3$/s]')
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.25))
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf11_H_pec_from_t_log.pdf',bbox_inches='tight')
+
+
+# %% ADF15
+
+plt.figure(figsize=(height,height))
+d=5e+17
+t=10
+e=1.602E-19
+m=1E-6
+al=0.8
+k=2.5
+l2e=lambda x:(h1*c)/(x*10**(-9))
+for t,c1,c2 in zip([200,100,10],[0,1,2],[3,5,6]):
+    k-=c1*0.4
+    hedata0=adas.he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)
+    plt.bar([l2e(a) for a in hedata0[0]],[a*m for a in hedata0[1]],k,color=colors2[c1],label='He$^0$, $T_e$=' +str(hedata0[3]) +'eV')
+k=2.5
+for t,c1,c2 in zip([200,100,10],[0,1,2],[3,5,6]):
+    k-=c1*0.4
+    hedata1=adas.he_adf15(data='pec96#he_pju#he1',T_max=t,density=d,Spectrum=True)
+    plt.bar([l2e(a) for a in hedata1[0]],[a*m for a in hedata1[1]],k,color=colors2[c2],label='He$^{+1}$, $T_e$=' +str(hedata0[3]) +'eV')
+plt.xlim(-1,60)
+plt.yscale('log')
+plt.ylabel('PEC [m$^3$/s]')
+plt.xlabel('photon energy [eV]')
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.1))
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf15_he_spectra.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(height,height))
+h=6.626E-34
+c=299792458
+# hedata0=adas.h_adf15()
+# plt.plot(hedata0[0],hedata0[1],color=colors2[2],label='H$^0$',marker='o')
+hedata0=adas.he_adf15(data='pec96#he_pju#he0')
+plt.plot(hedata0[0],hedata0[1],color=colors2[1],label='He$^0$',marker='o')
+hedata1=adas.he_adf15(data='pec96#he_pju#he1')
+plt.plot(hedata1[0],hedata1[1],color=colors2[5],label='He$^{+1}$',marker='o')
+plt.yscale('log')
+plt.ylim(1E-14,6E-13)
+plt.xlim(0,100)
+plt.yticks([1E-14,5E-14,1E-13,5E-13])
+plt.xlabel('temperature [eV]')
+plt.ylabel(r'$\left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eVm$^3$/s]')
+plt.legend(loc='lower right')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf15_he_from_t.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(height,height))
+h=6.626E-34
+c=299792458
+hdata=adas.h_adf15()
+hedata=adas.he_adf15(data='pec96#he_pju#he0')
+nedata=adas.ne_adf15(data='pec96#ne_pju#ne0')
+plt.plot(hdata[0],hdata[1],marker='o',color=colors2[2],label='H$^0$, ADF15')
+plt.plot(hedata[0],hedata[1],marker='o',color=colors2[5],label='He$^0$, ADF15')
+plt.plot(nedata[0],nedata[1],marker='o',color=colors2[12],label='Ne$^0$, ADF15')
+hdata=adas.h_adf11()
+hedata=adas.he_adf11(data='plt96_he')
+nedata=adas.ne_adf11(data='plt96_ne')
+plt.plot(hdata[0],hdata[1],marker='s',color=colors2[2],label='H$^0$, ADF11')
+plt.plot(hedata[0],hedata[1],marker='s',color=colors2[5],label='He$^0$, ADF11')
+plt.plot(nedata[0],nedata[1],marker='s',color=colors2[12],label='Ne$^0$, ADF11')
+plt.xlim(0,100)
+plt.yscale('log')
+plt.ylim(1E-14,6E-13)
+plt.xlabel('temperature [eV]')
+plt.ylabel(r'$\left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eVm$^3$/s]')
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.1))
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf15_compared_to_adf11.pdf',bbox_inches='tight')
+# %% All PLT
+plt.figure(figsize=(width,height))
+h=6.626E-34
+c=299792458
+hdata=adas.h_adf11()
+hedata=adas.he_adf11(data='plt96_he')
+nedata=adas.ne_adf11(data='plt96_ne')
+ardata=adas.ar_adf11()
+plt.plot(hdata[0],hdata[1],marker='o',color=colors2[2],label='H$^0$')
+plt.plot(hedata[0],hedata[1],marker='o',color=colors2[5],label='He$^0$')
+plt.plot(nedata[0],nedata[1],marker='o',color=colors2[12],label='Ne$^0$')
+plt.plot(ardata[0],ardata[1],marker='o',color=colors2[10],label='Ar$^0$')
+plt.plot(hedata[0],hedata[2],marker='s',color=colors2[4],label='He$^{+1}$')
+plt.plot(nedata[0],nedata[2],marker='s',color=colors2[11],label='Ne$^{+1}$')
+plt.plot(ardata[0],ardata[2],marker='s',color=colors2[9],label='Ar$^{+1}$')
+plt.xlim(0,60)
+plt.yscale('log')
+plt.ylim(1E-15,1E-12)
+plt.xlabel('temperature [eV]')
+plt.ylabel(r'$\left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eVm$^3$/s]')
+plt.legend(loc='lower right')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_plt.pdf',bbox_inches='tight')
 
 # %%

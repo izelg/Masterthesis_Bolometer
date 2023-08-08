@@ -101,8 +101,8 @@ def h_adf15(T_max=200,density='avrg',res=False,Spectrum=False):
 # %% H ADF11
 
 #line emission from excitation energy rate coefficients
-#excitation energy rate coefficientss in Wcm^3
-def h_adf11(T_max=200):
+#excitation energy rate coefficientss in Wcm^3-->eV/m^3
+def h_adf11(T_max=200,wish='rad_t_1'):
   densities=[10**x for x in [7.69897,8.00000,8.30103,8.69897,9.00000,9.30103,9.69897,10.00000,10.30103,10.69897,11.00000,11.30103,11.69897,12.00000,12.30103,12.69897,13.00000,13.30103,13.69897,14.00000,14.30103,14.69897,15.00000,15.30103]]
   temperatures=[10**x for x in [-0.69897,-0.52288,-0.30103,-0.15490,0.00000,0.17609, 0.30103,0.47712,0.69897,0.84510,1.00000,1.17609,1.30103,1.47712,1.69897,1.84510,2.00000,2.1760,2.30103,2.47712,2.69897,2.84510,3.00000,3.17609,3.30103,3.47712,3.69897,3.84510,4.00000]]
   t_n=max(np.argwhere(np.array(temperatures)<=T_max))+1
@@ -136,12 +136,13 @@ def h_adf11(T_max=200):
     average.append(np.mean(a))
 
   #print(temperatures[8],f'{densities[23]:.2e}',globals()['rad_d_24'][8])
-  return temperatures[0:t_n[0]], average[0:t_n[0]]
+  return temperatures[0:t_n[0]], average[0:t_n[0]], temperatures, densities, average, globals()[wish]
 
 
 
 # %% He ADF15
 def he_adf15(data='',T_max=200,density='avrg',Spectrum=False):
+
   wavelengths=[]
   indices=[]
   densities=[]
@@ -217,15 +218,15 @@ def he_adf15(data='',T_max=200,density='avrg',Spectrum=False):
       x=[]
       a=0
       for i in np.arange(0,len(all_wl)):
-        if types[i]=='RECOM':
-        #if types[i]=='EXCIT':
+        #if types[i]=='RECOM':
+        if types[i]=='EXCIT':
           x.append(wavelengths[i])
           y=[]
           z=int(len(wavelengths)/2)
           for d in np.arange(1,len(densities)):    
             y.append(globals()[all_wl[i]][d][t])
-          a+=((h*c/(x[i-z]*10**(-10)))*np.mean(y))
-          #a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
+          #a+=((h*c/(x[i-z]*10**(-10)))*np.mean(y))
+          a+=((h*c/(x[i]*10**(-10)))*np.mean(y))
       pec.append(a/e*m)
     return temperatures[0:t_n[0]], pec[0:t_n[0]]
   if type(density)==float and Spectrum==False:
@@ -248,7 +249,7 @@ def he_adf15(data='',T_max=200,density='avrg',Spectrum=False):
     t=t_n
     for i,j in zip(all_wl,np.arange(0,len(all_wl))):
       if globals()[i][0]<=10000:
-        if types[j]=='RECOM':
+        if types[j]=='EXCIT':
           s_e.append(globals()[i][d[0]][t[0]])
           w_e.append(float(globals()[i][0])*10**(-1))
     #data = np.column_stack([np.array(w_e), np.array(s_e)])
@@ -794,21 +795,4 @@ if __name__ == "__main__":
   plt.show()
 
 
-# %%
-d=5e+17
-t=10
-h=h_adf15(T_max=t,density=d,Spectrum=True)
-print(max(h[1]))
-plt.bar(h[0],[a/max(h[1]) for a in h[1]],10,color='red',alpha=0.5)
-# he=max(he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)[1])
-# plt.bar(he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)[0],[a/he for a in he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)[1]],10,color='blue',alpha=0.5)
 
-plt.show()
-# %%
-print(he_adf11(data='prb96_he')[1][8])
-print(he_adf11(data='plt96_he')[1][8])
-print(he_adf11(data='plt96_he')[2][8])
-#print(he_adf15(data='pec96#he_pju#he0')[1][13])
-#print(he_adf15(data='pec96#he_pju#he1')[1][9])
-
-# %%
