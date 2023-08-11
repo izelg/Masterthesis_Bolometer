@@ -10,6 +10,7 @@ from scipy.signal import savgol_filter
 from scipy.interpolate import pchip_interpolate
 from matplotlib.ticker import ScalarFormatter
 from scipy import signal
+from scipy import integrate
 
 import plasma_characteristics as pc
 import bolo_radiation as br
@@ -664,14 +665,63 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/i_v_curve_fit_3.pdf',bbox_inches='
 s=13252
 Position, char_U, char_I, I_isat,Bolo_sum, Interferometer=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=s),unpack=True)
 p_t,T=pc.TemperatureProfile(s,'Values','Power')[0],pc.TemperatureProfile(s,'Values','Power')[1]
-plt.plot(Position, I_isat,color=colors[0])
-plt.plot(Position,I_isat/np.sqrt(T))
-plt.plot(Position, I_isat/np.sqrt(T)*Interferometer)
+location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=s)
+time, inter_original=pc.LoadData(location)['Zeit [ms]'] / 1000,pc.LoadData(location)['Interferometer digital']
+inter=savgol_filter(inter_original,100,3)
+# fig=plt.figure(figsize=(width/2,height))
+# ax=fig.add_subplot(111)
+# fig.patch.set_facecolor('white')
+# ax2=ax.twinx()
+# ax2.plot(Position*100+z_0, Interferometer, marker='o',color=colors[1])
+# ax.plot(Position*100+z_0, I_isat, marker='o',color=colors[0])
+# ax.set_xlabel('R [cm]')
+# ax.set_ylabel('$I_{\mathrm{i, sat}}$ [mA]',color=colors[0])
+# ax2.set_ylabel('$U_{\mathrm{inter}}$ [V]',color=colors[1])
+# ax.tick_params(axis='y', labelcolor=colors[0])
+# ax2.tick_params(axis='y', labelcolor=colors[1])
+# fig= plt.gcf()
+# plt.show()
+# fig.savefig('/home/gediz/LaTex/Thesis/Figures/Isat_Iinter.pdf',bbox_inches='tight')
+
+#fig1=plt.figure(figsize=(width/2,height))
+# plt.axvspan(25,55,facecolor=colors2[6], alpha=0.5)
+# plt.axvspan(56,83,facecolor=colors2[12], alpha=0.5)
+# plt.plot(time,inter_original,color=colors[1],alpha=0.5,label='original')
+# plt.plot(time,inter,color=colors[1],label='Savitzky-Golay filter ')
+# plt.annotate('',xy=(70,0.95),xytext=(70,0.25), arrowprops=dict(arrowstyle='<->',color=colors[1],linewidth=2))
+# plt.annotate('$\Delta U_{\mathrm{inter}}$',xy=(72,0.6),color=colors[1])
+
+# plt.xlabel('time [s]')
+# plt.ylabel('$U_{\mathrm{inter}}$ [V]')
+# plt.ylim(0)
+# plt.legend(loc='lower center')
+# fig1= plt.gcf()
+# plt.show()
+#fig1.savefig('/home/gediz/LaTex/Thesis/Figures/Interferometer.pdf',bbox_inches='tight')
+
+fig2=plt.figure(figsize=(width,height))
+d=(pc.CorrectedDensityProfile(s)[1]*3.88E17)/2
+Position,I_isat=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=s),unpack=True,usecols=(0,3))
+norm_origin=integrate.trapezoid(I_isat,Position)/abs(Position[-1]-Position[0])
+Density_origin=[u*d/norm_origin for u in I_isat]
+norm_T=integrate.trapezoid(pc.CorrectedDensityProfile(s)[0],Position)/abs(Position[-1]-Position[0])
+Density_T=[u*d/norm_T for u in pc.CorrectedDensityProfile(s)[0]]
+Temperature=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}Te.dat'.format(s=s),usecols=1,unpack=True)
+norm=integrate.trapezoid([a*np.sqrt(b) for a,b in zip(pc.CorrectedDensityProfile(s)[0],Temperature)],Position)/abs(Position[-1]-Position[0])
+Density=[u*d/norm for u in [a*np.sqrt(b) for a,b in zip(pc.CorrectedDensityProfile(s)[0],Temperature)]]
+I_isat_fit=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}ne.dat'.format(s=s),usecols=1,unpack=True)
+norm_fit=integrate.trapezoid(I_isat_fit,Position)/abs(Position[-1]-Position[0])
+Density_fit=[u*d/norm_fit for u in I_isat_fit]
+plt.plot(Position*100+z_0,Density_origin,marker=markers[0],color=colors2[0],label='from $I_{\mathrm{i, sat}}$, uncorrected ')
+plt.plot(Position*100+z_0,Density,marker=markers[1],color=colors2[1],label='from $I_{\mathrm{i, sat}}$, corrected \n for interferometer dip ')
+plt.plot(Position*100+z_0, Density_T,marker=markers[2],color=colors2[2],label='from $I_{\mathrm{i, sat}}$, corrected \n for interferometer dip \n and temperature ')
+plt.plot(Position*100+z_0, Density_fit,marker=markers[3],color=colors2[4],label='from I-V curve fit,\n uncorrected ')        
+plt.xlabel('R [cm]')
+plt.ylabel('$n_\mathrm{e}(R)$ [m$^{-3}$]')
+plt.legend(loc='upper right')    
+fig2= plt.gcf()
 plt.show()
-plt.plot(Position, Interferometer/max(Interferometer),color=colors[1])
-plt.show()
-plt.plot(p_t,T/max(T),color=colors[2])
-plt.show()
+fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Density_procedure.pdf',bbox_inches='tight')
 
 # %% Gold Absorption
 
@@ -1494,5 +1544,35 @@ plt.legend(loc='lower right')
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_plt.pdf',bbox_inches='tight')
+
+# %% Total Power weighing method
+plt.figure(figsize=(width/2,height))
+shotnumbers=[[13265,13263,13261,13259,13257]]#[[13266,13264,13262,13260,13256]]
+gases=[['He'for i in range(5)]]
+arg,c,ecma,ecmi=poca.Totalpower_calc(shotnumbers[0],gases[0],'Power')
+p_tot_crossec=poca.Total_cross_section_calc(shotnumbers,gases)
+plt.plot(arg,p_tot_crossec,'o--',color=colors2[6],label='from modelled mean \n power density $\overline{p}_{\mathrm{rad, mod}}$')
+plt.plot(arg,c,'o--',color=colors2[5], label='from $P_{\mathrm{rad, mod}}$ \n with weighing method')
+plt.xlabel('$P_{\mathrm{MW}}$ [W]')
+plt.ylabel('$P_{\mathrm{rad,\ net}}$ [W]')
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.55))
+
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/net_power_loss_weighing_method.pdf',bbox_inches='tight')
+
+# %% Density Profile with Errorbars
+fig2=plt.figure(figsize=(width,height))
+for s,i in zip([13265,13263,13261,13259,13257],[0,1,2,3,4]):
+    p,d,e=pc.DensityProfile(s,'Values')[0],pc.DensityProfile(s,'Values')[1],pc.DensityProfile(s,'Values')[2]
+    plt.errorbar(p*100+z_0,d,e,capsize=5, marker='o', color=colors2[i],label='shot n°')
+plt.xlabel('R [cm]')
+plt.ylabel('$n_\mathrm{e}(R)$ [m$^{-3}$]')
+plt.legend(loc='upper right')    
+fig2= plt.gcf()
+plt.show()
+# fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Density_procedure.pdf',bbox_inches='tight')
+
+
 
 # %%

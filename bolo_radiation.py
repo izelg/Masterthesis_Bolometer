@@ -582,7 +582,7 @@ def CompareBolometerProfiles_two_Series(save=False):
 #Then enter one or several of the above functions according to what you want to analyze and run the script
 
 if __name__ == "__main__":
-    for shotnumber in [13265,13263,13261,13259]:#np.arange(70001,70036):
+    for shotnumber in [13260,13259]:#np.arange(70001,70036):
         #shotnumber=13088
         shotnumbers1=np.arange(13089,13097)#(13221,13220,13223,13222,13224,13218,13225,13226,13217,13216,13219,13227,13215)
         shotnumbers2=(13098,13104,13106) 
@@ -614,6 +614,7 @@ if __name__ == "__main__":
         if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
             os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
         
+        PlotAllTimeseriesTogether()
         #PowerTimeSeries(1,Plot=True)
-        BolometerProfile('Power',save=True)
+        #BolometerProfile('Power',save=True)
 # %%
