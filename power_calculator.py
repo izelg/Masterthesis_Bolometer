@@ -23,45 +23,46 @@ from sympy.abc import x
 import plasma_characteristics as pc
 import adas_data as adas
 #%% Parameter
-Latex=True
-Poster=False
-mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
-def gold(g):
-    if g=='H':
-        return [0.76 ,0]     
-    if g=='He':      
-        return [0.50 ,0.92]     
-    if g=='Ar':
-        return [0.84,0.80]
-    if g=='Ne':
-        return [0.61,0.78]
+if __name__ == "__main__":
+    Latex=True
+    Poster=False
+    mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
+    def gold(g):
+        if g=='H':
+            return [0.76 ,0]     
+        if g=='He':      
+            return [0.50 ,0.92]     
+        if g=='Ar':
+            return [0.84,0.80]
+        if g=='Ne':
+            return [0.61,0.78]
 
-if Poster==True:
-    plt.rc('font',size=20)
-    plt.rc('xtick',labelsize=25)
-    plt.rc('ytick',labelsize=25)
-    plt.rcParams['lines.markersize']=18
-elif Latex==True:
-    width=412/72.27
-    height=width*(5**.5-1)/2
-    n=1
-    plt.rcParams['text.usetex']=True
-    plt.rcParams['font.family']='serif'
-    plt.rcParams['axes.labelsize']=11*n
-    plt.rcParams['font.size']=11*n
-    plt.rcParams['legend.fontsize']=11*n
-    plt.rcParams['xtick.labelsize']=11*n
-    plt.rcParams['ytick.labelsize']=11*n
-    plt.rcParams['lines.markersize']=6
+    if Poster==True:
+        plt.rc('font',size=20)
+        plt.rc('xtick',labelsize=25)
+        plt.rc('ytick',labelsize=25)
+        plt.rcParams['lines.markersize']=18
+    elif Latex==True:
+        width=412/72.27
+        height=width*(5**.5-1)/2
+        n=1
+        plt.rcParams['text.usetex']=True
+        plt.rcParams['font.family']='serif'
+        plt.rcParams['axes.labelsize']=11*n
+        plt.rcParams['font.size']=11*n
+        plt.rcParams['legend.fontsize']=11*n
+        plt.rcParams['xtick.labelsize']=11*n
+        plt.rcParams['ytick.labelsize']=11*n
+        plt.rcParams['lines.markersize']=6
 
-else:
-    plt.rc('font',size=14)
-    plt.rc('figure', titlesize=15)
-#colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
-colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
-colors2=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#3C096C','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']
+    else:
+        plt.rc('font',size=14)
+        plt.rc('figure', titlesize=15)
+    #colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
+    colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
+    colors2=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#3C096C','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']
 
-markers=['o','v','s','P','p','D','8','*','x']
+    markers=['o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x']
 
 #%%
 
@@ -358,6 +359,9 @@ def Pixelmethod():
 def Totalpower_from_exp(s,g,Type='',save=False,plot=False):
     shotnumbers=s
     gases=g
+    #colors=['#0077B6','#00B4D8','#9D0208','#DC2F02','#F48C06','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']#power
+    colors=['#0077B6','#00B4D8','#9D0208','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']#pressure
+
     v_i_ges_middle=[0.00984,0.01764,0.02042,0.02157,0.02157,0.02042,0.01764,0.00984]#0.01476
     v_i_ges_min=[0.00894,0.01554,0.01786,0.01785,0.01785,0.01786,0.01554,0.00894]
     v_i_ges_max=[0.01086,0.01979,0.02309,0.02451,0.02451,0.02309,0.01979,0.01086]
@@ -367,17 +371,17 @@ def Totalpower_from_exp(s,g,Type='',save=False,plot=False):
         ax=fig1.add_subplot(111)
 
     for j in np.arange(len(shotnumbers)):
-        P_ges_exp,P_ges_calc,P_ges_calc_no_weighing,P_ges_no_weighing,pressures,mw,discrepancies,factors,P_ges_exp_error_min,P_ges_exp_error_max,P_ges_calc_error_min,P_ges_calc_error_max,P_ges_exp_error_bolo=[],[],[],[],[],[],[],[],[],[],[],[],[]
+        P_ges_exp,pressures,mw,P_ges_exp_error_min,P_ges_exp_error_max=[],[],[],[],[]
         for s,g in zip(shotnumbers[j],gases[j]):
             pressures.append(pc.Pressure(s,g))
             mw.append(pc.GetMicrowavePower(s)[0])
         if Type=='Pressure':
-            title=r'{g}, MW: {mw}, P$_M$$_W$ $\approx$ {m} kW'.format(g=g,mw=pc.GetMicrowavePower(s)[1],m=float(f'{np.mean(mw)*10**(-3):.1f}'))
+            title= str(g)+r', MW= '+str(pc.GetMicrowavePower(s)[1])+r', $P_{\mathrm{MW}}$ $\approx$ '+str(f'{np.mean(mw)*10**(-3):.2f}')+' kW'
             arg=np.sort(pressures)
             sortnumbers=[shotnumbers[j][i] for i in np.argsort(pressures)]
             xlabel='pressure [mPa]'
         if Type=='Power':
-            title='{g}, \t MW: {mw}, \t'.format(g=g,mw=pc.GetMicrowavePower(s)[1],)+r'p$\approx$'+'{p} mPa'.format(p=float(f'{np.mean(pressures):.1f}'))
+            title= str(g)+', MW= '+str(pc.GetMicrowavePower(s)[1])+r', p $\approx$ '+str(f'{np.mean(pressures):.1f}')+' mPa'
             arg=np.sort(mw)
             sortnumbers=[shotnumbers[j][i] for i in np.argsort(mw)]
             xlabel='$P_{\mathrm{MW}}$ [W]'
@@ -397,19 +401,21 @@ def Totalpower_from_exp(s,g,Type='',save=False,plot=False):
             P_ges_exp.append(np.mean(P_ges_exp_))
             P_ges_exp_error_min.append(abs(np.mean(P_ges_exp_error_min_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_))
             P_ges_exp_error_max.append(abs(np.mean(P_ges_exp_error_max_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_))
+            print(s,'&',g,'&',round(pc.GetMicrowavePower(s)[0],1),'&',round(pc.Pressure(s,g),1),'&',round(Totalpower_from_Profile(s)[2],1),'&','%.1e' % pc.Densities(s,g)[1],'&',round(np.mean(P_ges_exp_),1), '(+',round(abs(np.mean(P_ges_exp_error_min_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_),1),' -',round(abs(np.mean(P_ges_exp_error_max_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_),1),')\\\\')
         if plot==True:
             ax.set_xlabel(xlabel)
             ax.plot(arg,P_ges_exp,marker=markers[j],color=colors[j],linestyle='dashed',label=title)
             ax.errorbar(arg,P_ges_exp,yerr=(P_ges_exp_error_min,P_ges_exp_error_max),capsize=5,linestyle='None',color=colors[j])
             ax.set_ylabel('$P_{\mathrm{rad, net}}$ [W]')
             ax.set_ylim(0)
-            ax.legend(loc='lower center')
+            ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.85))
     if plot==True:
         fig1.show()
 
 
     if save==True:
-        fig1.savefig('/home/gediz/Results/Modeled_Data/Tota_P_rad/comparison_{T}_{g}.pdf'.format(T=Type, g=gases), bbox_inches='tight')
+        #fig1.savefig('/home/gediz/Results/Modeled_Data/Tota_P_rad/comparison_{T}_{g}.pdf'.format(T=Type, g=gases), bbox_inches='tight')
+        fig1.savefig('/home/gediz/LaTex/Thesis/Figures/pressure_study_245.pdf',bbox_inches='tight')
     return arg,P_ges_exp,P_ges_exp_error_min,P_ges_exp_error_max
 
 def Totalpower_calc(shotnumbers,gases,Type='',plot=False,savefig=False):
@@ -496,7 +502,6 @@ def Totalpower_from_Profile(s):
             T_dens_ges.append(a*b)
             T_dens_ch.append(a*c)
         weight.append((sum(T_dens_ges)/sum(V_T))/(sum(T_dens_ch)/sum(ch)))
-    print(mean_T,sum(T_dens_ges)/sum(V_T),(sum(T_dens_ch)/sum(ch)),(sum(T_dens_ch)/sum(ch))*weight[-1])
     return (weight, mean_T, sum(T_dens_ges)/sum(V_T))
 
 #The power absorbed by the channels calculated with ADAS coefficients
@@ -754,27 +759,27 @@ def TopView():
 if __name__ == "__main__":
     start=datetime.now()
     print('start:', start)
-    for shotnumber in [13259]:
-        #shotnumber=13257
-        shotnumbers=[[13265,13263,13261,13259,13257]]#[np.arange(13242,13255),np.arange(13299,13311),[13098,13099,13100,13101,13102,13103,13104,13105,13106],np.arange(13340,13348),[13079,13080,13081,13082,13083,13084],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095],[13089,13090,13091,13092,13093,13094,13095]]
-        gases=[['H'for i in range(5)]]#[['H'for i in range(13)],['Ar'for i in range(13)],['Ar'for i in range(9)],['Ne'for i in range(8)],['Ne'for i in range(7)],['H'for i in range(8)],['Ar'for i in range(8)],['Ne'for i in range(8)]]
-        gas='He'
-        infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
+    #for shotnumber in np.arange(13098,13107):
+    #shotnumber=13257
+    shotnumbers=[np.arange(13215,13228),[13090,13095,13096,13097],np.arange(13069,13073),np.arange(13170,13175),[13265, 13264, 13263, 13262, 13261, 13260, 13259, 13258, 13257],[13099,13107,13108,13109],np.arange(13280,13292)]
+    gases=[['H'for i in range(13)],['H'for i in range(4)],['He'for i in range(4)],['He'for i in range(5)],['He'for i in range(9)],['Ar'for i in range(4)],['Ar'for i in range(12)]]
+    gas='Ar'
+    infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
 
-        location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-        mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
-        def gold(g):
-            if g=='H':
-                return [0.76 ,0]     
-            if g=='He':      
-                return [0.50 ,0.92]     
-            if g=='Ar':
-                return [0.84,0.80]
-            if g=='Ne':
-                return [0.61,0.78]
-        #Totalpower_calc(shotnumbers[0],gases[0],Type='Power',plot=True,savefig=True)
-        #Totalpower_from_exp(shotnumbers,gases,Type='Power',plot=True)
-        Boloprofile_calc(shotnumber,gas,makedata=True,plot=True)
+    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+    mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
+    def gold(g):
+        if g=='H':
+            return [0.76 ,0]     
+        if g=='He':      
+            return [0.50 ,0.92]     
+        if g=='Ar':
+            return [0.84,0.80]
+        if g=='Ne':
+            return [0.61,0.78]
+    #Totalpower_calc(shotnumbers[0],gases[0],Type='Power',plot=True,savefig=True)
+    Totalpower_from_exp(shotnumbers,gases,Type='Power',plot=True)#,save=True)
+    #Boloprofile_calc(shotnumber,gas,makedata=True,plot=True,savedata=True)
     print('total:',datetime.now()-start)
   # %%
 

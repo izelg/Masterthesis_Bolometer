@@ -58,8 +58,8 @@ else:
     plt.rc('font',size=14)
     plt.rc('figure', titlesize=15)
 colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
-markers=['o','v','s','P','p','D','*','x']
-colors2=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#3C096C','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']
+markers=['o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x']
+colors2=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']
 #%% Plasmatypes and regimes
 
 #n=np.arange(10E5, 10E35)
@@ -712,10 +712,10 @@ Density=[u*d/norm for u in [a*np.sqrt(b) for a,b in zip(pc.CorrectedDensityProfi
 I_isat_fit=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}ne.dat'.format(s=s),usecols=1,unpack=True)
 norm_fit=integrate.trapezoid(I_isat_fit,Position)/abs(Position[-1]-Position[0])
 Density_fit=[u*d/norm_fit for u in I_isat_fit]
-plt.plot(Position*100+z_0,Density_origin,marker=markers[0],color=colors2[0],label='from $I_{\mathrm{i, sat}}$, uncorrected ')
-plt.plot(Position*100+z_0,Density,marker=markers[1],color=colors2[1],label='from $I_{\mathrm{i, sat}}$, corrected \n for interferometer dip ')
-plt.plot(Position*100+z_0, Density_T,marker=markers[2],color=colors2[2],label='from $I_{\mathrm{i, sat}}$, corrected \n for interferometer dip \n and temperature ')
-plt.plot(Position*100+z_0, Density_fit,marker=markers[3],color=colors2[4],label='from I-V curve fit,\n uncorrected ')        
+plt.plot(Position*100+60,Density_origin,marker=markers[0],color=colors2[0],label='from $I_{\mathrm{i, sat}}$, uncorrected ')
+plt.plot(Position*100+60,Density,marker=markers[1],color=colors2[1],label='from $I_{\mathrm{i, sat}}$, corrected \n for interferometer dip ')
+plt.plot(Position*100+60, Density_T,marker=markers[2],color=colors2[2],label='from $I_{\mathrm{i, sat}}$, corrected \n for interferometer dip \n and temperature ')
+plt.plot(Position*100+60, Density_fit,marker=markers[3],color=colors2[4],label='from I-V curve fit,\n uncorrected ')        
 plt.xlabel('R [cm]')
 plt.ylabel('$n_\mathrm{e}(R)$ [m$^{-3}$]')
 plt.legend(loc='upper right')    
@@ -1291,25 +1291,30 @@ plt.ylim(-0.3)
 plt.xlim(-10,249)
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/power_time_trace.pdf',bbox_inches='tight')
+#fig.savefig('/home/gediz/LaTex/Thesis/Figures/power_time_trace.pdf',bbox_inches='tight')
 
 
 # %% Bolometer profile
-plt.figure(figsize=(height,height))
-for shotnumber,i in zip([13265,13263,13261,13259,13257],[0,1,2,3,4]):
-    s,p,e=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=shotnumber),unpack=True)
-    plt.errorbar(s,p,yerr=e,marker=markers[0+i],color=colors[0+i],capsize=5,alpha=0.1)
-for shotnumber,i in zip([13265,13263,13261,13259,13257],[0,1,2,3,4]):
-    s,c,p,e=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_He.txt'.format(s=shotnumber),unpack=True)
-    plt.errorbar(s,p,yerr=e,marker=markers[0+i],color=colors[0+i],capsize=5,label='shot n$^\circ$'+str(shotnumber) +', $P_{\mathrm{MW}}$='+str(f'{pc.GetMicrowavePower(shotnumber)[0]/1000:.1f}') +'kW')
+plt.figure(figsize=(width/2,height))
+gas='Ne'
+#x=[13254, 13253, 13252, 13251, 13255, 13250, 13249, 13248, 13247, 13246, 13245, 13244, 13243, 13242]#H pressure
+#x=[13278, 13277, 13276, 13275, 13274, 13279, 13273, 13272, 13271, 13270, 13269, 13268]#He pressure
+#x=[13310, 13309, 13308, 13307, 13306, 13311, 13305, 13304, 13303, 13302, 13301, 13300, 13299]#Ar pressure
+x=[13347, 13346, 13345, 13344, 13343, 13342, 13341, 13340]#Ne pressure
+#x=[13289, 13290, 13288, 13287, 13285, 13286, 13284, 13291, 13283, 13282, 13281, 13280]#Ar power
+#x=[13221, 13220, 13223, 13222, 13224, 13218, 13225, 13226, 13217, 13216, 13219, 13227, 13215]#H power
+#x=[13265, 13264, 13263, 13262, 13261, 13260, 13259, 13258, 13257]#He power
+for shotnumber,i in zip(x,np.arange(0,len(x))):
+    b,c,ecmi,ecma,p,e=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=shotnumber,g=gas),unpack=True)
+    plt.errorbar(b,p,yerr=e,marker=markers[i],color=colors2[i],capsize=5)#,label='shot n$^\circ$'+str(shotnumber) +', $P_{\mathrm{MW}}$='+str(f'{pc.GetMicrowavePower(shotnumber)[0]/1000:.1f}') +'kW')
 plt.ylim(0)
-plt.xticks(s)
+plt.xticks(b)
 plt.xlabel('sensor number')
 plt.ylabel('$\Delta P_{\mathrm{rad}}$ [$\mu$W]')
-plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.0),title='He, MW=2.45 GHz, p=21 mPa')
+#plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.0),title='He, MW=2.45 GHz, p=21 mPa')
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/radiation_profiles.pdf',bbox_inches='tight')
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/{g}_pressure_radiation.pdf'.format(g=gas),bbox_inches='tight')
 
 # %% Total Power
 plt.figure(figsize=(height,height))
@@ -1562,17 +1567,56 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/net_power_loss_weighing_method.pdf',bbox_inches='tight')
 
 # %% Density Profile with Errorbars
-fig2=plt.figure(figsize=(width,height))
-for s,i in zip([13265,13263,13261,13259,13257],[0,1,2,3,4]):
-    p,d,e=pc.DensityProfile(s,'Values')[0],pc.DensityProfile(s,'Values')[1],pc.DensityProfile(s,'Values')[2]
-    plt.errorbar(p*100+z_0,d,e,capsize=5, marker='o', color=colors2[i],label='shot n°')
-plt.xlabel('R [cm]')
-plt.ylabel('$n_\mathrm{e}(R)$ [m$^{-3}$]')
-plt.legend(loc='upper right')    
+fig2=plt.figure(figsize=(width/2,height))
+ax=fig2.add_subplot(111)
+ax_f=ax.twinx()
+ax_f.set_yticks([])
+ax.set_xlim(58,79)
+x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position_extended.csv',sep=',',engine='python'),dtype=np.float64)
+y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
+for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
+    x=[u-60 for u in np.array(x_.iloc[i])]
+    y=np.array(y_.iloc[i])
+    ax_f.plot(np.append(x,x[0])+60,np.append(y,y[0]),color='grey',linewidth=2,alpha=0.3)
+
+s=13252
+i=2
+df=['d']
+p,d,e=pc.DensityProfile(s,df,'Values')[0],pc.DensityProfile(s,df,'Values')[1],pc.DensityProfile(s,df,'Values')[2]
+ax.errorbar(p*100+60,d,e,capsize=5, marker='o', color=colors2[i],label='corrected density profile \n with error bars ')
+ax.errorbar(p*100+46,np.flip(d),np.flip(e),capsize=5, marker='o', color=colors2[i],alpha=0.3)
+ax.set_xlabel('R [cm]')
+ax.set_ylabel('$n_\mathrm{e}(R)$ [m$^{-3}$]')
+ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.5),title='He, shot n$^\circ$13252, MW: 2.45 GHz, \n $P_{\mathrm{MW}}$ = 2.8 kW, p = 25.5 mPa')    
 fig2= plt.gcf()
 plt.show()
-# fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Density_procedure.pdf',bbox_inches='tight')
+fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Density_with_errorbars.pdf',bbox_inches='tight')
 
 
+
+# %% Temperature Profile with Errorbars
+fig2=plt.figure(figsize=(width/2,height))
+ax=fig2.add_subplot(111)
+ax_f=ax.twinx()
+ax_f.set_yticks([])
+ax.set_xlim(58,79)
+x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position_extended.csv',sep=',',engine='python'),dtype=np.float64)
+y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
+for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
+    x=[u-60 for u in np.array(x_.iloc[i])]
+    y=np.array(y_.iloc[i])
+    ax_f.plot(np.append(x,x[0])+60,np.append(y,y[0]),color='grey',linewidth=2,alpha=0.3)
+
+s=13252
+i=6
+p,t,e=pc.TemperatureProfile(s,'Values')[0],pc.TemperatureProfile(s,'Values')[1],pc.TemperatureProfile(s,'Values')[3]
+ax.errorbar(p*100+60,t,e,capsize=5, marker='o', color=colors2[i],label='temperature profile \n with error bars ')
+ax.errorbar(p*100+46,np.flip(t),np.flip(e),capsize=5, marker='o', color=colors2[i],alpha=0.3)
+ax.set_xlabel('R [cm]')
+ax.set_ylabel('$T_\mathrm{e}(R)$ [eV]')
+ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.5),title='He, shot n$^\circ$13252, MW: 2.45 GHz, \n $P_{\mathrm{MW}}$ = 2.8 kW, p = 25.5 mPa')    
+fig2= plt.gcf()
+plt.show()
+fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Temperature_with_errorbars.pdf',bbox_inches='tight')
 
 # %%
