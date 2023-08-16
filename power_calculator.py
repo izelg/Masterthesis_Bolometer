@@ -27,15 +27,7 @@ if __name__ == "__main__":
     Latex=True
     Poster=False
     mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
-    def gold(g):
-        if g=='H':
-            return [0.76 ,0]     
-        if g=='He':      
-            return [0.50 ,0.92]     
-        if g=='Ar':
-            return [0.84,0.80]
-        if g=='Ne':
-            return [0.61,0.78]
+
 
     if Poster==True:
         plt.rc('font',size=20)
@@ -80,8 +72,17 @@ z_0=63.9    #middle of flux surfaces
 r_ves=17.5 #radius of vessel [cm]
 A_D=(c_h*c_w)/10000 #detector area in [m]
 #err=0.4     #error of lines of sight in x and y direction [cm]
-
-
+mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
+density_from=['d']
+def gold(g):
+    if g=='H':
+        return [0.76 ,0]     
+    if g=='He':      
+        return [0.50 ,0.92]     
+    if g=='Ar':
+        return [0.84,0.80]
+    if g=='Ne':
+        return [0.61,0.78]
 def LoadData(location):
     with open(location, "r") as f:
         cols = f.readlines()[3]
@@ -356,11 +357,11 @@ def Pixelmethod():
 
 #Total Power from Channel 4
 
-def Totalpower_from_exp(s,g,Type='',save=False,plot=False):
+def Totalpower_from_exp(s,g,Type='',save=False,plot=False,Temp=True):
     shotnumbers=s
     gases=g
-    #colors=['#0077B6','#00B4D8','#9D0208','#DC2F02','#F48C06','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']#power
-    colors=['#0077B6','#00B4D8','#9D0208','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']#pressure
+    colors=['#DC2F02','#F48C06','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']#power
+    #colors=['#0077B6','#00B4D8','#9D0208','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']#pressure
 
     v_i_ges_middle=[0.00984,0.01764,0.02042,0.02157,0.02157,0.02042,0.01764,0.00984]#0.01476
     v_i_ges_min=[0.00894,0.01554,0.01786,0.01785,0.01785,0.01786,0.01554,0.00894]
@@ -386,7 +387,10 @@ def Totalpower_from_exp(s,g,Type='',save=False,plot=False):
             sortnumbers=[shotnumbers[j][i] for i in np.argsort(mw)]
             xlabel='$P_{\mathrm{MW}}$ [W]'
         for s,g in zip(sortnumbers,gases[j]):
-            weight=Totalpower_from_Profile(s)[0]
+            if Temp==False:
+                weight=[1,1,1,1,1,1,1,1]
+            else:    
+                weight=Totalpower_from_Profile(s)[0]
             P_ges_exp_,P_ges_exp_error_min_,P_ges_exp_error_max_,P_ges_exp_error_bolo_=[],[],[],[]
             bolo_p,bolo_err=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=s,g=g),unpack=True, usecols=(4,5))
             bolo_p=[p*10**(-6) for p in bolo_p]
@@ -401,21 +405,23 @@ def Totalpower_from_exp(s,g,Type='',save=False,plot=False):
             P_ges_exp.append(np.mean(P_ges_exp_))
             P_ges_exp_error_min.append(abs(np.mean(P_ges_exp_error_min_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_))
             P_ges_exp_error_max.append(abs(np.mean(P_ges_exp_error_max_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_))
-            print(s,'&',g,'&',round(pc.GetMicrowavePower(s)[0],1),'&',round(pc.Pressure(s,g),1),'&',round(Totalpower_from_Profile(s)[2],1),'&','%.1e' % pc.Densities(s,g)[1],'&',round(np.mean(P_ges_exp_),1), '(+',round(abs(np.mean(P_ges_exp_error_min_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_),1),' -',round(abs(np.mean(P_ges_exp_error_max_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_),1),')\\\\')
+            #print(s,'&',g,'&',round(pc.GetMicrowavePower(s)[0],1),'&',round(pc.Pressure(s,g),1),'&',round(Totalpower_from_Profile(s)[2],1),'&','%.1e' % pc.Densities(s,g)[1],'&',round(np.mean(P_ges_exp_),1), '(+',round(abs(np.mean(P_ges_exp_error_min_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_),1),' -',round(abs(np.mean(P_ges_exp_error_max_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_),1),')\\\\')
+            print(s,'&',g,'&',round(pc.GetMicrowavePower(s)[0],1),'&',round(pc.Pressure(s,g),1),'&',round(np.mean(P_ges_exp_),1), '(+',round(abs(np.mean(P_ges_exp_error_min_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_),1),' -',round(abs(np.mean(P_ges_exp_error_max_)-np.mean(P_ges_exp_))+np.mean(P_ges_exp_error_bolo_),1),')\\\\')
+
         if plot==True:
             ax.set_xlabel(xlabel)
             ax.plot(arg,P_ges_exp,marker=markers[j],color=colors[j],linestyle='dashed',label=title)
             ax.errorbar(arg,P_ges_exp,yerr=(P_ges_exp_error_min,P_ges_exp_error_max),capsize=5,linestyle='None',color=colors[j])
             ax.set_ylabel('$P_{\mathrm{rad, net}}$ [W]')
-            ax.set_ylim(0)
-            ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.85))
+            ax.set_ylim(0,650)
+            ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.45))
     if plot==True:
         fig1.show()
 
 
     if save==True:
         #fig1.savefig('/home/gediz/Results/Modeled_Data/Tota_P_rad/comparison_{T}_{g}.pdf'.format(T=Type, g=gases), bbox_inches='tight')
-        fig1.savefig('/home/gediz/LaTex/Thesis/Figures/pressure_study_245.pdf',bbox_inches='tight')
+        fig1.savefig('/home/gediz/LaTex/Thesis/Figures/pressure_study_8.pdf',bbox_inches='tight')
     return arg,P_ges_exp,P_ges_exp_error_min,P_ges_exp_error_max
 
 def Totalpower_calc(shotnumbers,gases,Type='',plot=False,savefig=False):
@@ -513,7 +519,7 @@ def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False
         flux_2,flux_2_max,flux_2_min=np.genfromtxt('/home/gediz/Results/Modeled_Data/Fluxsurfaces_and_Lines_of_sight/flux_0_to_11_channel_2.txt',unpack=True,usecols=(4,5,6))
         flux_1,flux_1_max,flux_1_min=np.genfromtxt('/home/gediz/Results/Modeled_Data/Fluxsurfaces_and_Lines_of_sight/flux_0_to_11_channel_1.txt',unpack=True,usecols=(4,5,6))
         flux_pos=[2.174,5.081,5.844,6.637,7.461,8.324,9.233,10.19,11.207,12.321,13.321,14.321,15.321,16.321]#position of the flux surface edged in cm
-        p_t,t,p_d,d=pc.TemperatureProfile(s,'Values',save=False)[0]*100,pc.TemperatureProfile(s,'Values',save=False)[1],pc.DensityProfile(s,'Values',save=False)[0]*100,pc.DensityProfile(s,'Values',save=False)[1]
+        p_t,t,p_d,d=pc.TemperatureProfile(s,'Values',save=False)[0]*100,pc.TemperatureProfile(s,'Values',save=False)[1],pc.DensityProfile(s,density_from,'Values',save=False)[0]*100,pc.DensityProfile(s,density_from,'Values',save=False)[1]
         if g=='H':
             temp,pec= adas.h_adf11(T_max=201)[0],adas.h_adf11(T_max=201)[1]
         if g=='He':
@@ -572,6 +578,7 @@ def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False
         print('mean electron density:','%.2E' %n_e)
         print('degree of ionisation:',str(round((n_e/n)*100,2)), '%')
         print('power from ions:',str(round((np.mean([a/b for a,b in zip(power_from_ions,P_profile_calc)]))*100,2)), '%')
+        print('power from ions/ionization:',str((round((np.mean([a/b for a,b in zip(power_from_ions,P_profile_calc)]))*100,2))/(round((n_e/n)*100,2))))
         print('power from neutrals:',str(round((np.mean([a/b for a,b in zip(power_from_neutrals,P_profile_calc)]))*100,2)), '%')
 
     if plot==True:
@@ -617,6 +624,26 @@ def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False
         data = np.column_stack([np.array([1,2,3,4,5,6,7,8]), np.array(P_profile_calc), np.array(error_P_calc[0]), np.array(error_P_calc[1]),np.array(P_profile_corr), np.array(error_P_exp)])#, np.array(z), np.array(abs(y-z))])
         np.savetxt(str(outfile)+"shot{n}/shot{n}_modeled_powerprofile_{g}.txt".format(n=s, g=g) , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f','%10.3f','%10.3f','%10.3f'], header='Modeled power data \n {t} \n bolometerchannel \t power modeled [\u03bcW] \terror for modeled Data min [\u03bcW]\terror for modeled Data max [\u03bcW]\t power measured and corrected [\u03bcW] \t error for experimental Data [\u03bcW]'.format(t=title))
     return P_profile_calc,error_P_calc,P_profile_corr,error_P_exp
+
+#If there is no calculated power available to determine the power from ions and neutrals (which are needed to correct the power profiles with the gold absorption coefficients) the experimental profiles can be corrected by an estimated gold absorption coefficient.
+def Boloprofile_correction(s,g,savedata=False):
+    n=pc.Densities(s,g)[0]
+    n_e=pc.Densities(s,g)[1]
+    n_0=pc.Densities(s,g)[2]
+    deg_of_ion=n_e/n
+    power_from_ions=deg_of_ion*0.2
+    power_from_neutrals=1-power_from_ions
+    P_profile,error_P_exp=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=s),unpack=True,usecols=(1,2))
+    P_profile_corr=[(a/(power_from_neutrals*gold(g)[0]+power_from_ions*gold(g)[1]))*mesh for a in P_profile]
+    if savedata==True:
+        outfile='/home/gediz/Results/Modeled_Data/Bolometerprofiles/'
+        if not os.path.exists(str(outfile)+'shot{}'.format(s)):
+            os.makedirs(str(outfile)+'shot{}'.format(s))
+        data = np.column_stack([np.array([1,2,3,4,5,6,7,8]), np.array([1,1,1,1,1,1,1,1]), np.array([1,1,1,1,1,1,1,1]), np.array([1,1,1,1,1,1,1,1]),np.array(P_profile_corr), np.array(error_P_exp)])#, np.array(z), np.array(abs(y-z))])
+        np.savetxt(str(outfile)+"shot{n}/shot{n}_modeled_powerprofile_{g}.txt".format(n=s, g=g) , data, delimiter='\t \t', fmt=['%d', '%10.3f', '%10.3f','%10.3f','%10.3f','%10.3f'], header='Modeled power data \n \n bolometerchannel \t power modeled [\u03bcW] \terror for modeled Data min [\u03bcW]\terror for modeled Data max [\u03bcW]\t power measured and corrected [\u03bcW] \t error for experimental Data [\u03bcW]')
+
+    return P_profile, P_profile_corr,error_P_exp
+
 
 def Total_cross_section_calc(s,g):
     shotnumbers=s
@@ -692,10 +719,7 @@ def Forward_modeling(s,g):
             print(nsolve(P_rad(x,n_e,n_0,v_i),x,P))
 
 def Model_accuracy(s,g):
-    if not os.path.exists('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=s,g=g)):
-        calc_p,bolo_p=Boloprofile_calc(s,g,save=True,plot=True)
-    else:
-        calc_p,bolo_p=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=s,g=g),unpack=True, usecols=(1,2))
+    calc_p,bolo_p=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=s,g=g),unpack=True, usecols=(1,4))
     mean_calc=np.mean(calc_p)
     mean_exp=np.mean(bolo_p)
     norm_calc=[i/mean_calc for i in calc_p]
@@ -703,7 +727,8 @@ def Model_accuracy(s,g):
     diff=[]
     for i,j in zip(norm_calc,norm_exp):
         diff.append(np.abs(i-j))
-    return sum(diff),(mean_calc/mean_exp)
+    hollowness_exp=(np.mean([bolo_p[3],bolo_p[4]])-np.mean([bolo_p[0],bolo_p[7]]))/(np.mean([bolo_p[2],bolo_p[5]])-np.mean([bolo_p[0],bolo_p[7]]))
+    return sum(diff),(mean_calc/mean_exp),hollowness_exp
 
 # The Top View Calculations
 def TopView():
@@ -759,28 +784,26 @@ def TopView():
 if __name__ == "__main__":
     start=datetime.now()
     print('start:', start)
-    #for shotnumber in np.arange(13098,13107):
-    #shotnumber=13257
-    shotnumbers=[np.arange(13215,13228),[13090,13095,13096,13097],np.arange(13069,13073),np.arange(13170,13175),[13265, 13264, 13263, 13262, 13261, 13260, 13259, 13258, 13257],[13099,13107,13108,13109],np.arange(13280,13292)]
-    gases=[['H'for i in range(13)],['H'for i in range(4)],['He'for i in range(4)],['He'for i in range(5)],['He'for i in range(9)],['Ar'for i in range(4)],['Ar'for i in range(12)]]
-    gas='Ar'
+    #for shotnumber in np.arange(13176,13193):
+    shotnumber=13280
+    shotnumbers=[[13194,13195,13196,13197,13198,13200],[13192,13191,13190,13189,13188,13187],[13318,13317,13316],[13206,13207,13208,13209,13210,13211]]
+    gases=[['H'for i in range(6)],['He'for i in range(6)],['He'for i in range(3)],['Ar'for i in range(6)]]    
+    gas='He'
+    density_from=['f','f','f','f','f']
     infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
 
     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-    mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
-    def gold(g):
-        if g=='H':
-            return [0.76 ,0]     
-        if g=='He':      
-            return [0.50 ,0.92]     
-        if g=='Ar':
-            return [0.84,0.80]
-        if g=='Ne':
-            return [0.61,0.78]
+
+    #print(Model_accuracy(shotnumber,gas)[2])
     #Totalpower_calc(shotnumbers[0],gases[0],Type='Power',plot=True,savefig=True)
-    Totalpower_from_exp(shotnumbers,gases,Type='Power',plot=True)#,save=True)
-    #Boloprofile_calc(shotnumber,gas,makedata=True,plot=True,savedata=True)
+    Totalpower_from_exp(shotnumbers,gases,Type='Power',plot=True,Temp=False)#,save=True)
+    #Boloprofile_calc(shotnumber,gas,makedata=True)
+    #Boloprofile_correction(shotnumber,gas,savedata=True)
     print('total:',datetime.now()-start)
   # %%
 
-
+#x=[13192,13191,13190,13189,13188,13187]#He 8GHz power 
+#x=[13186,13181,13187,13177,13184,13185,13180]#He 8GHz pressure
+#x=[13194,13195,13196,13197,13198,13200]#H 8Ghz  power
+x=[13205,13201,13202,13203,13204]#Ar 8GHz   pressure
+#x=[13206,13207,13208,13209,13210,13211]#Ar 8Ghz power

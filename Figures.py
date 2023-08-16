@@ -11,6 +11,7 @@ from scipy.interpolate import pchip_interpolate
 from matplotlib.ticker import ScalarFormatter
 from scipy import signal
 from scipy import integrate
+import math
 
 import plasma_characteristics as pc
 import bolo_radiation as br
@@ -58,7 +59,7 @@ else:
     plt.rc('font',size=14)
     plt.rc('figure', titlesize=15)
 colors=['#1bbbe9','#023047','#ffb703','#fb8500','#c1121f','#780000','#6969B3','#D81159','#1bbbe9','#023047','#ffb703','#fb8500','#c1121f']
-markers=['o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x']
+markers=['o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x']
 colors2=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#FFBA08','#7B2CBF','#C77DFF','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']
 #%% Plasmatypes and regimes
 
@@ -1296,14 +1297,15 @@ plt.show()
 
 # %% Bolometer profile
 plt.figure(figsize=(width/2,height))
-gas='Ne'
+gas='He'
 #x=[13254, 13253, 13252, 13251, 13255, 13250, 13249, 13248, 13247, 13246, 13245, 13244, 13243, 13242]#H pressure
 #x=[13278, 13277, 13276, 13275, 13274, 13279, 13273, 13272, 13271, 13270, 13269, 13268]#He pressure
 #x=[13310, 13309, 13308, 13307, 13306, 13311, 13305, 13304, 13303, 13302, 13301, 13300, 13299]#Ar pressure
-x=[13347, 13346, 13345, 13344, 13343, 13342, 13341, 13340]#Ne pressure
+#x=[13347, 13346, 13345, 13344, 13343, 13342, 13341, 13340]#Ne pressure
 #x=[13289, 13290, 13288, 13287, 13285, 13286, 13284, 13291, 13283, 13282, 13281, 13280]#Ar power
 #x=[13221, 13220, 13223, 13222, 13224, 13218, 13225, 13226, 13217, 13216, 13219, 13227, 13215]#H power
 #x=[13265, 13264, 13263, 13262, 13261, 13260, 13259, 13258, 13257]#He power
+x=[13316 ,13317, 13318 ,13319 ,13320]#He 8Ghz
 for shotnumber,i in zip(x,np.arange(0,len(x))):
     b,c,ecmi,ecma,p,e=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=shotnumber,g=gas),unpack=True)
     plt.errorbar(b,p,yerr=e,marker=markers[i],color=colors2[i],capsize=5)#,label='shot n$^\circ$'+str(shotnumber) +', $P_{\mathrm{MW}}$='+str(f'{pc.GetMicrowavePower(shotnumber)[0]/1000:.1f}') +'kW')
@@ -1314,7 +1316,37 @@ plt.ylabel('$\Delta P_{\mathrm{rad}}$ [$\mu$W]')
 #plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.0),title='He, MW=2.45 GHz, p=21 mPa')
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/{g}_pressure_radiation.pdf'.format(g=gas),bbox_inches='tight')
+#fig.savefig('/home/gediz/LaTex/Thesis/Figures/{g}_8GHz_radiation.pdf'.format(g=gas),bbox_inches='tight')
+
+#%% Bolometerprofile no Density and Temperature
+plt.figure(figsize=(width/2,height))
+gas='Ar'
+ScanType='Pressure'
+#x=[13192,13191,13190,13189,13188,13187]#He 8GHz power 
+#x=[13186,13181,13187,13177,13184,13185,13180]#He 8GHz pressure
+#x=[13194,13195,13196,13197,13198,13200]#H 8Ghz  power
+x=[13205,13201,13202,13203,13204]#Ar 8GHz   pressure
+#x=[13206,13207,13208,13209,13210,13211]#Ar 8Ghz power
+for s,i in zip(x,np.arange(0,len(x))):
+    if ScanType=='Pressure':
+        label=r'n$^\circ$'+str(s)+r', p= '+str(f'{pc.Pressure(s,gas):.1f}')+' mPa'
+        title= str(gas)+r', MW= '+str(pc.GetMicrowavePower(s)[1])+r', $P_{\mathrm{MW}}$ $\approx$ '+str(f'{pc.GetMicrowavePower(s)[0]*10**(-3):.2f}')+' kW'
+    if ScanType=='Power':
+        label=r'n$^\circ$'+str(s)+r', $P_{\mathrm{MW}}$ = '+str( f'{pc.GetMicrowavePower(s)[0]*10**(-3):.2f}')+' kW'
+        title= str(gas)+', MW= '+str(pc.GetMicrowavePower(s)[1])+r', p $\approx$ '+str(f'{pc.Pressure(s,gas):.1f}')+' mPa'
+    if ScanType=='None':
+        label=r'n$^\circ$'+str(s)+r', $P_{\mathrm{MW}}$ = '+str(f'{pc.GetMicrowavePower(s)[0]*10**(-3):.2f}')+' kW,\n p= '+str(f'{pc.Pressure(s,gas):.1f}')+' mPa'
+        title= str(gas)+', MW= '+str(pc.GetMicrowavePower(s)[1])
+    p,e=poca.Boloprofile_correction(s,gas,savedata=True)[1],poca.Boloprofile_correction(s,gas)[2]
+    plt.errorbar([1,2,3,4,5,6,7,8],p,yerr=e,marker=markers[i],color=colors2[i],capsize=5,label=label)
+plt.ylim(0)
+plt.xticks([1,2,3,4,5,6,7,8])
+plt.xlabel('sensor number')
+plt.ylabel('$\Delta P_{\mathrm{rad}}$ [$\mu$W]')
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.75),title=title)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/{g}_8GHz_{s}_radiation.pdf'.format(g=gas,s=ScanType),bbox_inches='tight')
 
 # %% Total Power
 plt.figure(figsize=(height,height))
@@ -1619,4 +1651,66 @@ fig2= plt.gcf()
 plt.show()
 fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Temperature_with_errorbars.pdf',bbox_inches='tight')
 
+# %% P total table
+shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+for j in np.arange(0,155):
+    if (math.isnan(t[j])):
+        m='*'
+    else:
+        m='o'
+    if gas[j]=='H ':
+        c=colors2[1]
+    if gas[j]==' He ':
+        c=colors2[5]
+    if gas[j]==' Ar ':
+        c=colors2[11]
+    if gas[j]==' Ne ':
+        c=colors2[8]
+    plt.plot(mw[j],P[j]/mw[j],marker=m,color=c)
+plt.show()
+for j in np.arange(0,155):
+    if (math.isnan(t[j])):
+        m='*'
+    else:
+        m='o'
+    if gas[j]=='H ':
+        c=colors2[1]
+    if gas[j]==' He ':
+        c=colors2[5]
+    if gas[j]==' Ar ':
+        c=colors2[11]
+    if gas[j]==' Ne ':
+        c=colors2[8]
+    plt.plot(p[j],P[j]/mw[j],marker=m,color=c)
+plt.show()
+for j in np.arange(0,155):
+    if (math.isnan(t[j])):
+        m='*'
+    else:
+        m='o'
+    if gas[j]=='H ':
+        c=colors2[1]
+    if gas[j]==' He ':
+        c=colors2[5]
+    if gas[j]==' Ar ':
+        c=colors2[11]
+    if gas[j]==' Ne ':
+        c=colors2[8]
+    plt.plot(t[j],P[j]/mw[j],marker=m,color=c)
+plt.show()
+for j in np.arange(0,155):
+    if (math.isnan(t[j])):
+        m='*'
+    else:
+        m='o'
+    if gas[j]=='H ':
+        c=colors2[1]
+    if gas[j]==' He ':
+        c=colors2[5]
+    if gas[j]==' Ar ':
+        c=colors2[11]
+    if gas[j]==' Ne ':
+        c=colors2[8]
+    plt.plot(n[j],P[j]/mw[j],marker=m,color=c)
+plt.show()
 # %%

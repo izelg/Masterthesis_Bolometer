@@ -342,7 +342,7 @@ def DensityProfile(s,df,Type='',ScanType='',save=False,figurename=''):
                 label=r'n$^\circ$'+str(i)+r', $P_{\mathrm{MW}}$ = '+str( f'{GetMicrowavePower(i)[0]*10**(-3):.2f}')+' kW'
                 title= str(gas)+', MW= '+str(GetMicrowavePower(i)[1])+r', p $\approx$ '+str(f'{np.mean(pressure):.1f}')+' mPa'
             if ScanType=='None':
-                label=r'n$^\circ$'+str(i)+r', $P_{\mathrm{MW}}$ = '+str(f'{GetMicrowavePower(i)[0]*10**(-3):.2f}')+' kW, p= '+str(f'{Pressure(i,gas):.1f}')+' mPa'
+                label=r'n$^\circ$'+str(i)+r', $P_{\mathrm{MW}}$ = '+str(f'{GetMicrowavePower(i)[0]*10**(-3):.2f}')+' kW,\n p= '+str(f'{Pressure(i,gas):.1f}')+' mPa'
                 title= str(gas)+', MW= '+str(GetMicrowavePower(i)[1])
 
             d=(CorrectedDensityProfile(i)[1]*3.88E17)/2
@@ -360,7 +360,7 @@ def DensityProfile(s,df,Type='',ScanType='',save=False,figurename=''):
         plt.ylim(bottom=0)
         plt.xlabel('$R$ [cm]')
         plt.ylabel('$n_{\mathrm{e}}$ [m$^{-3}$]')
-        plt.legend(loc='lower center',title=title,bbox_to_anchor=(0.5,-1))  
+        plt.legend(loc='lower center',title=title,bbox_to_anchor=(0.5,-1.05))  
         fig1= plt.gcf()
         plt.show()
         if save==True:
@@ -398,9 +398,10 @@ def DensityProfile(s,df,Type='',ScanType='',save=False,figurename=''):
             error_int=CorrectedDensityProfile(s)[5]
             error_corr=CorrectedDensityProfile(s)[4]
             d=(CorrectedDensityProfile(s)[1]*3.88E17)/2
-            Position=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}ne.dat'.format(s=i),usecols=0,unpack=True)
-            norm=integrate.trapezoid(CorrectedDensityProfile(i)[2],Position)/abs(Position[-1]-Position[0])
-            Density=[u*d/norm for u in CorrectedDensityProfile(i)[2]]
+            Position=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}ne.dat'.format(s=s),usecols=0,unpack=True)
+            norm=integrate.trapezoid(CorrectedDensityProfile(s)[2],Position)/abs(Position[-1]-Position[0])
+            Density=[u*d/norm for u in CorrectedDensityProfile(s)[2]]
+            errors=[a+b for a,b in zip([u*d/norm for u in error_corr],[u*error_int*3.88E17/(2*norm) for u in CorrectedDensityProfile(s)[0]])]
 
         return Position, Density,errors    
             
@@ -448,14 +449,20 @@ def Densities(s,gas):
     k=1.38E-23
     p=Pressure(s,gas)*10**(-3)
     n=p/(k*T)
-    n_e=(CorrectedDensityProfile(s)[1]*3.88E17)/2
+    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=s)
+    inter=savgol_filter((LoadData(location)['Interferometer digital']),100,3)
+    stop=np.argmin(np.gradient(inter[int(len(inter)*0.2):-1]))+int(len(inter)*0.2)
+    mean_1=int(len(inter[0:stop])*0.8)
+    offset=np.mean(inter[stop+50:-1])
+    mean_density=np.mean(inter[mean_1:stop-50])-offset
+    n_e=(mean_density*3.88E17)/2
     n_0=n-n_e
     deg_ion=(n_e/n)*100
     return n,n_e,n_0,deg_ion
     
 # %%
 if __name__ == "__main__":
-    shotnumbers=np.arange(13098,13107)
+    shotnumbers=np.arange(13316,13321)
     #Ar power   1.3     np.arange(13280,13292)  ['d','f','d','d','f','f','f','f','f','d','d','f']
     #Ar power           [13099,13107,13108,13109] 
     #H power    1.42    np.arange(13215,13228)
@@ -470,8 +477,9 @@ if __name__ == "__main__":
     #Ar pressure        np.arange(13098,13107)  ['f','d','d','d','f','f','f','d','d']
     #Ne pressure  1      np.arange(13340,13348)  ['f']
     #Ne pressure            np.arange(13079,13085)  ['f','d','f','f','d','d']
+    #He 8Ghz        0.6     np.arange(13316,13321)  ['f']
     density_profiles_from=['f' for i in range(len(shotnumbers))]
-    gas='Ar' 
+    gas='He' 
     shotnumber=13252
     infile='/data6/shot{s}/kennlinien/auswert/'.format(s=shotnumber)
     #infile='/data6/shot{}/probe2D/'.format(shotnumber)
@@ -480,8 +488,8 @@ if __name__ == "__main__":
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
-    #DensityProfile(shotnumbers,'Compare','Pressure',save=True,figurename='{g}_pressure'.format(g=gas),density_profiles_from)
-    #TemperatureProfile(shotnumbers,'Compare','Pressure',save=True,figurename='{g}_pressure'.format(g=gas))
-    for s in shotnumbers:
-        DensityProfile(s,'Single')
+    DensityProfile(shotnumbers,density_profiles_from,'Compare','None',save=True,figurename='{g}_8GHz'.format(g=gas))
+    #TemperatureProfile(shotnumbers,'Compare','None',save=True,figurename='{g}_8GHz'.format(g=gas))
+    # for s in shotnumbers:
+    #     DensityProfile(s,density_profiles_from,'Single')
 # %%
