@@ -36,7 +36,7 @@ if __name__ == "__main__":
     elif Latex==True:
         width=412/72.27
         height=width*(5**.5-1)/2
-        n=1
+        n=0.7
         plt.rcParams['text.usetex']=True
         plt.rcParams['font.family']='serif'
         plt.rcParams['axes.labelsize']=11*n
@@ -211,7 +211,7 @@ def PlotMeanValues(compare=False,save=False):
 #It is also possible to compare a list of shots as specified before calling the function
 def TemperatureProfile(s,Type='',ScanType='',save=False,figurename=''):
     if Type=='Compare':
-        plt.figure(figsize=(width/2,height))
+        plt.figure(figsize=(width/2,height/1.5))
         pressure,mw=[],[]
         for i in s:
             pressure.append(Pressure(i,gas))
@@ -238,8 +238,8 @@ def TemperatureProfile(s,Type='',ScanType='',save=False,figurename=''):
             #plt.errorbar(Position*100+60, T,yerr=[0.1*x for x in T], color=c,marker=m,capsize=5,alpha=0.1)#
             plt.plot(Position*100+60, T, color=c,marker=m,label=label)
         plt.ylim(bottom=0)
-        plt.xlabel('$R$ [cm]')
-        plt.ylabel('$T_{\mathrm{e}}$ [eV]')
+        plt.xlabel('$R$ [cm]',fontsize=10)
+        plt.ylabel('$T_{\mathrm{e}}$ [eV]',fontsize=10)
         #plt.legend(loc='lower center',title=title,bbox_to_anchor=(0.5,-1.3))  
         fig1= plt.gcf()
         plt.show()
@@ -320,7 +320,7 @@ def NormDensityProfile():
 
 def DensityProfile(s,df,Type='',ScanType='',save=False,figurename=''):
     if Type=='Compare':
-        plt.figure(figsize=(width/2,height))
+        plt.figure(figsize=(width/2,height/1.5))
         pressure,mw=[],[]
         for i in shotnumbers:
             pressure.append(Pressure(i,gas))
@@ -358,9 +358,9 @@ def DensityProfile(s,df,Type='',ScanType='',save=False,figurename=''):
                 plt.plot(Position*100+60, Density,color=c,marker=m,label='* '+label)       
         
         plt.ylim(bottom=0)
-        plt.xlabel('$R$ [cm]')
-        plt.ylabel('$n_{\mathrm{e}}$ [m$^{-3}$]')
-        plt.legend(loc='lower center',title=title,bbox_to_anchor=(0.5,-1.05))  
+        plt.xlabel('$R$ [cm]',fontsize=10)
+        plt.ylabel('$n_{\mathrm{e}}$ [m$^{-3}$]',fontsize=10)
+        plt.legend(loc='lower center',title=title,bbox_to_anchor=(0.5,-0.9))  
         fig1= plt.gcf()
         plt.show()
         if save==True:
@@ -380,7 +380,7 @@ def DensityProfile(s,df,Type='',ScanType='',save=False,figurename=''):
         plt.plot(Position_fit, Density_fit,'ro--', label=r'shot n$^\circ$'+str(s)+r' from fits, $P_{\mathrm{MW}}$ = '+str(f'{GetMicrowavePower(s)[0]*10**(-3):.2f}')+' kW, p= '+str(f'{Pressure(s,gas):.1f}')+' mPa')
         plt.xlabel('position R [m]')
         plt.ylabel('density [m$^-$$^3$]')
-        plt.legend(loc=1, bbox_to_anchor=(1.7,1))    
+        plt.legend(loc=1, bbox_to_anchor=(1.3,1))    
         fig1= plt.gcf()
         plt.show()
         if save==True:
@@ -458,7 +458,7 @@ def Densities(s,gas):
     n_e=(mean_density*3.88E17)/2
     n_0=n-n_e
     deg_ion=(n_e/n)*100
-    return n,n_e,n_0,deg_ion
+    return n,n_e,n_0
     
 # %%
 if __name__ == "__main__":
@@ -479,8 +479,8 @@ if __name__ == "__main__":
     #Ne pressure            np.arange(13079,13085)  ['f','d','f','f','d','d']
     #He 8Ghz        0.6     np.arange(13316,13321)  ['f']
     density_profiles_from=['f' for i in range(len(shotnumbers))]
-    gas='He' 
-    shotnumber=13252
+    gas='H' 
+    shotnumber=13093
     infile='/data6/shot{s}/kennlinien/auswert/'.format(s=shotnumber)
     #infile='/data6/shot{}/probe2D/'.format(shotnumber)
     outfile='/home/gediz/Results/Plasma_charactersitics/'
@@ -488,8 +488,10 @@ if __name__ == "__main__":
     if not os.path.exists(str(outfile)+'shot{}'.format(shotnumber)):
         os.makedirs(str(outfile)+'shot{}'.format(shotnumber))
 
-    DensityProfile(shotnumbers,density_profiles_from,'Compare','None',save=True,figurename='{g}_8GHz'.format(g=gas))
-    #TemperatureProfile(shotnumbers,'Compare','None',save=True,figurename='{g}_8GHz'.format(g=gas))
+    #DensityProfile(shotnumbers,density_profiles_from,'Compare','Pressure',save=True,figurename='{g}_8GHz'.format(g=gas))
+    #TemperatureProfile(shotnumbers,'Compare','Pressure',save=True,figurename='{g}_8GHz'.format(g=gas))
     # for s in shotnumbers:
-    #     DensityProfile(s,density_profiles_from,'Single')
+    #DensityProfile(shotnumber,['d'],'Single')
+    CorrectedDensityProfile(shotnumber, Plot=True)
+    print(Densities(13094,'H'))
 # %%

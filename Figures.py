@@ -752,7 +752,7 @@ ax.semilogx(E_F,100-R_F*100,marker='o',color=colors2[i],alpha=0.7,ls='None',labe
 ax.semilogx(E_H,100-R_H,marker='s',color=colors2[i+2],alpha=0.7,ls='None',label='Hagemann (1974)')
 ax.semilogx([(h1*c)/(x*10**(-9)) for x in l],R*100,marker='d',color=colors2[i+1],alpha=0.7,ls='None',label='Palik (1985)')
 ax.semilogx(energy,fitted, color=colors2[i+5],label='fit to all data')
-ax.set_xlim(0.0011,140000)
+ax.set_xlim(0.0011,1400)
 ax.minorticks_off()
 ax2 = ax.twiny()
 
@@ -776,7 +776,7 @@ ax.set_ylabel('absorption [\%]')
 ax.legend(loc='lower right')
 fig= plt.gcf()
 plt.show()
-#fig.savefig('/home/gediz/LaTex/Thesis/Figures/Gold_Absorption.pdf',bbox_inches='tight')
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/Gold_Absorption.pdf',bbox_inches='tight')
 
 # plt.figure()
 # #plt.xscale('log')
@@ -870,7 +870,7 @@ fig2.savefig('/home/gediz/LaTex/Thesis/Figures/ohmic_calibration_kappa.pdf',bbox
 
 
 # %% Laser Scan
-plt.figure(figsize=(width*0.75,height))
+plt.figure(figsize=(width*0.55,height*0.75))
 location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot60038.dat'
 cut=1000
 time = br.LoadData(location)['Zeit [ms]'][cut:-1] / 1000
@@ -878,24 +878,26 @@ for i in [1,2,3,4,5,6,7,8]:
     y= br.LoadData(location)["Bolo{}".format(i)][cut:-1]
     background=np.mean(y[-500:-1])
     y_1=y-background
-    plt.plot(time,-y_1,color=colors2[i+1], label='sensor {}'.format(i))
-plt.xlabel('time [s]')
+    plt.plot(time/3.73,-y_1,color=colors2[i+1], label='sensor {}'.format(i))
+plt.xlabel('y [mm]')
 plt.ylabel('sensor signal [V]')
-plt.annotate('1',(22,0.01),xymath=(15,0.15),arrowprops=dict(facecolor='#008e0c',edgecolor='none',alpha=0.5,width=1,headwidth=5), bbox={"boxstyle" : "circle","facecolor":'None','edgecolor':'#008e0c'},color='#008e0c')
-plt.annotate('2',(35,0.01),xymath=(32,0.15),arrowprops=dict(facecolor='#008e0c',edgecolor='none',alpha=0.5,width=1,headwidth=5), bbox={"boxstyle" : "circle","facecolor":'None','edgecolor':'#008e0c'},color='#008e0c')
+plt.annotate('1',(22/3.73,0.01),xytext=(15/3.73,0.35),arrowprops=dict(facecolor='#008e0c',edgecolor='none',alpha=0.5,width=1,headwidth=5), bbox={"boxstyle" : "circle","facecolor":'None','edgecolor':'#008e0c'},color='#008e0c')
+plt.annotate('2',(35/3.73,0.01),xytext=(32/3.73,0.35),arrowprops=dict(facecolor='#008e0c',edgecolor='none',alpha=0.5,width=1,headwidth=5), bbox={"boxstyle" : "circle","facecolor":'None','edgecolor':'#008e0c'},color='#008e0c')
 
-plt.legend(fontsize=9)
-plt.xlim(-10,120)
+plt.legend(fontsize=9,loc='center right',bbox_to_anchor=(1.4,0.5))
+plt.xlim(0,33)
+plt.ylim(-0.05,0.65)
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/Laser_scan.pdf',bbox_inches='tight')
 
 # %% UV scan
-plt.figure(figsize=(width,height))
+plt.figure(figsize=(width/2,height))
 location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot60078_cropped.dat'
 cut=0
 c=0
-time = br.LoadData(location)['Zeit [ms]'][cut:-1] / 1000
+con=0.77
+time = (br.LoadData(location)['Zeit [ms]'][cut:-1] / 1000)*con
 def lin (x,a,b):
     return a*x + b
 for i in [1,2,3,4]:
@@ -922,13 +924,54 @@ for i in [1,2,3,4]:
     fwhm=float(fwhm2-fwhm1)
     plt.plot([fwhm1,fwhm2],[amp[int(signal_edge[0])],amp[int(signal_edge[-1])]], color=colors2[i+c])
 
-plt.xlabel('time [s]')
+plt.xlabel('x [mm]')
 plt.ylabel('sensor signal [V]')
-plt.legend(loc='upper right',fontsize=9)
-plt.xlim(0,250)
+#plt.legend(loc='upper right',fontsize=9)
+plt.xlim(30,180)
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/UV_scan_horizontal.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,height))
+location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot60070_cropped.dat'
+cut=0
+c=0
+con=0.37
+time = (br.LoadData(location)['Zeit [ms]'][cut:-1] / 1000)*con
+def lin (x,a,b):
+    return a*x + b
+for i in [1,2,3,4,5,6,7,8]:
+    y0= br.LoadData(location)["Bolo{}".format(i)][cut:-1]
+    background=np.mean(y0[-500:-1])
+    y=savgol_filter(y0-background,1000,3)
+    steps=[]
+    for j in np.arange(0, len(y)-1000):
+        step= (y[j]-y[j+1000])
+        steps.append(abs(step))
+    start=(np.argwhere(np.array([steps])>0.005)[0][1])
+    stop=(np.argwhere(np.array([steps])>0.005)[-1][1])
+    background_x = np.concatenate((time[0:start],time[stop:-1]))
+    background_y=np.concatenate((y[0:start],y[stop:-1]))
+    popt,pcov=curve_fit(lin,background_x,background_y)
+    amp_origin=list((y[j]-lin(time[j],*popt))*(-1) for j in np.arange(0,len(y)))
+    maximum=max(amp_origin)
+    amp=list(amp_origin[j]/maximum for j in np.arange(0,len(y)))
+    plt.plot(time,  amp ,color=colors2[i+c],alpha=0.7)
+    signal_edge=np.argwhere(amp>max(amp)/np.e)
+    fwhm1, fwhm2=time[cut+int(signal_edge[0])],time[cut+int(signal_edge[-1])]
+    plt.plot(fwhm1,amp[int(signal_edge[0])],'o',color=colors2[i+c] ,label='sensor {}'.format(i))
+    plt.plot(fwhm2,amp[int(signal_edge[-1])],'o',color=colors2[i+c])
+    fwhm=float(fwhm2-fwhm1)
+    plt.plot([fwhm1,fwhm2],[amp[int(signal_edge[0])],amp[int(signal_edge[-1])]], color=colors2[i+c])
+
+plt.xlabel('y [mm]')
+plt.ylabel('sensor signal [V]')
+plt.legend(loc='center right',fontsize=10,bbox_to_anchor=(1.5,0.5))
+plt.xlim(0,250)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/UV_scan_vertical.pdf',bbox_inches='tight')
+
 
 # %% Spectra working gases
 plt.figure(figsize=(height,height))
@@ -975,7 +1018,7 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/spectra_ions.pdf',bbox_inches='tig
 # %% Reduced Spectrum
 d=5e+17
 t=10
-fig,ax=plt.subplots(figsize=(height,height))
+fig,ax=plt.subplots(figsize=(width/2,width/2))
 ax2=ax.twinx()
 l2e=lambda x:(h1*c)/(x*10**(-9))
 hdata=adas.h_adf15(T_max=t,density=d,Spectrum=True)
@@ -986,7 +1029,6 @@ gold=pchip_interpolate(all_energy,all_abs,gold_energy)
 reduced_pec=[]
 for i,j in zip(energy,pec):
     indice= int(round(i,3)*1000)
-    print(i,int(round(i,3)*1000))
     reduced_pec.append(j*gold[indice]/100)
 ax.bar(energy,pec,0.5,color=colors2[2],label='ADAS data for spectral lines at \n$T_e=$10 eV,$n_e$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation of H$^0$ ')   
 ax.bar(energy,reduced_pec,0.5,color=colors2[1],label='reduced spectrum:\n {}\% absorbed by gold foil'.format(float(f'{np.sum(reduced_pec)/np.sum(pec)*100:.2f}')))
@@ -995,37 +1037,38 @@ ax.set_ylabel('normalized PEC [m$^3$/s]')
 ax.set_xlabel('photon energy [eV]')
 ax2.set_ylabel('absorption gold [\%]',color=colors2[5])
 ax2.tick_params(axis='y', labelcolor=colors2[5])
-ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.9))
+ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.7))
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_H.pdf',bbox_inches='tight')
 
 
-# fig,ax=plt.subplots(figsize=(height,height))
-# ax2=ax.twinx()
-# l2e=lambda x:(h1*c)/(x*10**(-9))
-# wl,counts=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/spectrometer_data_of_lightsource_Weißlichtquelle_Wellenlängenmessung.txt',unpack=True)
-# energy=[round(l2e(a),3) for a in wl]
-# gold_energy=np.arange(0,round(energy[0],2),0.001)
-# gold=pchip_interpolate(all_energy,all_abs,gold_energy)
-# reduced_counts=[]
-# for i,j in zip(energy,counts):
-#     indice= int(round(i,3)*1000)
-#     reduced_counts.append(j*gold[indice]/100)
-# lns1=ax.plot(energy,counts,color=colors2[2],label='specrometer data for a \n white light source ')   
-# lns2=ax.plot(energy,reduced_counts,color=colors2[1],label='reduced spectrum:\n {}\% absorbed by gold foil'.format(float(f'{integrate.trapezoid(reduced_counts,energy)/integrate.trapezoid(counts,energy)*100:.2f}')))
-# ax2.plot(gold_energy,gold,color=colors2[5],ls='dotted')
-# ax.set_ylabel('counts')
-# ax.set_xlabel('photon energy [eV]')
-# ax2.set_ylabel('absorption gold [\%]',color=colors2[5])
-# ax2.tick_params(axis='y', labelcolor=colors2[5])
-# leg = lns1 + lns2 
-# labs = [l.get_label() for l in leg]
-# ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.8))
-# ax.set_xlim(0,4)
-# fig= plt.gcf()
-# plt.show()
-# fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_white.pdf',bbox_inches='tight')
+fig,ax=plt.subplots(figsize=(width/2,width/2))
+ax2=ax.twinx()
+l2e=lambda x:(h1*c)/(x*10**(-9))
+wl,counts=np.genfromtxt('/home/gediz/Results/Spectrometer/Spectra_of_laser_and_white_light_22_09_2022/spectrometer_data_of_lightsource_Weißlichtquelle_Wellenlängenmessung.txt',unpack=True)
+energy=[round(l2e(a),3) for a in wl]
+gold_energy=np.arange(0,round(energy[0],2),0.001)
+gold=pchip_interpolate(all_energy,all_abs,gold_energy)
+reduced_counts=[]
+for i,j in zip(energy,counts):
+    indice= int(round(i,3)*1000)
+    reduced_counts.append(j*gold[indice]/100)
+lns1=ax.plot(energy,counts,color=colors2[2],label='specrometer data for a \n white light source ')   
+lns2=ax.plot(energy,reduced_counts,color=colors2[1],label='reduced spectrum:\n {}\% absorbed by gold foil'.format(float(f'{integrate.trapezoid(reduced_counts,energy)/integrate.trapezoid(counts,energy)*100:.2f}')))
+ax2.plot(gold_energy,gold,color=colors2[5],ls='dotted')
+ax.set_ylabel('counts')
+ax.set_xlabel('photon energy [eV]')
+ax2.set_ylabel('absorption gold [\%]',color=colors2[5])
+ax2.tick_params(axis='y', labelcolor=colors2[5])
+leg = lns1 + lns2 
+labs = [l.get_label() for l in leg]
+ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.62))
+ax.set_xlim(0,4)
+ax.ticklabel_format(axis='y',style='sci',scilimits=(0,0))
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/reduced_spectrum_white.pdf',bbox_inches='tight')
 
 
 # %% electrical signals
@@ -1230,7 +1273,7 @@ plt.plot(s,[a/np.mean(uv254) for a in uv254])
 plt.show()
 # %% Voltage Time trace
 shotnumber=13257
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width*0.4,height))
 location=  '/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
 time = np.array(br.LoadData(location)['Zeit [ms]'] / 1000)[:,None]
 for i,c in zip(np.arange(1,9),colors):
@@ -1240,7 +1283,7 @@ for i,c in zip(np.arange(1,9),colors):
     plt.plot(time,  bolo_raw_data, label="sensor {}".format(i),color=c )
 plt.xlabel('time [s]')
 plt.ylabel('$U_{\mathrm{out}}$ [V]')
-plt.legend(loc='center right',bbox_to_anchor=(1.5,0.5),title='shot n$^\circ$13257,\nHe,\nMW= 2.45 GHz,\n$P_{\mathrm{MW}}$= 2.97 kW,\np= 21 mPa')
+plt.legend(loc='center right',bbox_to_anchor=(1.77,0.5),title='shot n$^\circ$13257,\nHe,\nMW= 2.45 GHz,\n$P_{\mathrm{MW}}$= 2.97 kW,\np= 21 mPa')
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/voltage_time_trace.pdf',bbox_inches='tight')
@@ -1249,7 +1292,7 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/voltage_time_trace.pdf',bbox_inche
 
 # %% Power time trace with height
 shotnumber=13257
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width/2,height))
 i=1
 location=  '/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
 time,U_Li =br.LoadData(location)['Zeit [ms]'] / 1000, br.LoadData(location)["Bolo{}".format(i)]
@@ -1277,7 +1320,6 @@ div2 = lin(time[stop], *popt2)-lin(time[stop], *popt1)
 div_avrg = abs(float(f'{(div1+div2)/2:.4f}'))
 sd=np.std([div1,div2],ddof=1)
 sem=sd/np.sqrt(2)
-plt.figure(figsize=(h,h))
 plt.plot(time[start+15],power[start+15],marker='x',color=colors[1])
 plt.plot(time[stop],power[stop],marker='x',color=colors[1])
 plt.plot(time,power,color=colors[0],label='sensor 1')
@@ -1287,16 +1329,17 @@ plt.annotate('',xy=(50,lin(50,*popt1)),xytext=(50,lin(50,*popt2)), arrowprops=di
 plt.annotate('$\Delta P_{\mathrm{rad}} \cdot a_{\mathrm{abs}}$='+str(f'{div_avrg:.2f}')+'$\mu$W',xy=(55,2.5),color=colors[1])
 plt.xlabel('time [s]')
 plt.ylabel('$P_{\mathrm{rad}}$  [$\mu$W]')
-plt.legend(loc='lower right')
-plt.ylim(-0.3)
+plt.legend(loc='lower right',fontsize=10)
+plt.ylim(-0.4)
 plt.xlim(-10,249)
 fig= plt.gcf()
 plt.show()
-#fig.savefig('/home/gediz/LaTex/Thesis/Figures/power_time_trace.pdf',bbox_inches='tight')
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/power_time_trace.pdf',bbox_inches='tight')
 
 
 # %% Bolometer profile
-plt.figure(figsize=(width/2,height))
+plt.figure(figsize=(width/2,height*0.75))
+x=[13265,13263,13261,13259,13257]
 gas='He'
 #x=[13254, 13253, 13252, 13251, 13255, 13250, 13249, 13248, 13247, 13246, 13245, 13244, 13243, 13242]#H pressure
 #x=[13278, 13277, 13276, 13275, 13274, 13279, 13273, 13272, 13271, 13270, 13269, 13268]#He pressure
@@ -1305,27 +1348,31 @@ gas='He'
 #x=[13289, 13290, 13288, 13287, 13285, 13286, 13284, 13291, 13283, 13282, 13281, 13280]#Ar power
 #x=[13221, 13220, 13223, 13222, 13224, 13218, 13225, 13226, 13217, 13216, 13219, 13227, 13215]#H power
 #x=[13265, 13264, 13263, 13262, 13261, 13260, 13259, 13258, 13257]#He power
-x=[13316 ,13317, 13318 ,13319 ,13320]#He 8Ghz
+#x=[13316 ,13317, 13318 ,13319 ,13320]#He 8Ghz
 for shotnumber,i in zip(x,np.arange(0,len(x))):
+    P_profile,error_P_exp=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=shotnumber),unpack=True,usecols=(1,2))
+    plt.errorbar(b,P_profile,yerr=error_P_exp,marker=markers[i],color=colors[i],capsize=5,alpha=0.15)
+
     b,c,ecmi,ecma,p,e=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=shotnumber,g=gas),unpack=True)
-    plt.errorbar(b,p,yerr=e,marker=markers[i],color=colors2[i],capsize=5)#,label='shot n$^\circ$'+str(shotnumber) +', $P_{\mathrm{MW}}$='+str(f'{pc.GetMicrowavePower(shotnumber)[0]/1000:.1f}') +'kW')
+    plt.errorbar(b,p,yerr=e,marker=markers[i],color=colors[i],capsize=5,label='shot n$^\circ$'+str(shotnumber) +', $P_{\mathrm{MW}}$='+str(f'{pc.GetMicrowavePower(shotnumber)[0]/1000:.1f}') +'kW')
+
 plt.ylim(0)
 plt.xticks(b)
-plt.xlabel('sensor number')
-plt.ylabel('$\Delta P_{\mathrm{rad}}$ [$\mu$W]')
-#plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.0),title='He, MW=2.45 GHz, p=21 mPa')
+plt.xlabel('sensor number',fontsize=10)
+plt.ylabel('$\Delta P_{\mathrm{rad}}$ [$\mu$W]',fontsize=10)
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.0),title='He, MW=2.45 GHz, p=21 mPa')
 fig= plt.gcf()
 plt.show()
-#fig.savefig('/home/gediz/LaTex/Thesis/Figures/{g}_8GHz_radiation.pdf'.format(g=gas),bbox_inches='tight')
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/radiation_profiles.pdf'.format(g=gas),bbox_inches='tight')
 
 #%% Bolometerprofile no Density and Temperature
-plt.figure(figsize=(width/2,height))
-gas='Ar'
+plt.figure(figsize=(width/2,height/1.5))
+gas='He'
 ScanType='Pressure'
 #x=[13192,13191,13190,13189,13188,13187]#He 8GHz power 
-#x=[13186,13181,13187,13177,13184,13185,13180]#He 8GHz pressure
+x=[13186,13181,13187,13177,13184,13185,13180]#He 8GHz pressure
 #x=[13194,13195,13196,13197,13198,13200]#H 8Ghz  power
-x=[13205,13201,13202,13203,13204]#Ar 8GHz   pressure
+#x=[13205,13201,13202,13203,13204]#Ar 8GHz   pressure
 #x=[13206,13207,13208,13209,13210,13211]#Ar 8Ghz power
 for s,i in zip(x,np.arange(0,len(x))):
     if ScanType=='Pressure':
@@ -1341,18 +1388,18 @@ for s,i in zip(x,np.arange(0,len(x))):
     plt.errorbar([1,2,3,4,5,6,7,8],p,yerr=e,marker=markers[i],color=colors2[i],capsize=5,label=label)
 plt.ylim(0)
 plt.xticks([1,2,3,4,5,6,7,8])
-plt.xlabel('sensor number')
-plt.ylabel('$\Delta P_{\mathrm{rad}}$ [$\mu$W]')
-plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.75),title=title)
+plt.xlabel('sensor number',fontsize=10)
+plt.ylabel('$\Delta P_{\mathrm{rad}}$ [$\mu$W]',fontsize=10)
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.2),title=title)
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/{g}_8GHz_{s}_radiation.pdf'.format(g=gas,s=ScanType),bbox_inches='tight')
 
 # %% Total Power
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width/2,height*0.75))
 shotnumbers=[[13265,13263,13261,13259,13257]]
 gases=[['He'for i in range(5)]]
-mw,p,emi,ema,c,ecma,ecmi=poca.Totalpower_from_exp(shotnumbers,gases,'Power')
+mw,p,emi,ema=poca.Totalpower_from_exp(shotnumbers,gases,'Power')
 plt.plot(mw,p,ls='dashed',label='He, MW=2.45 GHz, p=21 mPa')
 for i,j,k,m,a in zip(mw,p,emi,ema,[0,1,2,3,4]):
     plt.plot(i,j,marker=markers[0+a],color=colors[0+a])
@@ -1539,15 +1586,15 @@ c=299792458
 hdata=adas.h_adf15()
 hedata=adas.he_adf15(data='pec96#he_pju#he0')
 nedata=adas.ne_adf15(data='pec96#ne_pju#ne0')
-plt.plot(hdata[0],hdata[1],marker='o',color=colors2[2],label='H$^0$, ADF15')
-plt.plot(hedata[0],hedata[1],marker='o',color=colors2[5],label='He$^0$, ADF15')
-plt.plot(nedata[0],nedata[1],marker='o',color=colors2[12],label='Ne$^0$, ADF15')
+plt.plot(hdata[0],hdata[1],marker='o',color=colors2[2],label='H$^0$, ADF15',lw=3.5,markersize=8)
+plt.plot(hedata[0],hedata[1],marker='o',color=colors2[5],label='He$^0$, ADF15',lw=3.5,markersize=8)
+plt.plot(nedata[0],nedata[1],marker='o',color=colors2[12],label='Ne$^0$, ADF15',lw=3.5,markersize=8)
 hdata=adas.h_adf11()
 hedata=adas.he_adf11(data='plt96_he')
 nedata=adas.ne_adf11(data='plt96_ne')
-plt.plot(hdata[0],hdata[1],marker='s',color=colors2[2],label='H$^0$, ADF11')
-plt.plot(hedata[0],hedata[1],marker='s',color=colors2[5],label='He$^0$, ADF11')
-plt.plot(nedata[0],nedata[1],marker='s',color=colors2[12],label='Ne$^0$, ADF11')
+plt.plot(hdata[0],hdata[1],marker='s',color=colors2[1],label='H$^0$, ADF11',lw=2,markersize=5)
+plt.plot(hedata[0],hedata[1],marker='s',color=colors2[4],label='He$^0$, ADF11',lw=2,markersize=5)
+plt.plot(nedata[0],nedata[1],marker='s',color=colors2[10],label='Ne$^0$, ADF11',lw=2,markersize=5)
 plt.xlim(0,100)
 plt.yscale('log')
 plt.ylim(1E-14,6E-13)
@@ -1567,11 +1614,11 @@ nedata=adas.ne_adf11(data='plt96_ne')
 ardata=adas.ar_adf11()
 plt.plot(hdata[0],hdata[1],marker='o',color=colors2[2],label='H$^0$')
 plt.plot(hedata[0],hedata[1],marker='o',color=colors2[5],label='He$^0$')
-plt.plot(nedata[0],nedata[1],marker='o',color=colors2[12],label='Ne$^0$')
+plt.plot(nedata[0],nedata[1],marker='o',color=colors2[9],label='Ne$^0$')
 plt.plot(ardata[0],ardata[1],marker='o',color=colors2[10],label='Ar$^0$')
 plt.plot(hedata[0],hedata[2],marker='s',color=colors2[4],label='He$^{+1}$')
-plt.plot(nedata[0],nedata[2],marker='s',color=colors2[11],label='Ne$^{+1}$')
-plt.plot(ardata[0],ardata[2],marker='s',color=colors2[9],label='Ar$^{+1}$')
+plt.plot(nedata[0],nedata[2],marker='s',color=colors2[8],label='Ne$^{+1}$')
+plt.plot(ardata[0],ardata[2],marker='s',color=colors2[11],label='Ar$^{+1}$')
 plt.xlim(0,60)
 plt.yscale('log')
 plt.ylim(1E-15,1E-12)
@@ -1583,16 +1630,16 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_plt.pdf',bbox_inches='tight')
 
 # %% Total Power weighing method
-plt.figure(figsize=(width/2,height))
-shotnumbers=[[13265,13263,13261,13259,13257]]#[[13266,13264,13262,13260,13256]]
-gases=[['He'for i in range(5)]]
+plt.figure(figsize=(width,height))
+shotnumbers=[[13265, 13264, 13263, 13262, 13261, 13260, 13259, 13258, 13257]]
+gases=[['He'for i in range(10)]]
 arg,c,ecma,ecmi=poca.Totalpower_calc(shotnumbers[0],gases[0],'Power')
 p_tot_crossec=poca.Total_cross_section_calc(shotnumbers,gases)
 plt.plot(arg,p_tot_crossec,'o--',color=colors2[6],label='from modelled mean \n power density $\overline{p}_{\mathrm{rad, mod}}$')
 plt.plot(arg,c,'o--',color=colors2[5], label='from $P_{\mathrm{rad, mod}}$ \n with weighing method')
 plt.xlabel('$P_{\mathrm{MW}}$ [W]')
-plt.ylabel('$P_{\mathrm{rad,\ net}}$ [W]')
-plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.55))
+plt.ylabel('$P_{\mathrm{rad,net}}$ [W]')
+plt.legend(loc='lower right')
 
 fig= plt.gcf()
 plt.show()
@@ -1653,64 +1700,169 @@ fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Temperature_with_errorbars.pdf',b
 
 # %% P total table
 shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
-for j in np.arange(0,155):
+def colorchooser(j): 
     if (math.isnan(t[j])):
         m='*'
     else:
         m='o'
     if gas[j]=='H ':
         c=colors2[1]
+        a_span_p=max(p_h)
+        a_span_mw=max(mw_h)
     if gas[j]==' He ':
         c=colors2[5]
+        a_span_p=max(p_he)
+        a_span_mw=max(mw_he)
     if gas[j]==' Ar ':
         c=colors2[11]
+        a_span_p=max(p_ar)
+        a_span_mw=max(mw_ar)
     if gas[j]==' Ne ':
         c=colors2[8]
-    plt.plot(mw[j],P[j]/mw[j],marker=m,color=c)
-plt.show()
-for j in np.arange(0,155):
-    if (math.isnan(t[j])):
-        m='*'
-    else:
-        m='o'
+        a_span_p=max(p_ne)
+        a_span_mw=max(mw_ne)
+    return m,c,a_span_p,a_span_mw
+p_h,p_he,p_ar,p_ne,mw_h,mw_he,mw_ar,mw_ne=[],[],[],[],[],[],[],[]
+for j in np.arange(0,154):
     if gas[j]=='H ':
-        c=colors2[1]
+        mw_h.append(mw[j])
+        p_h.append(p[j])
     if gas[j]==' He ':
-        c=colors2[5]
+        mw_he.append(mw[j])
+        p_he.append(p[j])
     if gas[j]==' Ar ':
-        c=colors2[11]
+        mw_ar.append(mw[j])
+        p_ar.append(p[j])
     if gas[j]==' Ne ':
-        c=colors2[8]
-    plt.plot(p[j],P[j]/mw[j],marker=m,color=c)
-plt.show()
-for j in np.arange(0,155):
-    if (math.isnan(t[j])):
-        m='*'
+        mw_ne.append(mw[j])
+        p_ne.append(p[j])
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$P_{\mathrm{MW}}$ [W]')
+for j in np.arange(0,154):
+    a=p[j]/colorchooser(j)[2]
+    if 2.5*a>=1:
+        al=1
     else:
-        m='o'
-    if gas[j]=='H ':
-        c=colors2[1]
-    if gas[j]==' He ':
-        c=colors2[5]
-    if gas[j]==' Ar ':
-        c=colors2[11]
-    if gas[j]==' Ne ':
-        c=colors2[8]
-    plt.plot(t[j],P[j]/mw[j],marker=m,color=c)
+        al=2.5*a
+    plt.plot(mw[j],(P[j]/mw[j])*100,marker=colorchooser(j)[0],color=colorchooser(j)[1],alpha=al)
+plt.plot(mw[20],(P[20]/mw[20])*100,marker=colorchooser(20)[0],color=colorchooser(20)[1],ls='None',label='H')
+plt.plot(mw[32],(P[32]/mw[32])*100,marker=colorchooser(32)[0],color=colorchooser(32)[1],ls='None',label='He')
+plt.plot(mw[67],(P[67]/mw[67])*100,marker=colorchooser(67)[0],color=colorchooser(67)[1],ls='None',label='Ne')
+plt.plot(mw[53],(P[53]/mw[53])*100,marker=colorchooser(53)[0],color=colorchooser(53)[1],ls='None',label='Ar')
+plt.legend(loc='upper right')
+fig= plt.gcf()
 plt.show()
-for j in np.arange(0,155):
-    if (math.isnan(t[j])):
-        m='*'
-    else:
-        m='o'
-    if gas[j]=='H ':
-        c=colors2[1]
-    if gas[j]==' He ':
-        c=colors2[5]
-    if gas[j]==' Ar ':
-        c=colors2[11]
-    if gas[j]==' Ne ':
-        c=colors2[8]
-    plt.plot(n[j],P[j]/mw[j],marker=m,color=c)
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_power.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$p$ [mPa]')
+for j in np.arange(0,154):
+    a=mw[j]/colorchooser(j)[3]
+    plt.plot(p[j],(P[j]/mw[j])*100,marker=colorchooser(j)[0],color=colorchooser(j)[1],alpha=a)
+plt.plot(p[20],(P[20]/mw[20])*100,marker=colorchooser(20)[0],color=colorchooser(20)[1],ls='None',label='H')
+plt.plot(p[92],(P[92]/mw[92])*100,marker=colorchooser(92)[0],color=colorchooser(92)[1],ls='None',label='He')
+plt.plot(p[117],(P[117]/mw[117])*100,marker=colorchooser(117)[0],color=colorchooser(117)[1],ls='None',label='Ar')
+plt.plot(p[61],(P[61]/mw[61])*100,marker=colorchooser(61)[0],color=colorchooser(61)[1],ls='None',label='Ne')
+#plt.legend(loc='upper right')
+fig= plt.gcf()
 plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_pressure.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$\overline{T}_{\mathrm{e}}$ [eV]')
+for j in np.arange(0,154):
+    plt.plot(t[j],(P[j]/mw[j])*100,marker=colorchooser(j)[0],color=colorchooser(j)[1])
+plt.plot(t[20],(P[20]/mw[20])*100,marker=colorchooser(20)[0],color=colorchooser(20)[1],ls='None',label='H')
+plt.plot(t[92],(P[92]/mw[92])*100,marker=colorchooser(92)[0],color=colorchooser(92)[1],ls='None',label='He')
+plt.plot(t[117],(P[117]/mw[117])*100,marker=colorchooser(117)[0],color=colorchooser(117)[1],ls='None',label='Ar')
+plt.plot(t[61],(P[61]/mw[61])*100,marker=colorchooser(61)[0],color=colorchooser(61)[1],ls='None',label='Ne')
+#plt.legend(loc='upper right')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_temperature.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$\overline{n}_{\mathrm{e}}$ [m$^{-3}$]')
+for j in np.arange(0,154):
+    plt.plot(n[j],(P[j]/mw[j])*100,marker=colorchooser(j)[0],color=colorchooser(j)[1])
+plt.plot(n[20],(P[20]/mw[20])*100,marker=colorchooser(20)[0],color=colorchooser(20)[1],ls='None',label='H')
+plt.plot(n[92],(P[92]/mw[92])*100,marker=colorchooser(92)[0],color=colorchooser(92)[1],ls='None',label='He')
+plt.plot(n[117],(P[117]/mw[117])*100,marker=colorchooser(117)[0],color=colorchooser(117)[1],ls='None',label='Ar')
+plt.plot(n[61],(P[61]/mw[61])*100,marker=colorchooser(61)[0],color=colorchooser(61)[1],ls='None',label='Ne')
+#plt.legend(loc='upper right')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_density.pdf',bbox_inches='tight')
+# %% P total table model
+# %% P total table
+shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+shotnumberm,gasm,mwm,pm,tm,nm,Pm,Pminm,Pmaxm=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_modeled_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+g='Ar'
+for s in np.arange(13299,13312):
+    index=np.argwhere(shotnumber==s)
+    indexm=np.argwhere(shotnumberm==s)
+    print(P[index[0]]/Pm[indexm[0]])
+    mean_exp=poca.Model_accuracy(s,g)[3]
+    mean_mod=poca.Model_accuracy(s,g)[2]
+    print(mean_exp/mean_mod)
+# %% Model accuracy
+shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+def colorchooser(j): 
+    if gas[j]=='H':
+        c=colors2[1]
+    if gas[j]=='He':
+        c=colors2[5]
+    if gas[j]=='Ar':
+        c=colors2[11]
+    if gas[j]=='Ne':
+        c=colors2[8]
+    return c
+def neu(pres):
+    T=290
+    k=1.38E-23
+    return (pres*10**(-3))/(k*T)
+arg=p
+# for j in np.arange(0,117):
+#     n0=neu(p[j])
+#     n_e=n[j]
+#     plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[6],marker='o',color=colorchooser(j))
+# plt.ylabel('diff of norm')
+# plt.show()
+
+plt.figure(figsize=(width/2,height*0.7))
+for j in np.arange(0,117):
+    plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[4],marker='v',color=colorchooser(j))
+plt.plot(arg[20],poca.Model_accuracy(shotnumber[20],gas[20])[4],marker='v',color=colorchooser(20),ls='None',label='H')
+plt.plot(arg[32],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='v',color=colorchooser(32),ls='None',label='He')
+plt.plot(arg[67],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='v',color=colorchooser(67),ls='None',label='Ne')
+plt.plot(arg[53],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='v',color=colorchooser(53),ls='None',label='Ar')
+plt.legend(loc='upper right',title='modelled')
+plt.ylabel('hollowness $h$')
+plt.xlabel('$p$ [mPa]')
+plt.ylim(0.3,1.8)
+plt.show()
+
+plt.figure(figsize=(width/2,height*0.7))
+for j in np.arange(0,117):
+    plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[5],marker='o',color=colorchooser(j))
+plt.plot(arg[20],poca.Model_accuracy(shotnumber[20],gas[20])[4],marker='o',color=colorchooser(20),ls='None',label='H')
+plt.plot(arg[32],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='o',color=colorchooser(32),ls='None',label='He')
+plt.plot(arg[67],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='o',color=colorchooser(67),ls='None',label='Ne')
+plt.plot(arg[53],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='o',color=colorchooser(53),ls='None',label='Ar')
+plt.legend(loc='upper right',title='experimental')
+plt.ylabel('hollowness $h$')
+plt.xlabel('$p$ [mPa]')
+plt.ylim(0.3,1.8)
+plt.show()
+
+# for j in np.arange(0,117):
+#     plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[2]/poca.Model_accuracy(shotnumber[j],gas[j])[3],marker='o',color=colorchooser(j))
+# plt.ylabel('factor mean')
+# plt.show()
+
+# %%
 # %%
