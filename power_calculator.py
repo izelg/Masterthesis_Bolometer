@@ -492,6 +492,66 @@ def Totalpower_calc(shotnumbers,gases,Type='',plot=False,savefig=False):
 
     return arg,P_ges_calc,P_ges_calc_error_min,P_ges_calc_error_max
 
+def Totalpower_calc_compare(shotnumbers,gases,Type='',plot=False,savefig=False):
+    #colors=['#0077B6','#00B4D8','#9D0208','#DC2F02','#F48C06','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']#power
+    #colors=['#0077B6','#DC2F02','#F48C06','#2D6A4F']#power 8GHz
+    #colors=['#DC2F02','#F48C06','#2D6A4F','#40916C','#52B788','#03045E','#0077B6','#00B4D8']#pressure 8GHz
+    colors=['#0077B6','#00B4D8','#DC2F02','#7B2CBF','#C77DFF','#2D6A4F','#40916C']#pressure
+
+    v_i_ges_middle=[0.00984,0.01764,0.02042,0.02157,0.02157,0.02042,0.01764,0.00984]#0.01476
+    v_i_ges_min=[0.00894,0.01554,0.01786,0.01785,0.01785,0.01786,0.01554,0.00894]
+    v_i_ges_max=[0.01086,0.01979,0.02309,0.02451,0.02451,0.02309,0.01979,0.01086]
+    V_T_2=0.237 #till edge of calculation area with "additional fluxsurfaces"
+    if plot==True:
+        fig1=plt.figure(figsize=(width,height))
+        ax=fig1.add_subplot(111)
+
+    for j in np.arange(len(shotnumbers)):
+        P_ges_calc,pressures,mw,P_ges_calc_error_min,P_ges_calc_error_max =[],[],[],[],[]
+        for s,g in zip(shotnumbers[j],gases[j]):
+            pressures.append(pc.Pressure(s,g))
+            mw.append(pc.GetMicrowavePower(s)[0])
+        if Type=='Pressure':
+            title= str(g)+r', $P_{\mathrm{MW}}$ $\approx$ '+str(f'{np.mean(mw)*10**(-3):.2f}')+' kW'
+            arg=np.sort(pressures)
+            sortnumbers=[shotnumbers[j][i] for i in np.argsort(pressures)]
+            xlabel='pressure [mPa]'
+        if Type=='Power':
+            title= str(g)+r', p $\approx$ '+str(f'{np.mean(pressures):.1f}')+' mPa'
+            arg=np.sort(mw)
+            sortnumbers=[shotnumbers[j][i] for i in np.argsort(mw)]
+            xlabel='$P_{\mathrm{MW}}$ [W]'
+        for s,g in zip(sortnumbers,gases[j]):
+            weight=Totalpower_from_Profile(s)[0]
+            P_ges_calc_,P_ges_calc_error_min_,P_ges_calc_error_max_=[],[],[]
+            calc_p,calc_err_min,calc_err_max=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=s,g=g),unpack=True, usecols=(1,2,3))
+            calc_p,calc_err_min,calc_err_max=[p*10**(-6)for p in calc_p],[p*10**(-6)for p in calc_err_min],[p*10**(-6)for p in calc_err_max]
+            for i in [0,1,2,3,4,5,6,7]:
+                P_ges_calc_.append(((4*np.pi*calc_p[i])/(((c_w*c_h)/10000)*v_i_ges_middle[i]))*V_T_2*weight[i])
+                P_ges_calc_error_min_.append(((4*np.pi*calc_p[i])/(((c_w*c_h)/10000)*v_i_ges_min[i]))*V_T_2*weight[i]+((4*np.pi*calc_err_min[i])/(((c_w*c_h)/10000)*v_i_ges_middle[i]))*V_T_2*weight[i])
+                P_ges_calc_error_max_.append(((4*np.pi*calc_p[i])/(((c_w*c_h)/10000)*v_i_ges_max[i]))*V_T_2*weight[i]+((4*np.pi*calc_err_max[i])/(((c_w*c_h)/10000)*v_i_ges_middle[i]))*V_T_2*weight[i])
+            P_ges_calc.append(np.mean(P_ges_calc_))
+            P_ges_calc_error_min.append(abs(np.mean(P_ges_calc_error_min_)-np.mean(P_ges_calc_)))
+            P_ges_calc_error_max.append(abs(np.mean(P_ges_calc_error_max_)-np.mean(P_ges_calc_)))
+            print(s,'&',g,'&',round(pc.GetMicrowavePower(s)[0],1),'&',round(pc.Pressure(s,g),1),'&',round(Totalpower_from_Profile(s)[2],1),'&','%.1e' % pc.Densities(s,g)[1],'&',round(np.mean(P_ges_calc_),1), '(+',round(abs(np.mean(P_ges_calc_error_min_)-np.mean(P_ges_calc_)),1),'-',round(abs(np.mean(P_ges_calc_error_max_)-np.mean(P_ges_calc_)),1),')\\\\')
+
+        if plot==True:
+            ax.set_xlabel(xlabel)
+            ax.plot(arg,P_ges_calc,marker=markers[j],color=colors[j],linestyle='dashed',label=title)
+            ax.errorbar(arg,P_ges_calc,yerr=(P_ges_calc_error_min,P_ges_calc_error_max),capsize=5,linestyle='None',color=colors[j])
+            ax.set_ylabel('$P_{\mathrm{rad, net}}$ [W]')
+            #ax.set_ylim(0,750)
+            ax.legend(loc='center right',bbox_to_anchor=(1.48,0.5),title='MW= '+str(pc.GetMicrowavePower(s)[1]))
+    if plot==True:
+        fig1.show()
+
+
+    if savefig==True:
+        #fig1.savefig('/home/gediz/Results/Modeled_Data/Tota_P_rad/comparison_{T}_{g}.pdf'.format(T=Type, g=gases), bbox_inches='tight')
+        fig1.savefig('/home/gediz/LaTex/Thesis/Figures/power_study_245_modelled.pdf',bbox_inches='tight')
+    return arg,P_ges_calc,P_ges_calc_error_min,P_ges_calc_error_max
+
+
 def Totalpower_from_Profile(s):
     vol_4=[0.00010813,0.0001071,0.00015026,0.00018826,0.00019817,0.00019164,0.00019493,0.000214,0.0002304,0.00019267,0.00019731,0.00018608,0.00019864]
     vol_3=[0,0.00002208,0.00006679,0.000102,0.00015254,0.00021412,0.00026981,0.00031004,0.00027036,0.00020052,0.00019463,0.00018738,0.00019145]
@@ -556,9 +616,9 @@ def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False
             P_0,P_1,P_0_min,P_0_max,P_1_min,P_1_max=0,0,0,0,0,0
             if g=='H':
                 for j in np.arange(0,len(flux_d)):
-                    P_0+=((flux_rc[j]*flux_d[j]*(n_0-flux_d[j])*b[j])*1.602E-19)*(A_D/(4*np.pi))
-                    P_0_min+=((flux_rc_min[j]*flux_d[j]*(n_0-flux_d[j])*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
-                    P_0_max+=((flux_rc_max[j]*flux_d[j]*(n_0-flux_d[j])*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_0+=((flux_rc[j]*n_e*(n_0-flux_d[j])*b[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_0_min+=((flux_rc_min[j]*n_e*(n_0-flux_d[j])*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_0_max+=((flux_rc_max[j]*n_e*(n_0-flux_d[j])*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
                     P_1,P_1_min,P_1_max=0,0,0
             if g=='He' or g=='Ar' or g=='Ne':
                 for j in np.arange(0,len(flux_d)):
@@ -592,7 +652,7 @@ def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False
         c1=colors2[1]#'#18a8d1'
         c2=colors2[5]#'#fb8500'
         twoaxis=False
-        fig, ax=plt.subplots(figsize=(width/2,height))
+        fig, ax=plt.subplots(figsize=(width/2,height*0.8))
         #plt.ylim(0,20)
         ax.set_xticks(x)
         ax.set_xlabel('sensor number')
@@ -614,7 +674,7 @@ def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False
             ax.errorbar(x,P_profile_calc,yerr=(error_P_calc[0],error_P_calc[1]), capsize=5,linestyle='None',color=c2)
         leg = lns1  +lns2
         labs = [l.get_label() for l in leg]
-        ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.5), title=title)
+        ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.7), title=title)
         fig= plt.gcf()
         plt.show()
         if savefig==True:
@@ -721,14 +781,16 @@ def Forward_modeling(s,g):
             P=P_profile[a]*mesh/gold(g)
             print(nsolve(P_rad(x,n_e,n_0,v_i),x,P))
 
-def Model_accuracy(s,g,plot=False):
+def Model_accuracy(s,g,plot=False,savefig=False):
     calc_p,calc_err_min,calc_err_max,bolo_p,bolo_err=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=s,g=g),unpack=True, usecols=(1,2,3,4,5))
     mean_calc=(np.mean(calc_p))
     mean_exp=(np.mean(bolo_p))
     hollowness_exp=((np.mean([bolo_p[3],bolo_p[4]])-np.mean([bolo_p[0],bolo_p[7]]))/(np.mean([bolo_p[2],bolo_p[5]])-np.mean([bolo_p[0],bolo_p[7]])))
     hollowness_calc=((np.mean([calc_p[3],calc_p[4]])-np.mean([calc_p[0],calc_p[7]]))/(np.mean([calc_p[2],calc_p[5]])-np.mean([calc_p[0],calc_p[7]])))
-    norm_calc=[i/np.max(calc_p) for i in calc_p]
-    norm_exp=[i/np.max(bolo_p) for i in bolo_p]
+    hollowness_calc_min=((np.mean([calc_p[3]+calc_err_max[3],calc_p[4]+calc_err_max[4]])-np.mean([calc_p[0],calc_p[7]]))/(np.mean([calc_p[2]-calc_err_min[2],calc_p[5]-calc_err_min[5]])-np.mean([calc_p[0],calc_p[7]])))
+    hollowness_calc_max=((np.mean([calc_p[3]-calc_err_min[3],calc_p[4]-calc_err_min[4]])-np.mean([calc_p[0],calc_p[7]]))/(np.mean([calc_p[2]+calc_err_max[2],calc_p[5]+calc_err_max[5]])-np.mean([calc_p[0],calc_p[7]])))
+    norm_calc=[i/np.mean(calc_p) for i in calc_p]
+    norm_exp=[i/np.mean(bolo_p) for i in bolo_p]
     diff=[]
     for i,j in zip(norm_calc,norm_exp):
         diff.append(np.abs(i-j))
@@ -737,23 +799,27 @@ def Model_accuracy(s,g,plot=False):
         x=[1,2,3,4,5,6,7,8]
         c1=colors2[1]
         c2=colors2[5]
-        fig, ax=plt.subplots(figsize=(width/2,height))
+        fig, ax=plt.subplots(figsize=(width/2,height*0.7))
         ax.set_xticks(x)
         ax.set_xlabel('sensor number')
-        lns1=ax.plot(x,norm_exp,'o--',color=c1,label='experimental, $h$ ='+str('%.2f' %hollowness_exp))
-        ax.set_ylabel('$\Delta P_{\mathrm{rad}}$ [$\mu$W]')
-        lns2=ax.plot(x,norm_calc,'v--',color=c2,label='modelled, $h$ ='+str('%.2f' %hollowness_calc))
+        lns1=ax.plot(x,norm_exp,'o--',color=colors2[9],label='experimental, $h$ ='+str('%.2f' %hollowness_exp))
+        ax.set_ylabel('$\Delta P_{\mathrm{rad}} / \overline{\Delta P}_{\mathrm{rad}}  $ ')
+        lns2=ax.plot(x,norm_calc,'v--',color=colors2[4],label='modelled, $h$ ='+str('%.2f' %hollowness_calc))
+        ax.plot(1.5,1.3, marker='*',color=colors2[9], markersize=20)
         leg = lns1  +lns2
         labs = [l.get_label() for l in leg]
-        ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.5), title=title)
-        for s in x:
-            ax.vlines(s,norm_exp[s-1],norm_calc[s-1],color=colors2[2])
-        ax.annotate('$\Delta$ norm ='+str('%.2f' % sum(diff)),(3,0.5),color=colors2[2])
-        ax.annotate('$\Delta h $ ='+str('%.2f' % (abs(hollowness_calc-hollowness_exp))),(3,0.4),color=colors2[10])
-        ax.annotate('$\Delta mean $ ='+str('%.2f' % (mean_calc/mean_exp))+'\%',(3,0.3),color=colors2[8])
-        ax.set_ylim(0.3)
+        ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.8), title=title)
+        for i in x:
+            ax.vlines(i,norm_exp[i-1],norm_calc[i-1],color=colors2[2])
+        ax.annotate(r'\textbf{$P_{\mathrm{rad, diff}}$} = '+str('%.2f' % sum(diff)),(2.7,0.63),color=colors2[5])
+        ax.annotate('$| \Delta h |$ = '+str('%.2f' % (abs(hollowness_exp-hollowness_calc))),(3.4,0.54),color=colors2[8])
+        #ax.annotate('$\Delta mean $ ='+str('%.2f' % (mean_calc/mean_exp))+'\%',(3,0.3),color=colors2[8])
+        #ax.set_ylim(0.3)
         fig= plt.gcf()
         plt.show()
+        if savefig==True:
+            fig.savefig('/home/gediz/LaTex/Thesis/Figures/shot{n}_modeled_powerprofile_{g}_comparison.pdf'.format(n=s, g=g), bbox_inches='tight')
+
 
     return norm_calc,norm_exp,mean_calc,mean_exp,hollowness_calc,hollowness_exp,sum(diff)
 
@@ -812,19 +878,19 @@ def TopView():
 if __name__ == "__main__":
     start=datetime.now()
     print('start:', start)
-    shotnumbers=[np.arange(13299,13312)]
-    shotnumber=13094
-    #for shotnumber in shotnumbers:
-    gases=[['Ar' for i in range(13)]]
-    gas='H'
-    density_from=['f' for i in range(len(shotnumbers))]
-    infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
+    #for shotnumber in [13108,13107,13099,13282,13281,13280]:
+    shotnumber=13079
+    gas='Ne'
+    # shotnumbers=[[13090,13095,13096,13097],np.arange(13215,13228),np.arange(13069,13073),np.arange(13170,13175),[13265, 13264, 13263, 13262, 13261, 13260, 13259, 13258, 13257],[13099,13107,13108,13109],np.arange(13280,13292)]
+    # gases=[['H'for i in range(4)],['H'for i in range(13)],['He'for i in range(4)],['He'for i in range(5)],['He'for i in range(9)],['Ar'for i in range(4)],['Ar'for i in range(12)]]
+    #density_from=['f' for i in range(len(shotnumbers))]
+    #infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
 
-    location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+    #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
 
-    #Totalpower_calc(shotnumbers[0],gases[0],Type='Pressure',plot=True,savefig=True)
-    Boloprofile_calc(shotnumber,gas,makedata=True,plot=True,savedata=True)
-    #print(Model_accuracy(13094,'H')[6])
+    #Totalpower_calc_compare(shotnumbers,gases,Type='Power',plot=True,savefig=True)
+    #Boloprofile_calc(shotnumber,gas,makedata=False,plot=True,savefig=True)
+    Model_accuracy(shotnumber,gas,plot=True,savefig=True)
 
     print('total:',datetime.now()-start)
   # %%

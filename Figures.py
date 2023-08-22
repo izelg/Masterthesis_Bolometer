@@ -669,19 +669,20 @@ p_t,T=pc.TemperatureProfile(s,'Values','Power')[0],pc.TemperatureProfile(s,'Valu
 location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=s)
 time, inter_original=pc.LoadData(location)['Zeit [ms]'] / 1000,pc.LoadData(location)['Interferometer digital']
 inter=savgol_filter(inter_original,100,3)
-# fig=plt.figure(figsize=(width/2,height))
-# ax=fig.add_subplot(111)
-# fig.patch.set_facecolor('white')
-# ax2=ax.twinx()
-# ax2.plot(Position*100+z_0, Interferometer, marker='o',color=colors[1])
-# ax.plot(Position*100+z_0, I_isat, marker='o',color=colors[0])
-# ax.set_xlabel('R [cm]')
-# ax.set_ylabel('$I_{\mathrm{i, sat}}$ [mA]',color=colors[0])
-# ax2.set_ylabel('$U_{\mathrm{inter}}$ [V]',color=colors[1])
-# ax.tick_params(axis='y', labelcolor=colors[0])
-# ax2.tick_params(axis='y', labelcolor=colors[1])
-# fig= plt.gcf()
-# plt.show()
+fig=plt.figure(figsize=(width/2,height))
+ax=fig.add_subplot(111)
+fig.patch.set_facecolor('white')
+ax2=ax.twinx()
+ax2.plot(Position*100+z_0, Interferometer, marker='o',color=colors[1])
+ax.plot(Position*100+z_0, I_isat, marker='o',color=colors[0])
+ax.set_xlabel('R [cm]')
+ax.set_ylabel('$I_{\mathrm{i, sat}}$ [mA]',color=colors[0])
+ax2.set_ylabel('$U_{\mathrm{inter}}$ [V]',color=colors[1])
+ax.tick_params(axis='y', labelcolor=colors[0])
+ax2.tick_params(axis='y', labelcolor=colors[1])
+ax2.set_ylim(0)
+fig= plt.gcf()
+plt.show()
 # fig.savefig('/home/gediz/LaTex/Thesis/Figures/Isat_Iinter.pdf',bbox_inches='tight')
 
 #fig1=plt.figure(figsize=(width/2,height))
@@ -700,29 +701,29 @@ inter=savgol_filter(inter_original,100,3)
 # plt.show()
 #fig1.savefig('/home/gediz/LaTex/Thesis/Figures/Interferometer.pdf',bbox_inches='tight')
 
-fig2=plt.figure(figsize=(width,height))
-d=(pc.CorrectedDensityProfile(s)[1]*3.88E17)/2
-Position,I_isat=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=s),unpack=True,usecols=(0,3))
-norm_origin=integrate.trapezoid(I_isat,Position)/abs(Position[-1]-Position[0])
-Density_origin=[u*d/norm_origin for u in I_isat]
-norm_T=integrate.trapezoid(pc.CorrectedDensityProfile(s)[0],Position)/abs(Position[-1]-Position[0])
-Density_T=[u*d/norm_T for u in pc.CorrectedDensityProfile(s)[0]]
-Temperature=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}Te.dat'.format(s=s),usecols=1,unpack=True)
-norm=integrate.trapezoid([a*np.sqrt(b) for a,b in zip(pc.CorrectedDensityProfile(s)[0],Temperature)],Position)/abs(Position[-1]-Position[0])
-Density=[u*d/norm for u in [a*np.sqrt(b) for a,b in zip(pc.CorrectedDensityProfile(s)[0],Temperature)]]
-I_isat_fit=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}ne.dat'.format(s=s),usecols=1,unpack=True)
-norm_fit=integrate.trapezoid(I_isat_fit,Position)/abs(Position[-1]-Position[0])
-Density_fit=[u*d/norm_fit for u in I_isat_fit]
-plt.plot(Position*100+60,Density_origin,marker=markers[0],color=colors2[0],label='from $I_{\mathrm{i, sat}}$, uncorrected ')
-plt.plot(Position*100+60,Density,marker=markers[1],color=colors2[1],label='from $I_{\mathrm{i, sat}}$, corrected \n for interferometer dip ')
-plt.plot(Position*100+60, Density_T,marker=markers[2],color=colors2[2],label='from $I_{\mathrm{i, sat}}$, corrected \n for interferometer dip \n and temperature ')
-plt.plot(Position*100+60, Density_fit,marker=markers[3],color=colors2[4],label='from I-V curve fit,\n uncorrected ')        
-plt.xlabel('R [cm]')
-plt.ylabel('$n_\mathrm{e}(R)$ [m$^{-3}$]')
-plt.legend(loc='upper right')    
-fig2= plt.gcf()
-plt.show()
-fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Density_procedure.pdf',bbox_inches='tight')
+# fig2=plt.figure(figsize=(width,height))
+# d=(pc.CorrectedDensityProfile(s)[1]*3.88E17)/2
+# Position,I_isat=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=s),unpack=True,usecols=(0,3))
+# norm_origin=integrate.trapezoid(I_isat,Position)/abs(Position[-1]-Position[0])
+# Density_origin=[u*d/norm_origin for u in I_isat]
+# norm_T=integrate.trapezoid(pc.CorrectedDensityProfile(s)[0],Position)/abs(Position[-1]-Position[0])
+# Density_T=[u*d/norm_T for u in pc.CorrectedDensityProfile(s)[0]]
+# Temperature=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}Te.dat'.format(s=s),usecols=1,unpack=True)
+# norm=integrate.trapezoid([a*np.sqrt(b) for a,b in zip(pc.CorrectedDensityProfile(s)[0],Temperature)],Position)/abs(Position[-1]-Position[0])
+# Density=[u*d/norm for u in [a*np.sqrt(b) for a,b in zip(pc.CorrectedDensityProfile(s)[0],Temperature)]]
+# I_isat_fit=np.genfromtxt('/data6/shot{s}/kennlinien/auswert/shot{s}ne.dat'.format(s=s),usecols=1,unpack=True)
+# norm_fit=integrate.trapezoid(I_isat_fit,Position)/abs(Position[-1]-Position[0])
+# Density_fit=[u*d/norm_fit for u in I_isat_fit]
+# plt.plot(Position*100+60,Density_origin,marker=markers[0],color=colors2[0],label='from $I_{\mathrm{i, sat}}$, uncorrected ')
+# plt.plot(Position*100+60,Density,marker=markers[1],color=colors2[1],label='from $I_{\mathrm{i, sat}}$, corrected \n for interferometer dip ')
+# plt.plot(Position*100+60, Density_T,marker=markers[2],color=colors2[2],label='from $I_{\mathrm{i, sat}}$, corrected \n for interferometer dip \n and temperature ')
+# plt.plot(Position*100+60, Density_fit,marker=markers[3],color=colors2[4],label='from I-V curve fit,\n uncorrected ')        
+# plt.xlabel('R [cm]')
+# plt.ylabel('$n_\mathrm{e}(R)$ [m$^{-3}$]')
+# plt.legend(loc='upper right')    
+# fig2= plt.gcf()
+# plt.show()
+# fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Density_procedure.pdf',bbox_inches='tight')
 
 # %% Gold Absorption
 
@@ -1657,6 +1658,9 @@ for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
     x=[u-60 for u in np.array(x_.iloc[i])]
     y=np.array(y_.iloc[i])
     ax_f.plot(np.append(x,x[0])+60,np.append(y,y[0]),color='grey',linewidth=2,alpha=0.3)
+ax_f.hlines(0,64,78,color=colors2[5])
+for i in np.arange(0,29):
+    ax_f.vlines(64+i*0.5,-0.5,0.5,color=colors2[5],lw=1)
 
 s=13252
 i=2
@@ -1666,7 +1670,9 @@ ax.errorbar(p*100+60,d,e,capsize=5, marker='o', color=colors2[i],label='correcte
 ax.errorbar(p*100+46,np.flip(d),np.flip(e),capsize=5, marker='o', color=colors2[i],alpha=0.3)
 ax.set_xlabel('R [cm]')
 ax.set_ylabel('$n_\mathrm{e}(R)$ [m$^{-3}$]')
-ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.5),title='He, shot n$^\circ$13252, MW: 2.45 GHz, \n $P_{\mathrm{MW}}$ = 2.8 kW, p = 25.5 mPa')    
+ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.5),title='He, shot n$^\circ$13252, MW: 2.45 GHz, \n $P_{\mathrm{MW}}$ = 2.8 kW, p = 25.5 mPa') 
+ax.set_zorder(ax.get_zorder()+1)
+ax.set_frame_on(False)   
 fig2= plt.gcf()
 plt.show()
 fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Density_with_errorbars.pdf',bbox_inches='tight')
@@ -1685,6 +1691,9 @@ for i in [0,1,2,3,4,5,6,7,8,9,10,11,12]:
     x=[u-60 for u in np.array(x_.iloc[i])]
     y=np.array(y_.iloc[i])
     ax_f.plot(np.append(x,x[0])+60,np.append(y,y[0]),color='grey',linewidth=2,alpha=0.3)
+ax_f.hlines(0,64,78,color=colors2[5])
+for i in np.arange(0,29):
+    ax_f.vlines(64+i*0.5,-0.5,0.5,color=colors2[5],lw=1)
 
 s=13252
 i=6
@@ -1694,6 +1703,8 @@ ax.errorbar(p*100+46,np.flip(t),np.flip(e),capsize=5, marker='o', color=colors2[
 ax.set_xlabel('R [cm]')
 ax.set_ylabel('$T_\mathrm{e}(R)$ [eV]')
 ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.5),title='He, shot n$^\circ$13252, MW: 2.45 GHz, \n $P_{\mathrm{MW}}$ = 2.8 kW, p = 25.5 mPa')    
+ax.set_zorder(ax.get_zorder()+1)
+ax.set_frame_on(False)   
 fig2= plt.gcf()
 plt.show()
 fig2.savefig('/home/gediz/LaTex/Thesis/Figures/Temperature_with_errorbars.pdf',bbox_inches='tight')
@@ -1705,35 +1716,35 @@ def colorchooser(j):
         m='*'
     else:
         m='o'
-    if gas[j]=='H ':
+    if gas[j]=='H':
         c=colors2[1]
         a_span_p=max(p_h)
         a_span_mw=max(mw_h)
-    if gas[j]==' He ':
+    if gas[j]=='He':
         c=colors2[5]
         a_span_p=max(p_he)
         a_span_mw=max(mw_he)
-    if gas[j]==' Ar ':
+    if gas[j]=='Ar':
         c=colors2[11]
         a_span_p=max(p_ar)
         a_span_mw=max(mw_ar)
-    if gas[j]==' Ne ':
+    if gas[j]=='Ne':
         c=colors2[8]
         a_span_p=max(p_ne)
         a_span_mw=max(mw_ne)
     return m,c,a_span_p,a_span_mw
 p_h,p_he,p_ar,p_ne,mw_h,mw_he,mw_ar,mw_ne=[],[],[],[],[],[],[],[]
 for j in np.arange(0,154):
-    if gas[j]=='H ':
+    if gas[j]=='H':
         mw_h.append(mw[j])
         p_h.append(p[j])
-    if gas[j]==' He ':
+    if gas[j]=='He':
         mw_he.append(mw[j])
         p_he.append(p[j])
-    if gas[j]==' Ar ':
+    if gas[j]=='Ar':
         mw_ar.append(mw[j])
         p_ar.append(p[j])
-    if gas[j]==' Ne ':
+    if gas[j]=='Ne':
         mw_ne.append(mw[j])
         p_ne.append(p[j])
 plt.figure(figsize=(width/2,width/2))
@@ -1753,7 +1764,7 @@ plt.plot(mw[53],(P[53]/mw[53])*100,marker=colorchooser(53)[0],color=colorchooser
 plt.legend(loc='upper right')
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_power.pdf',bbox_inches='tight')
+#fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_power.pdf',bbox_inches='tight')
 
 plt.figure(figsize=(width/2,width/2))
 plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
@@ -1768,7 +1779,7 @@ plt.plot(p[61],(P[61]/mw[61])*100,marker=colorchooser(61)[0],color=colorchooser(
 #plt.legend(loc='upper right')
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_pressure.pdf',bbox_inches='tight')
+#fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_pressure.pdf',bbox_inches='tight')
 
 plt.figure(figsize=(width/2,width/2))
 plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
@@ -1782,7 +1793,7 @@ plt.plot(t[61],(P[61]/mw[61])*100,marker=colorchooser(61)[0],color=colorchooser(
 #plt.legend(loc='upper right')
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_temperature.pdf',bbox_inches='tight')
+#fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_temperature.pdf',bbox_inches='tight')
 
 plt.figure(figsize=(width/2,width/2))
 plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
@@ -1796,20 +1807,239 @@ plt.plot(n[61],(P[61]/mw[61])*100,marker=colorchooser(61)[0],color=colorchooser(
 #plt.legend(loc='upper right')
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_density.pdf',bbox_inches='tight')
-# %% P total table model
-# %% P total table
+#fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_density.pdf',bbox_inches='tight')
+
+# %% P total table modeled Gases pressure
 shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
 shotnumberm,gasm,mwm,pm,tm,nm,Pm,Pminm,Pmaxm=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_modeled_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
-g='Ar'
-for s in np.arange(13299,13312):
-    index=np.argwhere(shotnumber==s)
-    indexm=np.argwhere(shotnumberm==s)
-    print(P[index[0]]/Pm[indexm[0]])
-    mean_exp=poca.Model_accuracy(s,g)[3]
-    mean_mod=poca.Model_accuracy(s,g)[2]
-    print(mean_exp/mean_mod)
-# %% Model accuracy
+def colorchooserm(j): 
+    if gasm[j]=='H':
+        c=colors2[1]
+    if gasm[j]=='He':
+        c=colors2[5]
+    if gasm[j]=='Ar':
+        c=colors2[11]
+    if gasm[j]=='Ne':
+        c=colors2[8]
+    return c
+
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$p$ [mPa]')
+for j in np.arange(0,116):
+    if gasm[j]=='H':
+        if shotnumberm[j] in [13242 ,13243, 13244, 13245 ,13246, 13247, 13248,13250 ,13251, 13252 ,13253,13254 ,13255] or shotnumberm[j] in np.arange(13089,13095):
+            index=[np.argwhere(shotnumber==shotnumberm[j])][0]
+            plt.errorbar(pm[j],(Pm[j]/mwm[j])*100,yerr=([(Pminm[j]/mwm[j])*100],[(Pmaxm[j]/mwm[j])*100]),marker='v',color=colorchooserm(j),capsize=5)
+            plt.errorbar(p[index][0],(P[index][0]/mw[index][0])*100,yerr=([(Pmin[index][0]/mw[index][0])*100],[(Pmax[index][0]/mw[index][0])*100]),marker='o',color=colorchooserm(j),alpha=0.5,capsize=5)
+            plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+indexm=np.argwhere(shotnumberm==13242)
+index=np.argwhere(shotnumber==13242)
+plt.plot(pm[indexm],(Pm[indexm]/mwm[indexm])*100,marker='v',color=colorchooserm(indexm),ls='None',label='mod')
+plt.plot(p[index],(P[index]/mw[index])*100,marker='o',color=colorchooserm(indexm),ls='None',label='exp',alpha=0.5)
+plt.legend(loc='upper left',title='H')
+plt.ylim(0)
+plt.xlim(0,50)
+plt.hlines(100,0,200,lw=1,ls='dotted')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_pressure_modelled_H.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$p$ [mPa]')
+for j in np.arange(0,116):
+    if gasm[j]=='He':
+        if shotnumberm[j] in np.arange(13268,13280):
+            index=[np.argwhere(shotnumber==shotnumberm[j])][0]
+            plt.errorbar(pm[j],(Pm[j]/mwm[j])*100,yerr=([(Pminm[j]/mwm[j])*100],[(Pmaxm[j]/mwm[j])*100]),marker='v',color=colorchooserm(j),capsize=5)
+            plt.errorbar(p[index][0],(P[index][0]/mw[index][0])*100,yerr=([(Pmin[index][0]/mw[index][0])*100],[(Pmax[index][0]/mw[index][0])*100]),marker='o',color=colorchooserm(j),alpha=0.5,capsize=5)
+            plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+indexm=np.argwhere(shotnumberm==13268)
+index=np.argwhere(shotnumber==13268)
+plt.plot(pm[indexm],(Pm[indexm]/mwm[indexm])*100,marker='v',color=colorchooserm(indexm),ls='None',label='mod')
+plt.plot(p[index],(P[index]/mw[index])*100,marker='o',color=colorchooserm(indexm),ls='None',label='exp',alpha=0.5)
+plt.legend(loc='upper left',title='He')
+plt.ylim(0,80)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_pressure_modelled_He.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$p$ [mPa]')
+for j in np.arange(0,116):
+    if gasm[j]=='Ne':
+        index=[np.argwhere(shotnumber==shotnumberm[j])][0]
+        plt.errorbar(pm[j],(Pm[j]/mwm[j])*100,yerr=([(Pminm[j]/mwm[j])*100],[(Pmaxm[j]/mwm[j])*100]),marker='v',color=colorchooserm(j),capsize=5)
+        plt.errorbar(p[index][0],(P[index][0]/mw[index][0])*100,yerr=([(Pmin[index][0]/mw[index][0])*100],[(Pmax[index][0]/mw[index][0])*100]),marker='o',color=colorchooserm(j),alpha=0.5,capsize=5)
+        plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+indexm=np.argwhere(shotnumberm==13081)
+index=np.argwhere(shotnumber==13081)
+plt.plot(pm[indexm],(Pm[indexm]/mwm[indexm])*100,marker='v',color=colorchooserm(indexm),ls='None',label='mod')
+plt.plot(p[index],(P[index]/mw[index])*100,marker='o',color=colorchooserm(indexm),ls='None',label='exp',alpha=0.5)
+plt.legend(loc='upper left',title='Ne')
+plt.xlim(0,80)
+plt.hlines(100,0,200,lw=1,ls='dotted')
+plt.ylim(0)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_pressure_modelled_Ne.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$p$ [mPa]')
+for j in np.arange(0,116):
+    if gasm[j]=='Ar':
+        if shotnumberm[j] in [13299, 13300, 13301, 13302, 13303, 13304, 13305, 13306, 13307, 13308, 13309, 13310,13311,13099, 13100, 13101, 13102, 13104, 13105, 13106]:
+            index=[np.argwhere(shotnumber==shotnumberm[j])][0]
+            plt.errorbar(pm[j],(Pm[j]/mwm[j])*100,yerr=([(Pminm[j]/mwm[j])*100],[(Pmaxm[j]/mwm[j])*100]),marker='v',color=colorchooserm(j),capsize=5)
+            plt.errorbar(p[index][0],(P[index][0]/mw[index][0])*100,yerr=([(Pmin[index][0]/mw[index][0])*100],[(Pmax[index][0]/mw[index][0])*100]),marker='o',color=colorchooserm(j),alpha=0.5,capsize=5)
+            plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+indexm=np.argwhere(shotnumberm==13299)
+index=np.argwhere(shotnumber==13299)
+plt.plot(pm[indexm],(Pm[indexm]/mwm[indexm])*100,marker='v',color=colorchooserm(indexm),ls='None',label='mod')
+plt.plot(p[index],(P[index]/mw[index])*100,marker='o',color=colorchooserm(indexm),ls='None',label='exp',alpha=0.5)
+plt.legend(loc='upper left',title='Ar')
+plt.ylim(0,80)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_pressure_modelled_Ar.pdf',bbox_inches='tight')
+# %% P total table modeled Gases power
+shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+shotnumberm,gasm,mwm,pm,tm,nm,Pm,Pminm,Pmaxm=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_modeled_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+def colorchooserm(j): 
+    if gasm[j]=='H':
+        c=colors2[1]
+    if gasm[j]=='He':
+        c=colors2[5]
+    if gasm[j]=='Ar':
+        c=colors2[11]
+    if gasm[j]=='Ne':
+        c=colors2[8]
+    return c
+
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$P_{\mathrm{MW}}$ [W]')
+for j in np.arange(0,116):
+    if gasm[j]=='H':
+        index=[np.argwhere(shotnumber==shotnumberm[j])][0]
+        plt.plot(mwm[j],(Pm[j]/mwm[j])*100,marker='v',color=colorchooserm(j))
+        plt.plot(mw[index],(P[index]/mw[index])*100,marker='o',color=colorchooserm(j),alpha=0.5)
+        plt.vlines(mwm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+plt.plot(mwm[0],(Pm[0]/mwm[0])*100,marker='v',color=colorchooserm(0),ls='None',label='mod')
+plt.plot(mw[20],(P[20]/mw[20])*100,marker='o',color=colorchooserm(0),ls='None',label='exp',alpha=0.5)
+plt.legend(loc='upper right',title='H')
+plt.ylim(0)
+plt.xlim(0,2900)
+plt.hlines(100,0,3000,lw=1,ls='dotted')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_power_modelled_H.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$P_{\mathrm{MW}}$ [W]')
+for j in np.arange(0,116):
+    if gasm[j]=='He':
+        index=[np.argwhere(shotnumber==shotnumberm[j])][0]
+        plt.plot(mwm[j],(Pm[j]/mwm[j])*100,marker='v',color=colorchooserm(j))
+        plt.plot(mw[index],(P[index]/mw[index])*100,marker='o',color=colorchooserm(j),alpha=0.5)
+        plt.vlines(mwm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+plt.plot(mwm[26],(Pm[26]/mwm[26])*100,marker='v',color=colorchooserm(26),ls='None',label='mod')
+plt.plot(mw[32],(P[32]/mw[32])*100,marker='o',color=colorchooserm(26),ls='None',label='exp',alpha=0.5)
+plt.legend(loc='upper left',title='He')
+plt.ylim(0)
+plt.xlim(0,2900)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_power_modelled_He.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$P_{\mathrm{MW}}$ [W]')
+for j in np.arange(0,116):
+    if gasm[j]=='Ne':
+        index=[np.argwhere(shotnumber==shotnumberm[j])][0]
+        plt.plot(mwm[j],(Pm[j]/mwm[j])*100,marker='v',color=colorchooserm(j))
+        plt.plot(mw[index],(P[index]/mw[index])*100,marker='o',color=colorchooserm(j),alpha=0.5)
+        plt.vlines(mwm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+plt.plot(mwm[107],(Pm[107]/mwm[107])*100,marker='v',color=colorchooserm(107),ls='None',label='mod')
+plt.plot(mw[67],(P[67]/mw[67])*100,marker='o',color=colorchooserm(107),ls='None',label='exp',alpha=0.5)
+plt.legend(loc='upper left',title='Ne')
+plt.hlines(100,0,3000,lw=1,ls='dotted')
+plt.xlim(0,2900)
+plt.ylim(0)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_power_modelled_Ne.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$P_{\mathrm{MW}}$ [W]')
+for j in np.arange(0,116):
+    if gasm[j]=='Ar':
+        index=[np.argwhere(shotnumber==shotnumberm[j])][0]
+        plt.plot(mwm[j],(Pm[j]/mwm[j])*100,marker='v',color=colorchooserm(j))
+        plt.plot(mw[index],(P[index]/mw[index])*100,marker='o',color=colorchooserm(j),alpha=0.5)
+        plt.vlines(mwm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+plt.plot(mwm[49],(Pm[49]/mwm[49])*100,marker='v',color=colorchooserm(49),ls='None',label='mod')
+plt.plot(mw[53],(P[53]/mw[53])*100,marker='o',color=colorchooserm(49),ls='None',label='exp',alpha=0.5)
+plt.legend(loc='upper right',title='Ar')
+plt.xlim(0,2900)
+plt.ylim(0)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_power_modelled_Ar.pdf',bbox_inches='tight')
+
+#%% Faktor modeled experimental
+
+shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+shotnumberm,gasm,mwm,pm,tm,nm,Pm,Pminm,Pmaxm=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_modeled_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+def colorchooserm(j): 
+    if gasm[j]=='H':
+        c=colors2[1]
+    if gasm[j]=='He':
+        c=colors2[5]
+    if gasm[j]=='Ar':
+        c=colors2[11]
+    if gasm[j]=='Ne':
+        c=colors2[8]
+    return c
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$ \delta_{\mathrm{mod}}$')
+plt.xlabel('$n_{\mathrm{e}}$ [m$^{-3}$]')
+for j in np.arange(0,116):
+    plt.plot(nm[j],(Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0]),marker='d',color=colorchooserm(j))
+for j in [0,20,114,98]:
+    plt.plot(nm[j],(Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0]),marker='d',color=colorchooserm(j),ls='None',label=gasm[j])
+plt.legend(loc='upper left')
+plt.ylim(0,10)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_factor_mod_exp_density.pdf',bbox_inches='tight')
+
+# def neu(pres):
+#     T=290
+#     k=1.38E-23
+#     return (pres*10**(-3))/(k*T)
+
+# plt.figure(figsize=(width/2,width/2))
+# plt.ylabel('$P_{\mathrm{rad,net,mod}}/P_{\mathrm{rad,net,exp}}$')
+# plt.xlabel('$T_{\mathrm{e}}$ [eV]')
+# for j in np.arange(0,116):
+#     plt.plot(tm[j],(Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0]),marker='d',color=colorchooserm(j))
+# plt.ylim(0,10)
+# fig= plt.gcf()
+# plt.show()
+# fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_factor_mod_exp_temperature.pdf',bbox_inches='tight')
+
+
+# %% Model accuracy hollowness
 shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
 def colorchooser(j): 
     if gas[j]=='H':
@@ -1826,43 +2056,133 @@ def neu(pres):
     k=1.38E-23
     return (pres*10**(-3))/(k*T)
 arg=p
+# plt.figure(figsize=(width/2,height*0.7))
 # for j in np.arange(0,117):
-#     n0=neu(p[j])
-#     n_e=n[j]
-#     plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[6],marker='o',color=colorchooser(j))
-# plt.ylabel('diff of norm')
+#     plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[4],marker='v',color=colorchooser(j))
+# for j in [20,32,67,53]:
+#     plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[4],marker='v',color=colorchooser(j),ls='None',label=gas[j])
+# plt.legend(loc='upper right',title='modelled')
+# plt.ylabel('$h_{\mathrm{mod}}$')
+# plt.xlabel('$p$ [mPa]')
+# plt.ylim(0.3,1.8)
+# fig= plt.gcf()
 # plt.show()
+# fig.savefig('/home/gediz/LaTex/Thesis/Figures/model_hollowness_pressure.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(width/2,height*0.7))
-for j in np.arange(0,117):
-    plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[4],marker='v',color=colorchooser(j))
-plt.plot(arg[20],poca.Model_accuracy(shotnumber[20],gas[20])[4],marker='v',color=colorchooser(20),ls='None',label='H')
-plt.plot(arg[32],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='v',color=colorchooser(32),ls='None',label='He')
-plt.plot(arg[67],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='v',color=colorchooser(67),ls='None',label='Ne')
-plt.plot(arg[53],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='v',color=colorchooser(53),ls='None',label='Ar')
-plt.legend(loc='upper right',title='modelled')
-plt.ylabel('hollowness $h$')
-plt.xlabel('$p$ [mPa]')
-plt.ylim(0.3,1.8)
-plt.show()
-
-plt.figure(figsize=(width/2,height*0.7))
-for j in np.arange(0,117):
-    plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[5],marker='o',color=colorchooser(j))
-plt.plot(arg[20],poca.Model_accuracy(shotnumber[20],gas[20])[4],marker='o',color=colorchooser(20),ls='None',label='H')
-plt.plot(arg[32],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='o',color=colorchooser(32),ls='None',label='He')
-plt.plot(arg[67],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='o',color=colorchooser(67),ls='None',label='Ne')
-plt.plot(arg[53],poca.Model_accuracy(shotnumber[32],gas[32])[4],marker='o',color=colorchooser(53),ls='None',label='Ar')
-plt.legend(loc='upper right',title='experimental')
-plt.ylabel('hollowness $h$')
-plt.xlabel('$p$ [mPa]')
-plt.ylim(0.3,1.8)
-plt.show()
-
+# plt.figure(figsize=(width/2,height*0.7))
 # for j in np.arange(0,117):
-#     plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[2]/poca.Model_accuracy(shotnumber[j],gas[j])[3],marker='o',color=colorchooser(j))
-# plt.ylabel('factor mean')
+#     plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[5],marker='o',color=colorchooser(j))
+# for j in [20,32,67,53]:
+#     plt.plot(arg[j],poca.Model_accuracy(shotnumber[j],gas[j])[5],marker='o',color=colorchooser(j),ls='None',label=gas[j])
+# plt.legend(loc='upper right',title='experimental')
+# plt.ylabel('$h_{\mathrm{exp}}$')
+# plt.xlabel('$p$ [mPa]')
+# plt.ylim(0.3,1.8)
+# fig= plt.gcf()
 # plt.show()
+# fig.savefig('/home/gediz/LaTex/Thesis/Figures/experiment_hollowness_pressure.pdf',bbox_inches='tight')
 
-# %%
+fig=plt.figure(figsize=(width/2,height*0.7))
+for j in np.arange(0,117):
+    plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[5],poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4],marker='d',color=colorchooser(j))
+plt.xlabel('$h_{\mathrm{exp}}$')
+plt.ylabel('$h_{\mathrm{exp}} - h_{\mathrm{mod}}$',color=colors2[8])
+plt.tick_params(axis='y', labelcolor=colors2[8])
+fig.patch.set_facecolor('white')
+plt.ylim(-0.5,0.5)
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/delta_hollowness.pdf',bbox_inches='tight')
+
+fig=plt.figure(figsize=(width/2,height*0.7))
+h,P=[],[]
+for j in np.arange(0,117):
+    h.append(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4])
+print(np.mean(h))
+plt.hist(h,bins=15, color=colors2[9],alpha=0.7)
+plt.xlabel('$h_{\mathrm{exp}} - h_{\mathrm{mod}}$',color=colors2[8])
+plt.tick_params(axis='x', labelcolor=colors2[8])
+fig.patch.set_facecolor('white')
+plt.ylabel('occurrence')
+plt.xlim(-0.5,0.5)
+
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/delta_hollowness_hist.pdf',bbox_inches='tight')
+
+
+
+# %% Model accuracy diff
+shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+def colorchooser(j): 
+    if gas[j]=='H':
+        c=colors2[1]
+    if gas[j]=='He':
+        c=colors2[5]
+    if gas[j]=='Ar':
+        c=colors2[11]
+    if gas[j]=='Ne':
+        c=colors2[8]
+    return c
+def neu(pres):
+    T=290
+    k=1.38E-23
+    return (pres*10**(-3))/(k*T)
+arg=mw
+def lin(x,a,b):
+    return x*a+b
+plt.figure(figsize=(width/2,height*0.7))
+P,h,h_good=[],[],[]
+for j in np.arange(0,117):
+    P.append(poca.Model_accuracy(shotnumber[j],gas[j])[6])
+    h.append(abs(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4]))
+    if shotnumber[j] in [13253,13260,13102,13079]:
+        plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[6],abs(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4]),marker='*',color=colorchooser(j),markersize=20)
+    else:
+        plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[6],abs(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4]),marker='d',color=colorchooser(j))
+for j in [20,32,67,53]:
+    plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[6],abs(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4]),marker='d',color=colorchooser(j),ls='None',label=gas[j])
+h_1=[h[i] for i in np.argsort(P)]
+P_1=np.sort(P)
+popt,pcov=curve_fit(lin,P_1,h_1)
+P_2=np.arange(-1,5)
+plt.plot(P_2,lin(P_2,*popt),color=colors2[6],ls='dotted')
+plt.plot(P_2,lin(P_2,-0.23,0.5),color=colors2[6],ls='dotted')
+h_max=0.2
+P_max=1.4
+for j in np.arange(0,117):
+    if h[j]<=h_max:
+        if P[j]<=P_max:
+            h_good.append(shotnumber[j])
+print(len(h_good) )
+plt.axvspan(-0.05,P_max,ymin=-0.02,ymax=h_max*2+0.02, color=colors2[6],alpha=0.4)
+plt.legend(loc='upper right')
+plt.xlabel('$P_{\mathrm{rad, diff}}$',color=colors2[5])
+plt.ylabel('$|\Delta h |$',color=colors2[8])
+plt.ylim(-0.02,0.5)
+plt.xlim(-0.05,3.7)
+plt.tick_params(axis='x', labelcolor=colors2[5])
+plt.tick_params(axis='y', labelcolor=colors2[8])
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/model_hollowness_P_rad_diff.pdf',bbox_inches='tight')
+
+
+
+# plt.figure(figsize=(width/2,height*0.7))
+# P=[]
+# for j in np.arange(0,117):
+#     P.append(poca.Model_accuracy(shotnumber[j],gas[j])[6])
+# print(np.mean(P))
+# plt.hist(P, bins=15, color=colors2[6],alpha=0.7)
+# plt.xlabel('$P_{\mathrm{rad, diff}}$',color=colors2[5])
+# plt.tick_params(axis='x', labelcolor=colors2[5])
+# fig.patch.set_facecolor('white')
+# plt.xlim(-0.05,2.5)
+# plt.ylabel('occurrence')
+# fig= plt.gcf()
+# plt.show()
+# fig.savefig('/home/gediz/LaTex/Thesis/Figures/model_P_rad_diff_hist.pdf',bbox_inches='tight')
+
+
 # %%
