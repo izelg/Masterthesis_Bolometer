@@ -590,7 +590,7 @@ def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False
         if g=='Ar':
             temp,pec,pec_2= adas.ar_adf11()[0],adas.ar_adf11()[1],adas.ar_adf11()[2]
         if g=='Ne':
-            temp,pec,pec_2= adas.ne_adf11(data='plt96_ne')[0],adas.ne_adf11(data='plt96_ne')[1],adas.he_adf11(data='plt96_he')[2]
+            temp,pec,pec_2= adas.ne_adf11(data='plt96_ne')[0],adas.ne_adf11(data='plt96_ne')[1],adas.ne_adf11(data='plt96_ne')[2]
 
         flux_t,flux_t_max,flux_t_min,flux_d,flux_rc,flux_rc_min,flux_rc_max,flux_rc_2,flux_rc_2_max,flux_rc_2_min=[],[],[],[],[],[],[],[],[],[]
         n,n_e,n_0=pc.Densities(s,g)
@@ -616,18 +616,18 @@ def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False
             P_0,P_1,P_0_min,P_0_max,P_1_min,P_1_max=0,0,0,0,0,0
             if g=='H':
                 for j in np.arange(0,len(flux_d)):
-                    P_0+=((flux_rc[j]*n_e*(n_0-flux_d[j])*b[j])*1.602E-19)*(A_D/(4*np.pi))
-                    P_0_min+=((flux_rc_min[j]*n_e*(n_0-flux_d[j])*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
-                    P_0_max+=((flux_rc_max[j]*n_e*(n_0-flux_d[j])*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_0+=((flux_rc[j]*n_e*n_0*b[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_0_min+=((flux_rc_min[j]*n_e*n_0*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_0_max+=((flux_rc_max[j]*n_e*n_0*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
                     P_1,P_1_min,P_1_max=0,0,0
             if g=='He' or g=='Ar' or g=='Ne':
                 for j in np.arange(0,len(flux_d)):
-                    P_0+=((flux_rc[j]*n_e*(n_0-flux_d[j])*b[j])*1.602E-19)*(A_D/(4*np.pi))
-                    P_0_min+=((flux_rc_min[j]*n_e*(n_0-flux_d[j])*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
-                    P_0_max+=((flux_rc_max[j]*n_e*(n_0-flux_d[j])*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
-                    P_1+=((flux_rc_2[j]*flux_d[j]*n_e*b[j])*1.602E-19)*(A_D/(4*np.pi))
-                    P_1_min+=((flux_rc_2_min[j]*flux_d[j]*n_e*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
-                    P_1_max+=((flux_rc_2_max[j]*flux_d[j]*n_e*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_0+=((flux_rc[j]*n_e*n_0*b[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_0_min+=((flux_rc_min[j]*n_e*n_0*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_0_max+=((flux_rc_max[j]*n_e*n_0*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_1+=((flux_rc_2[j]*n_e*flux_d[j]*b[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_1_min+=((flux_rc_2_min[j]*n_e*flux_d[j]*e_min[j])*1.602E-19)*(A_D/(4*np.pi))
+                    P_1_max+=((flux_rc_2_max[j]*n_e*flux_d[j]*e_max[j])*1.602E-19)*(A_D/(4*np.pi))
             P_profile_calc.append((P_0+P_1)/10**(-6))
             error_P_calc[0].append(abs(P_0+P_1-P_0_min-P_1_min)/10**(-6)+(P_0+P_1)/(10**(-6)*n_e*n_0)*pc.CorrectedDensityProfile(s)[5])
             error_P_calc[1].append(abs(P_0+P_1-P_0_max-P_1_max)/10**(-6)+(P_0+P_1)/(10**(-6)*n_e*n_0)*pc.CorrectedDensityProfile(s)[5])
@@ -711,6 +711,7 @@ def Boloprofile_correction(s,g,savedata=False):
 def Total_cross_section_calc(s,g):
     shotnumbers=s
     gases=g
+    density_from=['d']
     V_T_2=0.237 #till edge of calculation area with "additional fluxsurfaces"
     flux=np.genfromtxt('/home/gediz/Results/Modeled_Data/Fluxsurfaces_and_Lines_of_sight/flux_0_to_11_total.txt',unpack=True,usecols=(1))
     flux_pos=[2.174,5.081,5.844,6.637,7.461,8.324,9.233,10.19,11.207,12.321,13.321,14.321,15.321,16.321]#position of the flux surface edged in cm
@@ -878,19 +879,19 @@ def TopView():
 if __name__ == "__main__":
     start=datetime.now()
     print('start:', start)
-    #for shotnumber in [13108,13107,13099,13282,13281,13280]:
-    shotnumber=13079
+    #for shotnumber in np.arange(13079,13085):
+    #shotnumber=13345
     gas='Ne'
-    # shotnumbers=[[13090,13095,13096,13097],np.arange(13215,13228),np.arange(13069,13073),np.arange(13170,13175),[13265, 13264, 13263, 13262, 13261, 13260, 13259, 13258, 13257],[13099,13107,13108,13109],np.arange(13280,13292)]
-    # gases=[['H'for i in range(4)],['H'for i in range(13)],['He'for i in range(4)],['He'for i in range(5)],['He'for i in range(9)],['Ar'for i in range(4)],['Ar'for i in range(12)]]
-    #density_from=['f' for i in range(len(shotnumbers))]
+    shotnumbers=[np.arange(13079,13085)]
+    gases=[['Ne'for i in range(88)]]
+    density_from=['f' for i in range(len(shotnumbers))]
     #infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
 
     #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
 
-    #Totalpower_calc_compare(shotnumbers,gases,Type='Power',plot=True,savefig=True)
-    #Boloprofile_calc(shotnumber,gas,makedata=False,plot=True,savefig=True)
-    Model_accuracy(shotnumber,gas,plot=True,savefig=True)
+    Totalpower_calc_compare(shotnumbers,gases,Type='Pressure',plot=True)#,savefig=True)
+    #Boloprofile_calc(shotnumber,gas,makedata=True,plot=True,savedata=True)
+    #Model_accuracy(shotnumber,gas,plot=True)
 
     print('total:',datetime.now()-start)
   # %%

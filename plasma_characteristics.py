@@ -445,7 +445,7 @@ def FastElectrons():
     plt.show()
     
 def Densities(s,gas):
-    T=290
+    T=320
     k=1.38E-23
     p=Pressure(s,gas)*10**(-3)
     n=p/(k*T)
@@ -492,6 +492,6 @@ if __name__ == "__main__":
     #TemperatureProfile(shotnumbers,'Compare','Pressure',save=True,figurename='{g}_8GHz'.format(g=gas))
     # for s in shotnumbers:
     #DensityProfile(shotnumber,['d'],'Single')
-    CorrectedDensityProfile(shotnumber, Plot=True)
-    print(Densities(13094,'H'))
+    #CorrectedDensityProfile(shotnumber, Plot=True)
+    print(Densities(13281,'Ar'))
 # %%

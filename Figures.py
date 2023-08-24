@@ -2010,33 +2010,73 @@ def colorchooserm(j):
         c=colors2[8]
     return c
 
-plt.figure(figsize=(width/2,width/2))
-plt.ylabel('$ \delta_{\mathrm{mod}}$')
-plt.xlabel('$n_{\mathrm{e}}$ [m$^{-3}$]')
+fig, ax= plt.subplots(figsize=(width/2,height*0.7))
+ax2=ax.twinx()
+ax.set_ylabel('$ \delta_{\mathrm{mod}}$')
+ax2.set_ylabel('$ \delta_{\mathrm{mod, Ne}}$',color=colors2[8])
+ax.set_xlabel('$n_{\mathrm{e}}$ [m$^{-3}$]')
 for j in np.arange(0,116):
-    plt.plot(nm[j],(Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0]),marker='d',color=colorchooserm(j))
-for j in [0,20,114,98]:
+    if gasm[j] in ['H','He','Ar']:
+        ax.plot(nm[j],(Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0]),marker='d',color=colorchooserm(j))
+    if gasm[j] =='Ne':
+        ax2.plot(nm[j],(Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0]),marker='d',color=colorchooserm(j))
+ax2.tick_params(axis='y', labelcolor=colors2[8])
+fig.patch.set_facecolor('white')
+
+for j in [0,20,107,98]:
     plt.plot(nm[j],(Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0]),marker='d',color=colorchooserm(j),ls='None',label=gasm[j])
 plt.legend(loc='upper left')
-plt.ylim(0,10)
+plt.xlim(0)
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_factor_mod_exp_density.pdf',bbox_inches='tight')
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_factor_mod_exp_density_wo_neon.pdf',bbox_inches='tight')
 
-# def neu(pres):
-#     T=290
-#     k=1.38E-23
-#     return (pres*10**(-3))/(k*T)
+fig, ax= plt.subplots(figsize=(width/2,height*0.7))
+ax2=ax.twinx()
+ax.set_ylabel('$ \delta_{\mathrm{mod}}$')
+ax2.set_ylabel('$ \delta_{\mathrm{mod, Ne}}$',color=colors2[8])
+ax.set_xlabel('$T_{\mathrm{e}}$ [eV]')
+for j in np.arange(0,116):
+    if gasm[j] in ['H','He','Ar']:
+        ax.plot(tm[j],(Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0]),marker='d',color=colorchooserm(j))
+    if gasm[j] =='Ne':
+        ax2.plot(tm[j],(Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0]),marker='d',color=colorchooserm(j))
+ax2.tick_params(axis='y', labelcolor=colors2[8])
+fig.patch.set_facecolor('white')
 
-# plt.figure(figsize=(width/2,width/2))
-# plt.ylabel('$P_{\mathrm{rad,net,mod}}/P_{\mathrm{rad,net,exp}}$')
-# plt.xlabel('$T_{\mathrm{e}}$ [eV]')
-# for j in np.arange(0,116):
-#     plt.plot(tm[j],(Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0]),marker='d',color=colorchooserm(j))
-# plt.ylim(0,10)
-# fig= plt.gcf()
-# plt.show()
-# fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_factor_mod_exp_temperature.pdf',bbox_inches='tight')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_factor_mod_exp_temperature_wo_neon.pdf',bbox_inches='tight')
+
+#%% Faktor Hist
+shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+shotnumberm,gasm,mwm,pm,tm,nm,Pm,Pminm,Pmaxm=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_modeled_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+
+plt.figure(figsize=(width*1.2,height*0.5))
+plt.xlabel('$ \delta_{\mathrm{mod}}$')
+delt_h,delt_he,delt_ar,delt_ne=[],[],[],[]
+for j in np.arange(0,116):
+    if gasm[j]=='H':
+        delt_h.append((Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0])[0])
+    if gasm[j]=='He':
+        delt_he.append((Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0])[0])
+    if gasm[j]=='Ar':
+        delt_ar.append((Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0])[0])
+    if gasm[j]=='Ne':
+        delt_ne.append((Pm[j]/P[np.argwhere(shotnumber==shotnumberm[j])][0])[0])
+plt.hist(delt_h,bins=np.arange(0,28,0.5),color=colors2[1],alpha=0.7,label='H, $\overline{\delta}_{\mathrm{mod}}$ ='+str('%.1f' %np.mean(delt_h)))
+plt.hist(delt_he,bins=np.arange(0.1,28,0.5),color=colors2[5],alpha=0.7,label='He, $\overline{\delta}_{\mathrm{mod}}$ ='+str('%.1f' %np.mean(delt_he)))
+plt.hist(delt_ne,bins=np.arange(0.2,28,0.5),color=colors2[8],alpha=0.7,label='Ne, $\overline{\delta}_{\mathrm{mod}}$ ='+str('%.1f' %np.mean(delt_ne)))
+plt.hist(delt_ar,bins=np.arange(0.3,28,0.5),color=colors2[11],alpha=0.7,label='Ar, $\overline{\delta}_{\mathrm{mod}}$ ='+str('%.1f' %np.mean(delt_ar)))
+plt.axvline(np.mean(delt_h),color=colors2[1],ls='dotted')
+plt.axvline(np.mean(delt_he),color=colors2[5],ls='dotted')
+plt.axvline(np.mean(delt_ne),color=colors2[8],ls='dotted')
+plt.axvline(np.mean(delt_ar),color=colors2[11],ls='dotted')
+plt.legend(loc='upper right')
+plt.ylabel('occurrence')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_factor_mod_exp_hist.pdf',bbox_inches='tight')
 
 
 # %% Model accuracy hollowness
@@ -2185,4 +2225,254 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/model_hollowness_P_rad_diff.pdf',b
 # fig.savefig('/home/gediz/LaTex/Thesis/Figures/model_P_rad_diff_hist.pdf',bbox_inches='tight')
 
 
+# %% Adjustments to model
+shotnumberm,gasm,mwm,pm,tm,nm,Pm,Pminm,Pmaxm=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_modeled_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+
+shotnumber,gas,mw,p,te,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+def colorchooser(j): 
+    if gas[j]=='H':
+        c=colors2[1]
+    if gas[j]=='He':
+        c=colors2[5]
+    if gas[j]=='Ar':
+        c=colors2[11]
+    if gas[j]=='Ne':
+        c=colors2[8]
+    return c
+def colorchooserm(j): 
+    if gasm[j]=='H':
+        c=colors2[1]
+    if gasm[j]=='He':
+        c=colors2[5]
+    if gasm[j]=='Ar':
+        c=colors2[11]
+    if gasm[j]=='Ne':
+        c=colors2[8]
+    return c
+def neu(pres,T):
+    k=1.38E-23
+    return (pres*10**(-3))/(k*T)
+
+flux=np.genfromtxt('/home/gediz/Results/Modeled_Data/Fluxsurfaces_and_Lines_of_sight/flux_0_to_11_total.txt',unpack=True,usecols=(1))
+flux_pos=[2.174,5.081,5.844,6.637,7.461,8.324,9.233,10.19,11.207,12.321,13.321,14.321,15.321,16.321]
+pec_h,den_h,full_h,pec_den_h,p_h,n_h,P_h,mw_h,t_h=[],[],[],[],[],[],[],[],[]
+pec_he,den_he,full_he,pec_den_he,p_he,n_he,P_he,mw_he,t_he=[],[],[],[],[],[],[],[],[]
+pec_ne,den_ne,full_ne,pec_den_ne,p_ne,n_ne,P_ne,mw_ne,t_ne=[],[],[],[],[],[],[],[],[]
+pec_ar,den_ar,full_ar,pec_den_ar,p_ar,n_ar,P_ar,mw_ar,t_ar=[],[],[],[],[],[],[],[],[]
+V_T_2=0.237
+V=sum(flux)
+for j in np.arange(0,115):
+    flux_t,flux_rc,pex_full,pex_pec_den,pex_den,pex_pec=[],[],[],[],[],[]
+    p_t,t,mean_t,error=pc.TemperatureProfile(shotnumber[j],'Values',save=False)
+    if gas[j]=='H':
+        temp,pec= adas.h_adf11(T_max=201)[0],adas.h_adf11(T_max=201)[1]
+        for i in np.arange(0,len(flux_pos)-1):
+            interpol_t=pchip_interpolate(p_t*100,t,np.arange(flux_pos[i],flux_pos[i+1],0.01))
+            flux_t.append(np.mean(interpol_t))
+            interpol_rc=pchip_interpolate(temp,pec,flux_t[i])
+            flux_rc.append(interpol_rc)
+        for i in np.arange(0,len(flux_pos)-1):
+            pex_full.append((flux_rc[i]*flux[i]*n[j]*(neu(p[j],270)-n[j]))*1.602E-19)
+            pex_pec_den.append((flux_rc[i]*n[j]*(neu(p[j],270)-n[j])))
+            pex_pec.append(flux_rc[i]*flux[i])
+            pex_den.append(n[j]*(neu(p[j],270)-n[j]))
+        den_h.append(np.mean(pex_den))
+        pec_h.append(np.mean(pex_pec)/V)
+        pec_den_h.append(np.mean(pex_pec_den))
+        full_h.append((np.sum(pex_full)/V)*V_T_2)
+        p_h.append(p[j])
+        n_h.append(n[j])
+        P_h.append(P[j])
+        mw_h.append(mw[j])
+        t_h.append(te[j])
+    if gas[j]=='He':
+        temp,pec,pec_2= adas.he_adf11(data='plt96_he')[0],adas.he_adf11(data='plt96_he')[1],adas.he_adf11(data='plt96_he')[2]
+        for i in np.arange(0,len(flux_pos)-1):
+            interpol_t=pchip_interpolate(p_t*100,t,np.arange(flux_pos[i],flux_pos[i+1],0.01))
+            flux_t.append(np.mean(interpol_t))
+            interpol_rc=pchip_interpolate(temp,pec,flux_t[i])
+            flux_rc.append(interpol_rc)
+        for i in np.arange(0,len(flux_pos)-1):
+            pex_full.append((flux_rc[i]*flux[i]*n[j]*(neu(p[j],270)-n[j]))*1.602E-19)
+            pex_pec_den.append((flux_rc[i]*n[j]*(neu(p[j],270)-n[j])))
+            pex_pec.append(flux_rc[i]*flux[i])
+            pex_den.append(n[j]*(neu(p[j],270)-n[j]))
+        den_he.append(np.mean(pex_den))
+        pec_he.append(np.mean(pex_pec)/V)
+        pec_den_he.append(np.mean(pex_pec_den))
+        full_he.append((np.sum(pex_full)/V)*V_T_2)
+        p_he.append(p[j])
+        n_he.append(n[j])
+        P_he.append(P[j])
+        mw_he.append(mw[j])
+        t_he.append(te[j])
+    if gas[j]=='Ne':
+        temp,pec,pec_2= adas.ne_adf11(data='plt96_ne')[0],adas.ne_adf11(data='plt96_ne')[1],adas.he_adf11(data='plt96_he')[2]
+        for i in np.arange(0,len(flux_pos)-1):
+            interpol_t=pchip_interpolate(p_t*100,t,np.arange(flux_pos[i],flux_pos[i+1],0.01))
+            flux_t.append(np.mean(interpol_t))
+            interpol_rc=pchip_interpolate(temp,pec,flux_t[i])
+            flux_rc.append(interpol_rc)
+        for i in np.arange(0,len(flux_pos)-1):
+            pex_full.append((flux_rc[i]*flux[i]*n[j]*(neu(p[j],270)-n[j]))*1.602E-19)
+            pex_pec_den.append((flux_rc[i]*n[j]*(neu(p[j],270)-n[j])))
+            pex_pec.append(flux_rc[i]*flux[i])
+            pex_den.append(n[j]*(neu(p[j],270)-n[j]))
+        den_ne.append(np.mean(pex_den))
+        pec_ne.append(np.mean(pex_pec)/V)
+        pec_den_ne.append(np.mean(pex_pec_den))
+        full_ne.append((np.sum(pex_full)/V)*V_T_2)
+        p_ne.append(p[j])
+        n_ne.append(n[j])
+        P_ne.append(P[j])
+        mw_ne.append(mw[j])
+        t_ne.append(te[j])
+    if gas[j]=='Ar':
+        temp,pec,pec_2= adas.ar_adf11()[0],adas.ar_adf11()[1],adas.ar_adf11()[2]
+        for i in np.arange(0,len(flux_pos)-1):
+            interpol_t=pchip_interpolate(p_t*100,t,np.arange(flux_pos[i],flux_pos[i+1],0.01))
+            flux_t.append(np.mean(interpol_t))
+            interpol_rc=pchip_interpolate(temp,pec,flux_t[i])
+            flux_rc.append(interpol_rc)
+        for i in np.arange(0,len(flux_pos)-1):
+            pex_full.append((flux_rc[i]*flux[i]*n[j]*(neu(p[j],270)-n[j]))*1.602E-19)
+            pex_pec_den.append((flux_rc[i]*n[j]*(neu(p[j],270)-n[j])))
+            pex_pec.append(flux_rc[i]*flux[i])
+            pex_den.append(n[j]*(neu(p[j],270)-n[j]))
+        den_ar.append(np.mean(pex_den))
+        pec_ar.append(np.mean(pex_pec)/V)
+        pec_den_ar.append(np.mean(pex_pec_den))
+        full_ar.append((np.sum(pex_full)/V)*V_T_2)
+        p_ar.append(p[j])
+        n_ar.append(n[j])
+        P_ar.append(P[j])
+        mw_ar.append(mw[j])
+        t_ar.append(te[j])
+
+# fig,ax=plt.subplots(figsize=(width/2,height*0.7))
+# ax.set_yscale('log')
+# ax.set_ylabel(r'$n_{\mathrm{e}} \cdot n_{\mathrm{0}} \cdot \left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eV/m$^{3}$s]')
+# ax.set_xlabel('$p$ [mPa]')
+# ax.plot(p_h,pec_den_h,color=colors2[1],marker='d',ls='None',label='H')
+# ax.plot(p_he,pec_den_he,color=colors2[5],marker='d',ls='None',label='He')
+# ax.plot(p_ne,pec_den_ne,color=colors2[8],marker='d',ls='None',label='Ne')
+# ax.plot(p_ar,pec_den_ar,color=colors2[11],marker='d',ls='None',label='Ar')
+# plt.legend(loc='lower right')
+# fig= plt.gcf()
+# plt.show()
+# fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_mean_densityproduct_and_pec_pressure.pdf',bbox_inches='tight')
+
+fig,ax=plt.subplots(figsize=(width/3,height*0.7))
+ax.set_yscale('log')
+ax.set_ylabel('$n_{\mathrm{e}} \cdot n_{\mathrm{0}}$ [m$^{-6}$]',color=colors2[8])
+ax.tick_params(axis='y', labelcolor=colors2[8])
+fig.patch.set_facecolor('white')
+ax.set_xlabel('$p$ [mPa]')
+ax.plot(p_h,den_h,color=colors2[1],marker='d',ls='None',label='H')
+ax.plot(p_he,den_he,color=colors2[5],marker='d',ls='None',label='He')
+ax.plot(p_ne,den_ne,color=colors2[8],marker='d',ls='None',label='Ne')
+ax.plot(p_ar,den_ar,color=colors2[11],marker='d',ls='None',label='Ar')
+plt.legend(loc='lower right')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_mean_densityproduct_pressure.pdf',bbox_inches='tight')
+
+fig,ax=plt.subplots(figsize=(width/3,height*0.7))
+ax.set_yscale('log')
+ax.set_ylabel('$\overline{\sigma}_{\mathrm{rad,}f}$ [eVm$^3$/s]',color=colors2[5])
+ax.tick_params(axis='y', labelcolor=colors2[5])
+fig.patch.set_facecolor('white')
+ax.set_xlabel('$T_{\mathrm{e}}$ [eV]')
+ax.plot(t_h,pec_h,color=colors2[1],marker='d',ls='None',label='H')
+ax.plot(t_he,pec_he,color=colors2[5],marker='d',ls='None',label='He')
+ax.plot(t_ne,pec_ne,color=colors2[8],marker='d',ls='None',label='Ne')
+ax.plot(t_ar,pec_ar,color=colors2[11],marker='d',ls='None',label='Ar')
+#plt.legend(loc='lower right')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_mean_pec_temperature.pdf',bbox_inches='tight')
+
+fig,ax=plt.subplots(figsize=(width/3,height*0.7))
+ax.set_yscale('log')
+ax.set_ylabel('$P_{\mathrm{rad,net,mod}}$ [W]')
+ax.set_xlabel('$p$ [mPa]')
+ax.plot(p_h,full_h,color=colors2[1],marker='d',ls='None',label='H')
+ax.plot(p_he,full_he,color=colors2[5],marker='d',ls='None',label='He')
+ax.plot(p_ne,full_ne,color=colors2[8],marker='d',ls='None',label='Ne')
+ax.plot(p_ar,full_ar,color=colors2[11],marker='d',ls='None',label='Ar')
+#plt.legend(loc='lower right')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_p_net_mod_pressure.pdf',bbox_inches='tight')
+
+# fig,ax=plt.subplots(figsize=(width/2,height*0.7))
+# ax2=ax.twinx()
+# ax.plot(p_h,pec_h,color=colors2[1],marker='v',ls='None')
+# ax2.plot(p_h,P_h,color=colors2[1],marker='o',ls='None')
+# plt.show()
+# fig,ax=plt.subplots(figsize=(width/2,height*0.7))
+# ax2=ax.twinx()
+# ax.plot(p_he,pec_he,color=colors2[5],marker='v',ls='None')
+# ax2.plot(p_he,P_he,color=colors2[5],marker='o',ls='None')
+# plt.show()
+# fig,ax=plt.subplots(figsize=(width/2,height*0.7))
+# ax2=ax.twinx()
+# ax.plot(p_ne,pec_ne,color=colors2[8],marker='v',ls='None')
+# ax2.plot(p_ne,P_ne,color=colors2[8],marker='o',ls='None')
+# plt.show()
+# fig,ax=plt.subplots(figsize=(width/2,height*0.7))
+# ax2=ax.twinx()
+# ax.plot(p_ar,pec_ar,color=colors2[11],marker='v',ls='None')
+# ax2.plot(p_ar,P_ar,color=colors2[11],marker='o',ls='None')
+# plt.show()
+
+# fig,ax=plt.subplots(figsize=(width/2,height*0.7))
+# ax2=ax.twinx()
+# ax.plot(mw_h,pec_h,color=colors2[1],marker='v',ls='None')
+# ax2.plot(mw_h,P_h,color=colors2[1],marker='o',ls='None')
+# plt.show()
+# fig,ax=plt.subplots(figsize=(width/2,height*0.7))
+# ax2=ax.twinx()
+# ax.plot(mw_he,pec_he,color=colors2[5],marker='v',ls='None')
+# ax2.plot(mw_he,P_he,color=colors2[5],marker='o',ls='None')
+# plt.show()
+# fig,ax=plt.subplots(figsize=(width/2,height*0.7))
+# ax2=ax.twinx()
+# ax.plot(mw_ne,pec_ne,color=colors2[8],marker='v',ls='None')
+# ax2.plot(mw_ne,P_ne,color=colors2[8],marker='o',ls='None')
+# plt.show()
+# fig,ax=plt.subplots(figsize=(width/2,height*0.7))
+# ax2=ax.twinx()
+# ax.plot(mw_ar,pec_ar,color=colors2[11],marker='v',ls='None')
+# ax2.plot(mw_ar,P_ar,color=colors2[11],marker='o',ls='None')
+# plt.show()
+# %% Degree of ioniz
+shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+
+def colorchooser(j): 
+    if gas[j]=='H':
+        c=colors2[1]
+    if gas[j]=='He':
+        c=colors2[5]
+    if gas[j]=='Ar':
+        c=colors2[11]
+    if gas[j]=='Ne':
+        c=colors2[8]
+    return c
+def neu(pres):
+    T=290
+    k=1.38E-23
+    return (pres*10**(-3))/(k*T)
+
+for j in np.arange(0,117):
+    plt.plot(t[j],n[j]/neu(p[j]),'o',color=colorchooser(j))
+plt.show()
+
+for j in np.arange(0,117):
+    plt.plot(t[j],n[j],'o',color=colorchooser(j))
+plt.show()
+
+for j in np.arange(0,117):
+    plt.plot(t[j],neu(p[j]),'o',color=colorchooser(j))
+plt.show()
 # %%
