@@ -64,6 +64,7 @@ def LoadData(location):
     data = pd.read_csv(location, skiprows=4, sep="\t\t", names=cols, engine='python')
     return data
 
+#calculates the real pressure depending on the gas type from the measurement
 def Pressure(shotnumber,gas):
     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     y= LoadData(location)["Pressure"]
@@ -88,7 +89,7 @@ def Pressure(shotnumber,gas):
     elif gas == 'Xe':
         corr =.4
     return pressure*corr
-
+#calculates the MW power from the signal height
 def GetMicrowavePower(shotnumber):
     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
     time = np.array(LoadData(location)['Zeit [ms]'] / 1000)[:,None]
@@ -266,6 +267,10 @@ def TemperatureProfile(s,Type='',ScanType='',save=False,figurename=''):
         error=[0.1*x for x in T]
         return(Position,T,np.mean(T),error)
 
+#REad chapter 6.1 of my thesis to understand how the raw satturation current measured with the Langmuir probes has to be 
+#treated to gain an accurate density information
+#This function relates the satturation current to the temperature and uses the dip in the interferometer data to correct
+#the density profile curve
 def CorrectedDensityProfile(s,Plot=False):
     Position, char_U, char_I, I_isat,Bolo_sum, Interferometer=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=s),unpack=True)
     location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=s)
@@ -276,7 +281,7 @@ def CorrectedDensityProfile(s,Plot=False):
     time =LoadData(location)['Zeit [ms]'] / 1000
     stop=np.argmin(np.gradient(inter[int(len(inter)*0.2):-1]))+int(len(inter)*0.2)
     mean_1=int(len(inter[0:stop])*0.8)
-    offset=np.mean(inter[stop+50:-1])
+    offset=np.mean(inter[stop+100:-1])
     mean_density=np.mean(inter[mean_1:stop-50])-offset
     error_int=np.std(inter_original[mean_1:stop-50],ddof=1)/np.sqrt(len(inter_original[mean_1:stop-50]))
     error_isat=0.01
@@ -285,10 +290,11 @@ def CorrectedDensityProfile(s,Plot=False):
         mean_density=np.mean(inter[mean_1:stop-50])-(3.6-np.mean(inter[stop+50:-1]))
     if Plot==True:
         plt.plot(time,inter_original,alpha=0.5)
+        plt.plot(time,inter)
         #plt.plot(time[int(len(inter)*0.2):-1],inter[int(len(inter)*0.2):-1])
         plt.plot(time[stop-50],inter[stop-50],'go')
         plt.plot(time[mean_1],inter[mean_1],'ro')
-        plt.plot(time[stop+50],inter[stop+50],'bo')
+        plt.plot(time[stop+100],inter[stop+100],'bo')
         plt.show()
     correction,corrected,corrected_fit,error_corr,error_corr_fit=[],[],[],[],[]
     for i in [a-offset for a in Interferometer]:
@@ -300,6 +306,8 @@ def CorrectedDensityProfile(s,Plot=False):
         error_corr_fit.append((k/np.sqrt(m))*error_int+(i/np.sqrt(m))*0.1*k+(i*k/(2*m**(3/2)))*error_T*m)
     return corrected,mean_density,corrected_fit,error_corr,error_corr_fit,error_int
 
+#The corrected density profile curve is then normalized with the mean interferometer value to calculate actual density values.
+#Again: Compare to chapter 6.1 of my thesis for the explenation of the procedure
 def NormDensityProfile():
     Position, char_U, char_I, I_isat,Bolo_sum, Interferometer=np.genfromtxt('/data6/shot{s}/probe2D/shot{s}.dat'.format(s=shotnumber),unpack=True)
     new_pos=np.concatenate((-np.flip(Position)+2*Position[0],Position[1:,]))
@@ -318,6 +326,7 @@ def NormDensityProfile():
     plt.show()
     print(integrate.trapezoid(density_interpol(new_pos)))
 
+#Single or several density profiles can be compared here
 def DensityProfile(s,df,Type='',ScanType='',save=False,figurename=''):
     if Type=='Compare':
         plt.figure(figsize=(width/2,height/1.5))
@@ -479,8 +488,8 @@ if __name__ == "__main__":
     #Ne pressure            np.arange(13079,13085)  ['f','d','f','f','d','d']
     #He 8Ghz        0.6     np.arange(13316,13321)  ['f']
     density_profiles_from=['f' for i in range(len(shotnumbers))]
-    gas='H' 
-    shotnumber=13093
+    gas='He' 
+    shotnumber=13279
     infile='/data6/shot{s}/kennlinien/auswert/'.format(s=shotnumber)
     #infile='/data6/shot{}/probe2D/'.format(shotnumber)
     outfile='/home/gediz/Results/Plasma_charactersitics/'
@@ -492,6 +501,6 @@ if __name__ == "__main__":
     #TemperatureProfile(shotnumbers,'Compare','Pressure',save=True,figurename='{g}_8GHz'.format(g=gas))
     # for s in shotnumbers:
     #DensityProfile(shotnumber,['d'],'Single')
-    #CorrectedDensityProfile(shotnumber, Plot=True)
-    print(Densities(13281,'Ar'))
+    CorrectedDensityProfile(shotnumber, Plot=True)
+    #print(Densities(13281,'Ar'))
 # %%

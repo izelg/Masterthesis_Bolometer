@@ -37,9 +37,6 @@ colors=['#03045E','#0077B6','#00B4D8','#370617','#9D0208','#DC2F02','#F48C06','#
 markers=['o','v','s','P','p','D','*','x','o','v','s','P','p','D','*','x','o','v','s']
 
 #%% --------------------------------------------------------------------------------------------------------
-# Important Functions 
-# (change nothing here)
-#Choose a function to create the plot/data you desire
 
 
 

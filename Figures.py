@@ -1,7 +1,7 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
-#import matplotlib 
+import matplotlib 
 from matplotlib.patches import Rectangle
 import pandas as pd
 from scipy.optimize import curve_fit
@@ -19,7 +19,8 @@ import adas_data as adas
 import power_calculator as poca
 #%% Parameter
 Poster=False
-Latex=True
+Latex=False
+PPP=True
 a=60+32.11+3.45 #Position of Bolometerheadmiddle [cm]
 b=3.45 #Distance of Bolometerhead Middle to  Slit [cm]
 s_w=1.4 #Width of the slit [cm]
@@ -43,7 +44,7 @@ if Poster==True:
 elif Latex==True:
     width=412/72.27
     height=width*(5**.5-1)/2
-    n=1
+    n=1.5
     plt.rcParams['text.usetex']=True
     plt.rcParams['font.family']='serif'
     plt.rcParams['axes.labelsize']=11*n
@@ -51,7 +52,20 @@ elif Latex==True:
     plt.rcParams['legend.fontsize']=11*n
     plt.rcParams['xtick.labelsize']=11*n
     plt.rcParams['ytick.labelsize']=11*n
-    plt.rcParams['lines.markersize']=6
+    plt.rcParams['lines.markersize']=4
+elif PPP==True:
+    width=(412/72.27)*1.5
+    height=(width*(5**.5-1)/2)*1.5
+    plt.rcParams['text.usetex']=True
+    plt.rcParams['font.family']='sans-serif'
+    plt.rcParams['axes.labelsize']=20
+    plt.rcParams['font.size']=15
+    plt.rcParams['legend.fontsize']=15
+    plt.rcParams['xtick.labelsize']=20
+    plt.rcParams['ytick.labelsize']=20
+    plt.rcParams['lines.markersize']=10
+    plt.rcParams['lines.linewidth']=3
+
 
 else:
     w=10
@@ -175,7 +189,7 @@ plt.plot([a-b-20,a-b-10.3],[-12.5,-12.5],[a-b-20,a-b-10.3],[12.5,12.5],[a-b-10.3
 plt.annotate('outer\n port',(73,22),color=c)
 #slit
 plt.plot([a-b,a-b],[-12,-s_h/2],[a-b,a-b],[12,s_h/2],color='grey',linewidth=3,alpha=0.5,linestyle='dashed')
-plt.annotate('slit',(a-b-0.1,-0.5),xymath=(a-b-20,-25),arrowprops=dict(facecolor=c,edgecolor='none',alpha=0.5,width=2),color=c)
+plt.annotate('slit',(a-b-0.1,-0.5),xytext=(a-b-20,-25),arrowprops=dict(facecolor=c,edgecolor='none',alpha=0.5,width=2),color=c)
 bolovessel=patches.Rectangle((60+21.8,-12),20.8,24,edgecolor='grey',facecolor='none',linewidth=3, alpha=0.5)
 plt.annotate('bolometer\n  vessel',(83,22),color=c)
 #bolometerhead
@@ -186,7 +200,7 @@ tr1 = matplotlib.transforms.Affine2D().rotate_deg_around(coords1[0],coords1[1], 
 tr2 = matplotlib.transforms.Affine2D().rotate_deg_around(coords2[0],coords2[1],alpha)
 bolohead1=patches.Rectangle((-abs(np.cos((90-alpha)*np.pi/180)*(-2))+a,-2),2,2,edgecolor='grey',facecolor='grey',linewidth=3, alpha=0.5,transform=tr1+ts)
 bolohead2=patches.Rectangle((-abs(np.cos((90-alpha)*np.pi/180)*(0))+a,0),2,2,edgecolor='grey',facecolor='grey',linewidth=3, alpha=0.5,transform=tr2+ts)
-plt.annotate('bolometer\n   heads',(a,-2),xymath=(a-15,-27),arrowprops=dict(facecolor=c,edgecolor='none',alpha=0.5,width=2),color=c)
+plt.annotate('bolometer\n   heads',(a,-2),xytext=(a-15,-27),arrowprops=dict(facecolor=c,edgecolor='none',alpha=0.5,width=2),color=c)
 ax.add_patch(vessel)
 ax.add_patch(bolovessel)
 ax.add_patch(bolohead1)
@@ -484,22 +498,22 @@ T_BR_RR,He_0_BR_RR,He_1_BR_RR=adas.he_adf11(data='prb96_he',T_max=T)[0],adas.he_
 T_RR_0,He_0_RR=adas.he_adf15(data='pec96#he_pju#he0',T_max=T)[0],adas.he_adf15(data='pec96#he_pju#he0',T_max=T)[1]
 T_RR_1,He_1_RR=adas.he_adf15(data='pec96#he_pju#he1',T_max=T)[0],adas.he_adf15(data='pec96#he_pju#he1',T_max=T)[1]
 
-plt.figure(figsize=(width,height))
-plt.plot(T_LR,He_0_LR,color=colors[0],marker=markers[0],label='He$^0$, excitation, source: ADF11 ')
-plt.plot(T_LR,He_1_LR,color=colors[0],marker=markers[0],label='He${^+1}$, excitation, source: ADF11 ',alpha=0.5)
+plt.figure(figsize=(width*0.7,height))
+plt.plot(T_LR,He_0_LR,color=colors[0],marker=markers[0],label='He$^0$, excitation')
+plt.plot(T_LR,He_1_LR,color=colors[0],marker=markers[0],label='He${^+1}$, excitation',alpha=0.5)
 
-plt.plot(T_RR_0,He_0_RR,color=colors[3],marker=markers[3],label=r'He$^{+1} \rightarrow$ He$^0$, recombination, source: ADF15')
-plt.plot(T_RR_1,He_1_RR,color=colors[3],marker=markers[3],label=r'He$^{+2} \rightarrow$ He$^{+1}$, recombination, source: ADF15',alpha=0.5)
+plt.plot(T_RR_0,He_0_RR,color=colors[3],marker=markers[3],label=r'He$^{+1} \rightarrow$ He$^0$, recombination')
+plt.plot(T_RR_1,He_1_RR,color=colors[3],marker=markers[3],label=r'He$^{+2} \rightarrow$ He$^{+1}$, recombination',alpha=0.5)
 
 #plt.plot(T_BR_RR,He_0_BR_RR,color=colors[1],marker=markers[1],label='He$^0$,Bremsstrahlung and recombination, source: ADF11 ')
 #plt.plot(T_BR_RR,He_1_BR_RR,color=colors[1],marker=markers[1],label='He$^{+1}$,Bremsstrahlung and recombination, source: ADF11 ',alpha=0.5)
 
-plt.ylabel('collisional radiative coefficients [eVm$^3$/s]')
-plt.xlabel('temperature [eV]')
+plt.ylabel('radiation energy coefficient [eVm$^3$/s]')
+plt.xlabel('$T_{\mathrm{e}}$ [eV]')
 plt.yscale('log')
 plt.ylim(1E-20,1E-12)
 plt.xlim(-1,30)
-plt.legend(loc='lower center',bbox_to_anchor=(0.5,-0.6))
+plt.legend(loc='right center',bbox_to_anchor=(1,0.5))
 fig1= plt.gcf()
 plt.show()
 fig1.savefig('/home/gediz/LaTex/Thesis/Figures/lt_br_rr.pdf',bbox_inches='tight')
@@ -532,7 +546,7 @@ plt.ylim(-20,20)
 plt.xlabel('R [cm]')
 fig0= plt.gcf()
 plt.show()
-fig0.savefig('/home/gediz/LaTex/Thesis/Figures/inner_port.pdf',bbox_inches='tight')
+#fig0.savefig('/home/gediz/LaTex/Thesis/Figures/inner_port.pdf',bbox_inches='tight')
 
 fig1=plt.figure(figsize=(size,size))
 ax1=fig1.add_subplot(111)
@@ -547,7 +561,7 @@ plt.ylim(-20,20)
 plt.xlabel('R [cm]')
 fig1= plt.gcf()
 plt.show()
-fig1.savefig('/home/gediz/LaTex/Thesis/Figures/upper_port.pdf',bbox_inches='tight')
+#fig1.savefig('/home/gediz/LaTex/Thesis/Figures/upper_port.pdf',bbox_inches='tight')
 
 fig2=plt.figure(figsize=(size,size))
 ax2=fig2.add_subplot(111)
@@ -562,7 +576,7 @@ plt.ylabel('Z [cm]')
 plt.xlabel('R [cm]')
 fig2= plt.gcf()
 plt.show()
-fig2.savefig('/home/gediz/LaTex/Thesis/Figures/outer_port.pdf',bbox_inches='tight')
+#fig2.savefig('/home/gediz/LaTex/Thesis/Figures/outer_port.pdf',bbox_inches='tight')
 
 fig3=plt.figure(figsize=(size,size))
 ax3=fig3.add_subplot(111)
@@ -577,7 +591,7 @@ plt.ylim(-20,20)
 plt.xlabel('R [cm]')
 fig3= plt.gcf()
 plt.show()
-fig3.savefig('/home/gediz/LaTex/Thesis/Figures/bottom_port.pdf',bbox_inches='tight')
+#fig3.savefig('/home/gediz/LaTex/Thesis/Figures/bottom_port.pdf',bbox_inches='tight')
 # %% I-V curve
 fig,ax=plt.subplots(figsize=(width,height))
 fig.patch.set_visible(False)
@@ -834,7 +848,7 @@ for i,j,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[t1,t2,t3,t4,t5,t6,t7,t8,t9,
     j.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(1)))
     k.append(np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_reduced_noise_measurement_0{}.txt'.format(n), unpack=True, usecols=(2))) 
 mean_t,sd_t,sem_t=[],[],[]
-fig1=plt.figure(figsize=(height,height))
+fig1=plt.figure(figsize=(width/2,height*0.7))
 for i,j,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10],[0,1,2,3,4,5,6,7,8,9]):
     plt.plot(i,j,label='Measurement {} TJ-K'.format(n),marker='o',color=colors[3],alpha=0.3)
 for m in [0,1,2,3,4,5,6,7]:
@@ -851,7 +865,7 @@ plt.show()
 print(mean_t,sem_t)
 fig1.savefig('/home/gediz/LaTex/Thesis/Figures/ohmic_calibration_tau.pdf',bbox_inches='tight')
 
-fig2=plt.figure(figsize=(height,height))
+fig2=plt.figure(figsize=(width/2,height*0.7))
 mean_k,sd_k,sem_k=[],[],[]
 for i,k,n in zip([x1,x2,x3,x4,x5,x6,x7,x8,x9,x10],[k1,k2,k3,k4,k5,k6,k7,k8,k9,k10],[0,1,2,3,4,5,6,7,8,9]):
     plt.plot(i,k,label='Measurement {} TJ-K'.format(n),marker='o',color=colors[0],alpha=0.3)
@@ -871,7 +885,7 @@ fig2.savefig('/home/gediz/LaTex/Thesis/Figures/ohmic_calibration_kappa.pdf',bbox
 
 
 # %% Laser Scan
-plt.figure(figsize=(width*0.55,height*0.75))
+plt.figure(figsize=(width*0.7,height*0.8))
 location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot60038.dat'
 cut=1000
 time = br.LoadData(location)['Zeit [ms]'][cut:-1] / 1000
@@ -885,7 +899,7 @@ plt.ylabel('sensor signal [V]')
 plt.annotate('1',(22/3.73,0.01),xytext=(15/3.73,0.35),arrowprops=dict(facecolor='#008e0c',edgecolor='none',alpha=0.5,width=1,headwidth=5), bbox={"boxstyle" : "circle","facecolor":'None','edgecolor':'#008e0c'},color='#008e0c')
 plt.annotate('2',(35/3.73,0.01),xytext=(32/3.73,0.35),arrowprops=dict(facecolor='#008e0c',edgecolor='none',alpha=0.5,width=1,headwidth=5), bbox={"boxstyle" : "circle","facecolor":'None','edgecolor':'#008e0c'},color='#008e0c')
 
-plt.legend(fontsize=9,loc='center right',bbox_to_anchor=(1.4,0.5))
+plt.legend(fontsize=9,loc='center right',bbox_to_anchor=(1.32,0.5))
 plt.xlim(0,33)
 plt.ylim(-0.05,0.65)
 fig= plt.gcf()
@@ -893,7 +907,7 @@ plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/Laser_scan.pdf',bbox_inches='tight')
 
 # %% UV scan
-plt.figure(figsize=(width/2,height))
+plt.figure(figsize=(width/2,height*0.8))
 location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot60078_cropped.dat'
 cut=0
 c=0
@@ -933,7 +947,7 @@ fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/UV_scan_horizontal.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(width/2,height))
+plt.figure(figsize=(width/2,height*0.8))
 location='/home/gediz/Measurements/Lines_of_sight/shot_data/shot60070_cropped.dat'
 cut=0
 c=0
@@ -982,18 +996,18 @@ al=0.8
 k=1.13
 l2e=lambda x:(h1*c)/(x*10**(-9))
 hdata=adas.h_adf15(T_max=t,density=d,Spectrum=True)
-plt.bar([l2e(a) for a in hdata[0]],[a/max(hdata[1]) for a in hdata[1]],k,color=colors2[9],alpha=al,label='H$^0$')
+plt.bar([l2e(a) for a in hdata[0]],[a/max(hdata[1]) for a in hdata[1]],k,color=colors2[8],alpha=al,label='H$^0$')
 hedata=adas.he_adf15(data='pec96#he_pju#he0',T_max=t,density=d,Spectrum=True)
 plt.bar([l2e(a) for a in hedata[0]],[a/max(hedata[1]) for a in hedata[1]],k,color=colors2[1],alpha=al,label='He$^0$')
 nedata=adas.ne_adf15(data='pec96#ne_pju#ne0',T_max=t,density=d,Spectrum=True)
 plt.bar([l2e(a) for a in nedata[0]],[a/max(nedata[1]) for a in nedata[1]],k,color=colors2[5],alpha=al,label='Ne$^0$')
 ardata=adas.ar_adf15(data='pec40#ar_ls#ar0',T_max=t,density=d,Spectrum=True)
-plt.bar([l2e(a) for a in ardata[0]],[a/max(ardata[1]) for a in ardata[1]],k,color=colors2[12],alpha=al,label='Ar$^0$')
+plt.bar([l2e(a) for a in ardata[0]],[a/max(ardata[1]) for a in ardata[1]],k,color=colors2[11],alpha=al,label='Ar$^0$')
 plt.plot(energy,fitted/100,color='red',ls='dotted',alpha=0.5)
 plt.xlim(-1,75)
 plt.ylabel('normalized PEC [m$^3$/s]')
 plt.xlabel('photon energy [eV]')
-plt.legend(loc='lower right', title='ADAS data \n for spectral \n lines at  \n $T_e=$10 eV, \n $n_e$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation \n of neutrals ')
+plt.legend(loc='lower right', title='ADAS data \n for spectral \n lines at  \n $T_{\mathrm{e}}=$10 eV, \n $n_{\mathrm{e}}$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation \n of neutrals ')
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/spectra_neutrals.pdf',bbox_inches='tight')
@@ -1005,7 +1019,7 @@ plt.bar([l2e(a) for a in hedata[0]],[a/max(hedata[1]) for a in hedata[1]],k,colo
 nedata=adas.ne_adf15(data='pec96#ne_pju#ne1',T_max=t,density=d,Spectrum=True)
 plt.bar([l2e(a) for a in nedata[0]],[a/max(nedata[1]) for a in nedata[1]],k,color=colors2[6],alpha=al,label='Ne$^{+1}$')
 ardata=adas.ar_adf15(data='pec40#ar_ic#ar1',T_max=t,density=d,Spectrum=True)
-plt.bar([l2e(a) for a in ardata[0]],[a/max(ardata[1]) for a in ardata[1]],k,color=colors2[13],alpha=al,label='Ar$^{+1}$')
+plt.bar([l2e(a) for a in ardata[0]],[a/max(ardata[1]) for a in ardata[1]],k,color=colors2[12],alpha=al,label='Ar$^{+1}$')
 plt.plot(energy,fitted/100,color='red',ls='dotted',alpha=0.5)
 
 plt.xlim(-1,100)
@@ -1031,7 +1045,7 @@ reduced_pec=[]
 for i,j in zip(energy,pec):
     indice= int(round(i,3)*1000)
     reduced_pec.append(j*gold[indice]/100)
-ax.bar(energy,pec,0.5,color=colors2[2],label='ADAS data for spectral lines at \n$T_e=$10 eV,$n_e$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation of H$^0$ ')   
+ax.bar(energy,pec,0.5,color=colors2[2],label='ADAS data for spectral lines at \n$T_{\mathrm{e}}=$10 eV,$n_{\mathrm{e}}$=5$\cdot 10^{17}$ m$^{-3}$ \n due to excitation of H$^0$ ')   
 ax.bar(energy,reduced_pec,0.5,color=colors2[1],label='reduced spectrum:\n {}\% absorbed by gold foil'.format(float(f'{np.sum(reduced_pec)/np.sum(pec)*100:.2f}')))
 ax2.plot(gold_energy,gold,color=colors2[5],ls='dotted',label='gold absorption \n characteristic \n fit to data')
 ax.set_ylabel('normalized PEC [m$^3$/s]')
@@ -1147,7 +1161,7 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/e_sig_with_sine_result.pdf',bbox_i
 path=['/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated.txt','/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_second_set.txt','/home/gediz/Results/Calibration/Channel_resistances_September_2022/all_resistor_values_bolometer_sensors_calculated_third_set.txt']
 x=[1,2,3,4,5,6,7,8]
 i=0
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width/2,height*0.7))
 mean,sem=[],[]
 for s in x:
     M1=[]
@@ -1162,13 +1176,12 @@ print(mean,sem)
 plt.xticks(x)
 plt.xlabel('sensor number')
 plt.ylabel('resistivity [$\Omega$]')
-plt.ylim(1170,1230)
 plt.legend(loc='lower left')
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_m1.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width/2,height*0.7))
 mean,sem=[],[]
 for s in x:
     M2=[]
@@ -1184,13 +1197,12 @@ print(sem)
 plt.xticks(x)
 plt.xlabel('sensor number')
 plt.ylabel('resistivity [$\Omega$]')
-plt.ylim(1170,1230)
 plt.legend(loc='lower left')
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_m2.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width/2,height*0.7))
 mean,sem=[],[]
 for s in x:
     R1=[]
@@ -1206,13 +1218,12 @@ print(sem)
 plt.xticks(x)
 plt.xlabel('sensor number')
 plt.ylabel('resistivity [$\Omega$]')
-plt.ylim(1170,1230)
-plt.legend(loc='lower left')
+plt.legend(loc='lower right')
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_r1.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width/2,height*0.7))
 mean,sem=[],[]
 for s in x:
     R2=[]
@@ -1228,8 +1239,7 @@ print(sem)
 plt.xticks(x)
 plt.xlabel('sensor number')
 plt.ylabel('resistivity [$\Omega$]')
-plt.ylim(1170,1230)
-plt.legend(loc='lower left')
+plt.legend(loc='lower right')
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/resistance_r2.pdf',bbox_inches='tight')
@@ -1283,34 +1293,55 @@ for i,c in zip(np.arange(1,9),colors):
     bolo_raw_data=[(k-m)+i*0.05 for k in bolo_raw_data]
     plt.plot(time,  bolo_raw_data, label="sensor {}".format(i),color=c )
 plt.xlabel('time [s]')
-plt.ylabel('$U_{\mathrm{out}}$ [V]')
-plt.legend(loc='center right',bbox_to_anchor=(1.77,0.5),title='shot n$^\circ$13257,\nHe,\nMW= 2.45 GHz,\n$P_{\mathrm{MW}}$= 2.97 kW,\np= 21 mPa')
+plt.ylabel('U$_{\mathrm{out}}$ [V]')
+plt.legend(loc='center right',bbox_to_anchor=(2,0.5),title='shot n$^\circ$13257,\nHe,\nMW= 2.45 GHz,\n P$_{\mathrm{MW}}$= 2.97 kW,\np= 21 mPa')
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/voltage_time_trace.pdf',bbox_inches='tight')
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_voltage_time_traces.pdf',bbox_inches='tight')
 
 
 
 # %% Power time trace with height
 shotnumber=13257
-plt.figure(figsize=(width/2,height))
 i=1
-location=  '/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
-time,U_Li =br.LoadData(location)['Zeit [ms]'] / 1000, br.LoadData(location)["Bolo{}".format(i)]
-def power(g,k,U_ac, t, U_Li):
-    return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li)
-def error(g,k,U_ac, t, U_Li,delta_t,delta_k):
-    return ((np.pi/g) * (2/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li))*delta_k+(np.pi/g) * (2*k/U_ac) * np.gradient(U_Li,time*1000 )*delta_t
-tau,tau_sem,kappa,kappa_sem=np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_mean_and_sem.txt',unpack=True,usecols=(1,2,3,4))
-g1,g2,g3= 30,1,100
-g=g1*g2*g3
-U_ac,k,t,delta_t,delta_k=8,kappa[i-1],tau[i-1],tau_sem[i-1],kappa_sem[i-1]
-power=[a/10**(-6) for a in power(g,k,U_ac, t, U_Li)]
-steps=[]
-for i in np.arange(0, len(power)-10):
-    step= (power[i]-power[i+10])
-    steps.append(abs(step))
-start,stop=np.argwhere(np.array([steps])>0.5)[0][1],np.argwhere(np.array([steps])>0.5)[-1][1]
+# location=  '/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
+# time,U_Li =br.LoadData(location)['Zeit [ms]'] / 1000, br.LoadData(location)["Bolo{}".format(i)]
+# def power(g,k,U_ac, t, U_Li):
+#     return (np.pi/g) * (2*k/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li)
+# def error(g,k,U_ac, t, U_Li,delta_t,delta_k):
+#     return ((np.pi/g) * (2/U_ac) * (t* np.gradient(U_Li,time*1000 )+U_Li))*delta_k+(np.pi/g) * (2*k/U_ac) * np.gradient(U_Li,time*1000 )*delta_t
+# tau,tau_sem,kappa,kappa_sem=np.genfromtxt('/home/gediz/Results/Calibration/Ohmic_Calibration/Ohmic_Calibration_Vacuum_November/ohmic_calibration_vacuum_tjk_tau_and_kappa_mean_and_sem.txt',unpack=True,usecols=(1,2,3,4))
+# g1,g2,g3= 30,1,100
+# g=g1*g2*g3
+# U_ac,k,t,delta_t,delta_k=8,kappa[i-1],tau[i-1],tau_sem[i-1],kappa_sem[i-1]
+# power=[a/10**(-6) for a in power(g,k,U_ac, t, U_Li)]
+# steps=[]
+# for i in np.arange(0, len(U_Li)-10):
+#     step= (U_Li[i]-U_Li[i+10])
+#     steps.append(abs(step))
+# start,stop=np.argwhere(np.array([steps])>0.005)[0][1],np.argwhere(np.array([steps])>0.005)[-1][1]
+# U_Li=U_Li*1000
+# x1,y1,x2,y2 = time[start:stop],U_Li[start:stop],np.concatenate((time[0:start],time[stop:-1])),np.concatenate((U_Li[0:start],U_Li[stop:-1]))
+# def lin (x,a,b):
+#     return a*x + b
+# popt1, pcov1 = curve_fit(lin,x1,y1)
+# popt2, pcov2 = curve_fit(lin,x2,y2)
+# sd=np.std([div1,div2],ddof=1)
+# sem=sd/np.sqrt(2)
+# plt.figure(figsize=(width/2,height/2))
+# plt.plot(time[start+15],U_Li[start+15],marker='x',color=colors[1])
+# plt.plot(time[stop],U_Li[stop],marker='x',color=colors[1])
+# plt.plot(time,U_Li,color=colors[0],label='sensor 1')
+# plt.plot(np.arange(0,240),lin(np.arange(0,240),*popt1),color=colors[3],label='fit to $U_{\mathrm{out}} (t_{\mathrm{plasma \ on}})$')
+# plt.plot(np.arange(0,240),lin(np.arange(0,240),*popt2),color=colors[4],label='fit to $U_{\mathrm{out}} (t_{\mathrm{plasma \ off}})$')
+# plt.ylabel('$U_{\mathrm{out}}$  [mV]')
+# plt.xticks([])
+# plt.ticklabel_format(axis='y', style='sci')
+# #plt.legend(loc='lower right',fontsize=10)
+# fig= plt.gcf()
+# plt.show()
+# fig.savefig('/home/gediz/LaTex/Thesis/Figures_PPP/voltage_time_trace.pdf',bbox_inches='tight')
+
 x1,y1,x2,y2 = time[start:stop],power[start:stop],np.concatenate((time[0:start],time[stop:-1])),np.concatenate((power[0:start],power[stop:-1]))
 def lin (x,a,b):
     return a*x + b
@@ -1319,28 +1350,26 @@ popt2, pcov2 = curve_fit(lin,x2,y2)
 div1 = lin(time[start], *popt2)-lin(time[start], *popt1)
 div2 = lin(time[stop], *popt2)-lin(time[stop], *popt1)
 div_avrg = abs(float(f'{(div1+div2)/2:.4f}'))
-sd=np.std([div1,div2],ddof=1)
-sem=sd/np.sqrt(2)
-plt.plot(time[start+15],power[start+15],marker='x',color=colors[1])
-plt.plot(time[stop],power[stop],marker='x',color=colors[1])
-plt.plot(time,power,color=colors[0],label='sensor 1')
-plt.plot(np.arange(0,240),lin(np.arange(0,240),*popt1),color=colors[3],label='fit to $P_{\mathrm{rad}} (t_{\mathrm{plasma \ on}})$')
-plt.plot(np.arange(0,240),lin(np.arange(0,240),*popt2),color=colors[4],label='fit to $P_{\mathrm{rad}} (t_{\mathrm{plasma \ off}})$')
-plt.annotate('',xy=(50,lin(50,*popt1)),xytext=(50,lin(50,*popt2)), arrowprops=dict(arrowstyle='<->',color=colors[1],alpha=0.7,linewidth=2))
-plt.annotate('$\Delta P_{\mathrm{rad}} \cdot a_{\mathrm{abs}}$='+str(f'{div_avrg:.2f}')+'$\mu$W',xy=(55,2.5),color=colors[1])
+
+plt.figure(figsize=(width/2,height/2))
+plt.plot(time,power-lin(time,*popt2),color=colors[0],label='sensor 1')
+x1,y1,x2,y2 = time[start:stop],power[start:stop]-lin(time[start:stop],*popt2),np.concatenate((time[0:start],time[stop:-1])),np.concatenate((power[0:start]-lin(time[0:start],*popt2),power[stop:-1]-lin(time[stop:-1],*popt2)))
+popt1, pcov1 = curve_fit(lin,x1,y1)
+popt2, pcov2 = curve_fit(lin,x2,y2)
+plt.plot(np.arange(0,240),lin(np.arange(0,240),*popt1),color=colors[3],label='fit to $U_{\mathrm{out}} (t_{\mathrm{plasma \ on}})$')
+plt.plot(np.arange(0,240),lin(np.arange(0,240),*popt2),color=colors[4],label='fit to $U_{\mathrm{out}} (t_{\mathrm{plasma \ off}})$')
+plt.annotate('',xy=(50,lin(50,*popt2)),xytext=(50,lin(50,*popt1)), arrowprops=dict(arrowstyle='<->',color=colors[1],alpha=0.7,linewidth=2))
+plt.annotate('$\Delta P_{\mathrm{rad}} \cdot a_{\mathrm{abs}}$='+str(f'{div_avrg:.2f}')+'$\mu$W',xy=(55,1),color=colors[1])
 plt.xlabel('time [s]')
-plt.ylabel('$P_{\mathrm{rad}}$  [$\mu$W]')
-plt.legend(loc='lower right',fontsize=10)
-plt.ylim(-0.4)
-plt.xlim(-10,249)
+plt.ylabel('P$_{\mathrm{rad}}$  [$\mu$W]')
 fig= plt.gcf()
 plt.show()
-fig.savefig('/home/gediz/LaTex/Thesis/Figures/power_time_trace.pdf',bbox_inches='tight')
-
+fig.savefig('/home/gediz/LaTex/Thesis/Figures_PPP/power_time_trace.pdf',bbox_inches='tight')
 
 # %% Bolometer profile
 plt.figure(figsize=(width/2,height*0.75))
 x=[13265,13263,13261,13259,13257]
+b=[1,2,3,4,5,6,7,8]
 gas='He'
 #x=[13254, 13253, 13252, 13251, 13255, 13250, 13249, 13248, 13247, 13246, 13245, 13244, 13243, 13242]#H pressure
 #x=[13278, 13277, 13276, 13275, 13274, 13279, 13273, 13272, 13271, 13270, 13269, 13268]#He pressure
@@ -1487,7 +1516,7 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/flux_surfaces_extended_zoom.pdf',b
 temperatures=adas.h_adf11()[2]
 densities=[a*10**6 for a in adas.h_adf11()[3]]
 
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width*0.4,height*0.8))
 for i,c in zip([3,5,9,11,15,17,23,29],[0,1,2,3,4,5,6,7]):
     t_name='rad_t_'+str(i)
     d_dep_h=adas.h_adf11(T_max=temperatures[-1],wish=t_name)[5]
@@ -1500,7 +1529,7 @@ fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf11_H_pec_from_d.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width*0.4,height*0.8))
 for i,c in zip([2,5,8,11,14,17,20,23],[0,1,2,3,4,5,6,7]):
     d_name='rad_d_'+str(i)
     t_dep_h=adas.h_adf11(T_max=temperatures[-1],wish=d_name)[5]
@@ -1508,12 +1537,12 @@ for i,c in zip([2,5,8,11,14,17,20,23],[0,1,2,3,4,5,6,7]):
 plt.xscale('log')
 plt.xlabel('temperature [eV]')
 plt.ylabel(r'$\left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eVm$^3$/s]')
-plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.25))
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.2))
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf11_H_pec_from_t.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width*0.4,height*0.8))
 for i,c in zip([7,8,10,11,13,14,16],[1,2,3,4,5,6,7]):
     d_name='rad_d_'+str(i)
     t_dep_h=adas.h_adf11(T_max=temperatures[-1],wish=d_name)[5]
@@ -1527,7 +1556,7 @@ plt.ylim(1E-13,6E-13)
 plt.xlim(0,100)
 plt.xlabel('temperature [eV]')
 plt.ylabel(r'$\left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eVm$^3$/s]')
-plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.25))
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.2))
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf11_H_pec_from_t_log.pdf',bbox_inches='tight')
@@ -1535,7 +1564,7 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf11_H_pec_from_t_log.pdf',bbox_i
 
 # %% ADF15
 
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width*0.4,height*0.8))
 d=5e+17
 t=10
 e=1.602E-19
@@ -1554,14 +1583,18 @@ for t,c1,c2 in zip([200,100,10],[0,1,2],[3,5,6]):
     plt.bar([l2e(a) for a in hedata1[0]],[a*m for a in hedata1[1]],k,color=colors2[c2],label='He$^{+1}$, $T_e$=' +str(hedata0[3]) +'eV')
 plt.xlim(-1,60)
 plt.yscale('log')
+plt.gca().yaxis.set_major_formatter(ScalarFormatter()) 
+plt.gca().yaxis.set_minor_formatter(ScalarFormatter())
+plt.minorticks_off()
+plt.ticklabel_format(axis='y', style='sci')
 plt.ylabel('PEC [m$^3$/s]')
 plt.xlabel('photon energy [eV]')
-plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.1))
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1))
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf15_he_spectra.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width*0.4,height*0.8))
 h=6.626E-34
 c=299792458
 # hedata0=adas.h_adf15()
@@ -1573,6 +1606,10 @@ plt.plot(hedata1[0],hedata1[1],color=colors2[5],label='He$^{+1}$',marker='o')
 plt.yscale('log')
 plt.ylim(1E-14,6E-13)
 plt.xlim(0,100)
+plt.gca().yaxis.set_major_formatter(ScalarFormatter()) 
+plt.gca().yaxis.set_minor_formatter(ScalarFormatter())
+plt.minorticks_off()
+plt.ticklabel_format(axis='y', style='sci')
 plt.yticks([1E-14,5E-14,1E-13,5E-13])
 plt.xlabel('temperature [eV]')
 plt.ylabel(r'$\left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eVm$^3$/s]')
@@ -1581,7 +1618,7 @@ fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf15_he_from_t.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(height,height))
+plt.figure(figsize=(width*0.4,height*0.8))
 h=6.626E-34
 c=299792458
 hdata=adas.h_adf15()
@@ -1598,10 +1635,14 @@ plt.plot(hedata[0],hedata[1],marker='s',color=colors2[4],label='He$^0$, ADF11',l
 plt.plot(nedata[0],nedata[1],marker='s',color=colors2[10],label='Ne$^0$, ADF11',lw=2,markersize=5)
 plt.xlim(0,100)
 plt.yscale('log')
+plt.gca().yaxis.set_major_formatter(ScalarFormatter()) 
+plt.gca().yaxis.set_minor_formatter(ScalarFormatter())
+plt.minorticks_off()
+plt.ticklabel_format(axis='y', style='sci')
 plt.ylim(1E-14,6E-13)
 plt.xlabel('temperature [eV]')
 plt.ylabel(r'$\left\langle  \sigma v \right\rangle _{\textrm{rad}}\left\langle E_{\textrm{rad}}\right\rangle$ [eVm$^3$/s]')
-plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1.1))
+plt.legend(loc='lower center',bbox_to_anchor=(0.5,-1))
 fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/adf15_compared_to_adf11.pdf',bbox_inches='tight')
@@ -1666,11 +1707,11 @@ s=13252
 i=2
 df=['d']
 p,d,e=pc.DensityProfile(s,df,'Values')[0],pc.DensityProfile(s,df,'Values')[1],pc.DensityProfile(s,df,'Values')[2]
-ax.errorbar(p*100+60,d,e,capsize=5, marker='o', color=colors2[i],label='corrected density profile \n with error bars ')
+ax.errorbar(p*100+60,d,e,capsize=5, marker='o', color=colors2[i],label='corrected\n density\n profile')
 ax.errorbar(p*100+46,np.flip(d),np.flip(e),capsize=5, marker='o', color=colors2[i],alpha=0.3)
 ax.set_xlabel('R [cm]')
 ax.set_ylabel('$n_\mathrm{e}(R)$ [m$^{-3}$]')
-ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.5),title='He, shot n$^\circ$13252, MW: 2.45 GHz, \n $P_{\mathrm{MW}}$ = 2.8 kW, p = 25.5 mPa') 
+#ax.legend(loc='lower left')#,bbox_to_anchor=(0.5,-0.5))#,title='He, shot n$^\circ$13252, MW: 2.45 GHz, \n $P_{\mathrm{MW}}$ = 2.8 kW, p = 25.5 mPa') 
 ax.set_zorder(ax.get_zorder()+1)
 ax.set_frame_on(False)   
 fig2= plt.gcf()
@@ -1702,7 +1743,7 @@ ax.errorbar(p*100+60,t,e,capsize=5, marker='o', color=colors2[i],label='temperat
 ax.errorbar(p*100+46,np.flip(t),np.flip(e),capsize=5, marker='o', color=colors2[i],alpha=0.3)
 ax.set_xlabel('R [cm]')
 ax.set_ylabel('$T_\mathrm{e}(R)$ [eV]')
-ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.5),title='He, shot n$^\circ$13252, MW: 2.45 GHz, \n $P_{\mathrm{MW}}$ = 2.8 kW, p = 25.5 mPa')    
+#ax.legend(loc='lower center',bbox_to_anchor=(0.5,-0.5),title='He, shot n$^\circ$13252, MW: 2.45 GHz, \n $P_{\mathrm{MW}}$ = 2.8 kW, p = 25.5 mPa')    
 ax.set_zorder(ax.get_zorder()+1)
 ax.set_frame_on(False)   
 fig2= plt.gcf()
@@ -1784,21 +1825,21 @@ plt.show()
 plt.figure(figsize=(width/2,width/2))
 plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
 plt.xlabel('$\overline{T}_{\mathrm{e}}$ [eV]')
-for j in np.arange(0,154):
+for j in np.arange(0,117):
     plt.plot(t[j],(P[j]/mw[j])*100,marker=colorchooser(j)[0],color=colorchooser(j)[1])
 plt.plot(t[20],(P[20]/mw[20])*100,marker=colorchooser(20)[0],color=colorchooser(20)[1],ls='None',label='H')
 plt.plot(t[92],(P[92]/mw[92])*100,marker=colorchooser(92)[0],color=colorchooser(92)[1],ls='None',label='He')
 plt.plot(t[117],(P[117]/mw[117])*100,marker=colorchooser(117)[0],color=colorchooser(117)[1],ls='None',label='Ar')
 plt.plot(t[61],(P[61]/mw[61])*100,marker=colorchooser(61)[0],color=colorchooser(61)[1],ls='None',label='Ne')
-#plt.legend(loc='upper right')
+plt.legend(loc='upper right')
 fig= plt.gcf()
 plt.show()
-#fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_temperature.pdf',bbox_inches='tight')
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_temperature.pdf',bbox_inches='tight')
 
 plt.figure(figsize=(width/2,width/2))
 plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
 plt.xlabel('$\overline{n}_{\mathrm{e}}$ [m$^{-3}$]')
-for j in np.arange(0,154):
+for j in np.arange(0,117):
     plt.plot(n[j],(P[j]/mw[j])*100,marker=colorchooser(j)[0],color=colorchooser(j)[1])
 plt.plot(n[20],(P[20]/mw[20])*100,marker=colorchooser(20)[0],color=colorchooser(20)[1],ls='None',label='H')
 plt.plot(n[92],(P[92]/mw[92])*100,marker=colorchooser(92)[0],color=colorchooser(92)[1],ls='None',label='He')
@@ -1807,7 +1848,81 @@ plt.plot(n[61],(P[61]/mw[61])*100,marker=colorchooser(61)[0],color=colorchooser(
 #plt.legend(loc='upper right')
 fig= plt.gcf()
 plt.show()
-#fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_density.pdf',bbox_inches='tight')
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_density.pdf',bbox_inches='tight')
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$\overline{n}_{\mathrm{e}} \cdot \overline{T}_{\mathrm{e}}$ [eVm$^{-3}$]')
+for j in np.arange(0,117):
+    plt.plot(n[j]*t[j],(P[j]/mw[j])*100,marker=colorchooser(j)[0],color=colorchooser(j)[1])
+plt.plot(n[20]*t[j],(P[20]/mw[20])*100,marker=colorchooser(20)[0],color=colorchooser(20)[1],ls='None',label='H')
+plt.plot(n[92]*t[j],(P[92]/mw[92])*100,marker=colorchooser(92)[0],color=colorchooser(92)[1],ls='None',label='He')
+plt.plot(n[117]*t[j],(P[117]/mw[117])*100,marker=colorchooser(117)[0],color=colorchooser(117)[1],ls='None',label='Ar')
+plt.plot(n[61]*t[j],(P[61]/mw[61])*100,marker=colorchooser(61)[0],color=colorchooser(61)[1],ls='None',label='Ne')
+fig= plt.gcf()
+plt.show()
+fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_energyproduct.pdf',bbox_inches='tight')
+
+# %% P Energieinhalt
+shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table_245.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
+def colorchooser(j): 
+    if (math.isnan(t[j])):
+        m='*'
+    else:
+        m='o'
+    if gas[j]=='H':
+        c=colors2[1]
+        a_span_p=max(p_h)
+        a_span_mw=max(mw_h)
+    if gas[j]=='He':
+        c=colors2[5]
+        a_span_p=max(p_he)
+        a_span_mw=max(mw_he)
+    if gas[j]=='Ar':
+        c=colors2[11]
+        a_span_p=max(p_ar)
+        a_span_mw=max(mw_ar)
+    if gas[j]=='Ne':
+        c=colors2[8]
+        a_span_p=max(p_ne)
+        a_span_mw=max(mw_ne)
+    return m,c,a_span_p,a_span_mw
+p_h,p_he,p_ar,p_ne,mw_h,mw_he,mw_ar,mw_ne=[],[],[],[],[],[],[],[]
+for j in np.arange(0,117):
+    if gas[j]=='H':
+        mw_h.append(mw[j])
+        p_h.append(p[j])
+    if gas[j]=='He':
+        mw_he.append(mw[j])
+        p_he.append(p[j])
+    if gas[j]=='Ar':
+        mw_ar.append(mw[j])
+        p_ar.append(p[j])
+    if gas[j]=='Ne':
+        mw_ne.append(mw[j])
+        p_ne.append(p[j])
+
+def func(x,a,b,c):
+    return a+b*(x**c)
+x=np.sort(n*t)
+y=[(P[i]/mw[i])*100 for i in np.argsort(n*t)]
+popt, pcov = curve_fit(func,x,y)
+
+plt.figure(figsize=(width/2,width/2))
+plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
+plt.xlabel('$\overline{n}_{\mathrm{e}} \cdot \overline{T}_{\mathrm{e}}$ [eVm$^{-3}$]')
+for j in np.arange(0,117):
+    plt.plot(n[j]*t[j],(P[j]/mw[j])*100,marker=colorchooser(j)[0],color=colorchooser(j)[1])
+plt.plot(n[20]*t[j],(P[20]/mw[20])*100,marker=colorchooser(20)[0],color=colorchooser(20)[1],ls='None',label='H')
+plt.plot(n[92]*t[j],(P[92]/mw[92])*100,marker=colorchooser(92)[0],color=colorchooser(92)[1],ls='None',label='He')
+plt.plot(n[117]*t[j],(P[117]/mw[117])*100,marker=colorchooser(117)[0],color=colorchooser(117)[1],ls='None',label='Ar')
+plt.plot(n[61]*t[j],(P[61]/mw[61])*100,marker=colorchooser(61)[0],color=colorchooser(61)[1],ls='None',label='Ne')
+plt.plot(x,func(x,*popt))
+plt.legend(loc='upper right')
+print(*popt)
+fig= plt.gcf()
+plt.show()
+#fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_energyproduct.pdf',bbox_inches='tight')
 
 # %% P total table modeled Gases pressure
 shotnumber,gas,mw,p,t,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
@@ -1824,7 +1939,7 @@ def colorchooserm(j):
     return c
 
 
-plt.figure(figsize=(width/2,width/2))
+plt.figure(figsize=(width/2,height*0.7))
 plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
 plt.xlabel('$p$ [mPa]')
 for j in np.arange(0,116):
@@ -1833,7 +1948,7 @@ for j in np.arange(0,116):
             index=[np.argwhere(shotnumber==shotnumberm[j])][0]
             plt.errorbar(pm[j],(Pm[j]/mwm[j])*100,yerr=([(Pminm[j]/mwm[j])*100],[(Pmaxm[j]/mwm[j])*100]),marker='v',color=colorchooserm(j),capsize=5)
             plt.errorbar(p[index][0],(P[index][0]/mw[index][0])*100,yerr=([(Pmin[index][0]/mw[index][0])*100],[(Pmax[index][0]/mw[index][0])*100]),marker='o',color=colorchooserm(j),alpha=0.5,capsize=5)
-            plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+           # plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
 indexm=np.argwhere(shotnumberm==13242)
 index=np.argwhere(shotnumber==13242)
 plt.plot(pm[indexm],(Pm[indexm]/mwm[indexm])*100,marker='v',color=colorchooserm(indexm),ls='None',label='mod')
@@ -1846,7 +1961,7 @@ fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_pressure_modelled_H.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(width/2,width/2))
+plt.figure(figsize=(width/2,height*0.7))
 plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
 plt.xlabel('$p$ [mPa]')
 for j in np.arange(0,116):
@@ -1855,7 +1970,7 @@ for j in np.arange(0,116):
             index=[np.argwhere(shotnumber==shotnumberm[j])][0]
             plt.errorbar(pm[j],(Pm[j]/mwm[j])*100,yerr=([(Pminm[j]/mwm[j])*100],[(Pmaxm[j]/mwm[j])*100]),marker='v',color=colorchooserm(j),capsize=5)
             plt.errorbar(p[index][0],(P[index][0]/mw[index][0])*100,yerr=([(Pmin[index][0]/mw[index][0])*100],[(Pmax[index][0]/mw[index][0])*100]),marker='o',color=colorchooserm(j),alpha=0.5,capsize=5)
-            plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+            #plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
 indexm=np.argwhere(shotnumberm==13268)
 index=np.argwhere(shotnumber==13268)
 plt.plot(pm[indexm],(Pm[indexm]/mwm[indexm])*100,marker='v',color=colorchooserm(indexm),ls='None',label='mod')
@@ -1866,7 +1981,7 @@ fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_pressure_modelled_He.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(width/2,width/2))
+plt.figure(figsize=(width/2,height*0.7))
 plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
 plt.xlabel('$p$ [mPa]')
 for j in np.arange(0,116):
@@ -1874,7 +1989,7 @@ for j in np.arange(0,116):
         index=[np.argwhere(shotnumber==shotnumberm[j])][0]
         plt.errorbar(pm[j],(Pm[j]/mwm[j])*100,yerr=([(Pminm[j]/mwm[j])*100],[(Pmaxm[j]/mwm[j])*100]),marker='v',color=colorchooserm(j),capsize=5)
         plt.errorbar(p[index][0],(P[index][0]/mw[index][0])*100,yerr=([(Pmin[index][0]/mw[index][0])*100],[(Pmax[index][0]/mw[index][0])*100]),marker='o',color=colorchooserm(j),alpha=0.5,capsize=5)
-        plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+        #plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
 indexm=np.argwhere(shotnumberm==13081)
 index=np.argwhere(shotnumber==13081)
 plt.plot(pm[indexm],(Pm[indexm]/mwm[indexm])*100,marker='v',color=colorchooserm(indexm),ls='None',label='mod')
@@ -1887,7 +2002,7 @@ fig= plt.gcf()
 plt.show()
 fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_pressure_modelled_Ne.pdf',bbox_inches='tight')
 
-plt.figure(figsize=(width/2,width/2))
+plt.figure(figsize=(width/2,height*0.7))
 plt.ylabel('$P_{\mathrm{rad,net}}/P_{\mathrm{MW}}$ [\%]')
 plt.xlabel('$p$ [mPa]')
 for j in np.arange(0,116):
@@ -1896,7 +2011,7 @@ for j in np.arange(0,116):
             index=[np.argwhere(shotnumber==shotnumberm[j])][0]
             plt.errorbar(pm[j],(Pm[j]/mwm[j])*100,yerr=([(Pminm[j]/mwm[j])*100],[(Pmaxm[j]/mwm[j])*100]),marker='v',color=colorchooserm(j),capsize=5)
             plt.errorbar(p[index][0],(P[index][0]/mw[index][0])*100,yerr=([(Pmin[index][0]/mw[index][0])*100],[(Pmax[index][0]/mw[index][0])*100]),marker='o',color=colorchooserm(j),alpha=0.5,capsize=5)
-            plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
+            #plt.vlines(pm[j],(P[index]/mw[index])*100,(Pm[j]/mwm[j])*100,color=colorchooserm(j),lw=1)
 indexm=np.argwhere(shotnumberm==13299)
 index=np.argwhere(shotnumber==13299)
 plt.plot(pm[indexm],(Pm[indexm]/mwm[indexm])*100,marker='v',color=colorchooserm(indexm),ls='None',label='mod')
@@ -2125,6 +2240,10 @@ arg=p
 fig=plt.figure(figsize=(width/2,height*0.7))
 for j in np.arange(0,117):
     plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[5],poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4],marker='d',color=colorchooser(j))
+for j in [20,32,67,53]:
+    plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[5],poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4],marker='d',color=colorchooser(j),ls='None',label=gas[j])
+plt.legend(loc='lower right')
+
 plt.xlabel('$h_{\mathrm{exp}}$')
 plt.ylabel('$h_{\mathrm{exp}} - h_{\mathrm{mod}}$',color=colors2[8])
 plt.tick_params(axis='y', labelcolor=colors2[8])
@@ -2176,12 +2295,18 @@ P,h,h_good=[],[],[]
 for j in np.arange(0,117):
     P.append(poca.Model_accuracy(shotnumber[j],gas[j])[6])
     h.append(abs(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4]))
-    if shotnumber[j] in [13253,13260,13102,13079]:
-        plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[6],abs(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4]),marker='*',color=colorchooser(j),markersize=20)
-    else:
+    
+    if shotnumber[j] not in [13253,13260,13102,13079]:
         plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[6],abs(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4]),marker='d',color=colorchooser(j))
 for j in [20,32,67,53]:
     plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[6],abs(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4]),marker='d',color=colorchooser(j),ls='None',label=gas[j])
+for j in np.arange(0,117):
+    if shotnumber[j] in [13253,13260,13102,13079]:
+        plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[6],abs(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4]),marker='*',markeredgecolor='white',markersize=20, fillstyle='none',markeredgewidth=2.5)
+
+        plt.plot(poca.Model_accuracy(shotnumber[j],gas[j])[6],abs(poca.Model_accuracy(shotnumber[j],gas[j])[5]-poca.Model_accuracy(shotnumber[j],gas[j])[4]),marker='*',markeredgecolor=colorchooser(j),markersize=20, fillstyle='none',markeredgewidth=2)
+
+
 h_1=[h[i] for i in np.argsort(P)]
 P_1=np.sort(P)
 popt,pcov=curve_fit(lin,P_1,h_1)
@@ -2225,7 +2350,7 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/model_hollowness_P_rad_diff.pdf',b
 # fig.savefig('/home/gediz/LaTex/Thesis/Figures/model_P_rad_diff_hist.pdf',bbox_inches='tight')
 
 
-# %% Adjustments to model
+# %% Simplified Model in Parts
 shotnumberm,gasm,mwm,pm,tm,nm,Pm,Pminm,Pmaxm=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_modeled_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
 
 shotnumber,gas,mw,p,te,n,P,Pmin,Pmax=np.genfromtxt('/home/gediz/Results/Modeled_Data/Tota_P_rad/P_total_table.txt',unpack=True,dtype=[int,'<U19',float,float,float,float,float,float,float],delimiter=',',encoding=None)
@@ -2364,6 +2489,10 @@ for j in np.arange(0,115):
 
 fig,ax=plt.subplots(figsize=(width/3,height*0.7))
 ax.set_yscale('log')
+plt.gca().yaxis.set_major_formatter(ScalarFormatter()) 
+plt.gca().yaxis.set_minor_formatter(ScalarFormatter())
+ax.minorticks_off()
+ax.ticklabel_format(axis='y', style='sci')
 ax.set_ylabel('$n_{\mathrm{e}} \cdot n_{\mathrm{0}}$ [m$^{-6}$]',color=colors2[8])
 ax.tick_params(axis='y', labelcolor=colors2[8])
 fig.patch.set_facecolor('white')
@@ -2379,6 +2508,10 @@ fig.savefig('/home/gediz/LaTex/Thesis/Figures/all_studies_mean_densityproduct_pr
 
 fig,ax=plt.subplots(figsize=(width/3,height*0.7))
 ax.set_yscale('log')
+plt.gca().yaxis.set_major_formatter(ScalarFormatter()) 
+plt.gca().yaxis.set_minor_formatter(ScalarFormatter())
+ax.minorticks_off()
+ax.ticklabel_format(axis='y', style='sci')
 ax.set_ylabel('$\overline{\sigma}_{\mathrm{rad,}f}$ [eVm$^3$/s]',color=colors2[5])
 ax.tick_params(axis='y', labelcolor=colors2[5])
 fig.patch.set_facecolor('white')

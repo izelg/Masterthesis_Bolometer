@@ -1,9 +1,9 @@
 #%%
 #Written by: Izel Gediz
 #Date of Creation: 14.11.2022
-#This code takes the simulated data of the cross section of the fluxsurfaces
-#It also takes the modeled and exmerimentaly determined lines of sight
-#Then it derives the area covered by e.g. channel 5 line of sight and fluxsurface 0 to 5 with a given resolution
+#The power absorbed by one sensor is modelled here using the flux surface model, the line of sight measurement and the ADAS data.
+#Furthermore total power loss over the whole plasma can be calculated using modelled or real data.
+
 
 import pandas as pd
 import re
@@ -24,16 +24,17 @@ import plasma_characteristics as pc
 import adas_data as adas
 #%% Parameter
 if __name__ == "__main__":
-    Latex=True
-    Poster=False
+    Latex=False
+    Poster=True
     mesh=1/0.75     #multiply with this factor to account for 25% absorbance of mesh
 
 
     if Poster==True:
-        plt.rc('font',size=20)
+        width=10
+        plt.rc('font',size=25)
         plt.rc('xtick',labelsize=25)
         plt.rc('ytick',labelsize=25)
-        plt.rcParams['lines.markersize']=18
+        plt.rcParams['lines.markersize']=10
     elif Latex==True:
         width=412/72.27
         height=width*(5**.5-1)/2
@@ -89,6 +90,7 @@ def LoadData(location):
     data = pd.read_csv(location, skiprows=4, sep="\t\t", names=cols, engine='python')
     return data
 
+#A short version of the Pixelmethod below (this became obsolete)
 def Method():
     popt_flux_pos=[[],[],[],[],[],[],[],[],[],[],[],[]]
     popt_flux_neg=[[],[],[],[],[],[],[],[],[],[],[],[]]
@@ -161,15 +163,20 @@ def Method():
     print('total:',datetime.now()-start)
 
 
-# Pixelmethod
+# Pixelmethodfunction that uses the flux surface volume, the lines of sight and calculates the volume occupied by each channel in each flux surface
+#Ideally you only have to calculate these volumes once. Then you use this information in the function Boloprofile_calc.
+#There the volumes (or more specific vol/r*2 or v-factors) are paired with the adas data to calculate the actual power absorbed by a bolometer sensor in theory.
+#Read the documentation /home/gediz/Documentations/Powerloss_modelling_Method_and_Results.pdf or the thesis for detailed analysis
+#I tried to explain the method in the comments over each section of this function
 def Pixelmethod():
     start=datetime.now()
     #-----------------------------------------------------#-
     #!!! Enter here which channels lines of sight you want to have analyzed(1 to 8), what pixel-resolution you need (in cm) and  which flux surfaces (0 to 7) should be modeled. 
     #note that more channels, a smaller resolution and more fluxsurfaces result in longer computation times
+    #If you choose err== 'Min' or 'Max' the code derives the power absorbed by a sensor taking into account the largest and smallest possible line of sight within the errorbar of the line of sight measurement
     bolo_channel=[5] #1 to 8
-    Bolo= False
-    res=0.5
+    Bolo= True
+    res=0.3
     fluxsurfaces=[0,1,2,3,4,5,6,7,8,9,10,11]
     err='None'
     #-----------------------------------------------------#-
@@ -186,7 +193,7 @@ def Pixelmethod():
         
 
     for bol in bolo_channel:
-        fig=plt.figure(figsize=(w,w))
+        fig=plt.figure(figsize=(width,width))
         ax=fig.add_subplot(111)
         x_=pd.DataFrame(pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_position_extended.csv',sep=',',engine='python'),dtype=np.float64)
         y_=pd.read_csv('/home/gediz/IDL/Fluxsurfaces/example/Fluxsurfaces_10_angle30_radii_extended.csv',sep=',',engine='python')
@@ -335,7 +342,7 @@ def Pixelmethod():
         plt.ylim(-15.5,15.5)
         fig1= plt.gcf()
         plt.show()
-        fig1.savefig('/home/gediz/LaTex/Thesis/Figures/pixelmethod_sensor_5.pdf',bbox_inches='tight')
+        fig1.savefig('/home/gediz/Results/Jahresbericht/pixelmethod_sensor_5.pdf',bbox_inches='tight')
         #fig1.savefig('/home/gediz/Results/Modeled_Data/Fluxsurfaces_and_Lines_of_sight/flux_{f1}_to_{f2}_channel_{b}.pdf'.format(f1=fluxsurfaces[0],f2=fluxsurfaces[-1],b=bolo_channel[0]))
 
         vol_ges=0
@@ -354,8 +361,9 @@ def Pixelmethod():
 
     print('total:',datetime.now()-start)
 
-#Total Power from Channel 4
-
+#Total Power from Experiment using the weighing factor.
+#The calculations are explained in the thesis in section 4.6
+#This plots the total power either as a function of pressure or MW power depending on what was investigated in the list of shotnumbers you give it
 def Totalpower_from_exp(s,g,Type='',save=False,plot=False,Temp=True):
     shotnumbers=s
     gases=g
@@ -425,6 +433,8 @@ def Totalpower_from_exp(s,g,Type='',save=False,plot=False,Temp=True):
         fig1.savefig('/home/gediz/LaTex/Thesis/Figures/pressure_study_245.pdf',bbox_inches='tight')
     return arg,P_ges_exp,P_ges_exp_error_min,P_ges_exp_error_max
 
+#The total power emitted by the plasma based on the calculated (modelled) bolometer values
+#This plots the total power either as a function of pressure or MW power depending on what was investigated in the list of shotnumbers you give it
 def Totalpower_calc(shotnumbers,gases,Type='',plot=False,savefig=False):
     v_i_ges_middle=[0.00984,0.01764,0.02042,0.02157,0.02157,0.02042,0.01764,0.00984]#0.01476
     v_i_ges_min=[0.00894,0.01554,0.01786,0.01785,0.01785,0.01786,0.01554,0.00894]
@@ -461,9 +471,9 @@ def Totalpower_calc(shotnumbers,gases,Type='',plot=False,savefig=False):
     if plot==True:
         P_ges_exp,P_ges_exp_error_min,P_ges_exp_error_max=Totalpower_from_exp([shotnumbers],[gases],Type)[1],Totalpower_from_exp([shotnumbers],[gases],Type)[2],Totalpower_from_exp([shotnumbers],[gases],Type)[3]
         c1=colors2[1]
-        c2=colors2[5]
+        c2=colors2[4]
         twoaxis=False
-        fig, ax=plt.subplots(figsize=(width/2,height))
+        fig, ax=plt.subplots(figsize=(width/2,height*0.8))
         #plt.ylim(0,500)
         ax.set_xlabel(xlabel)
         lns1=ax.plot(arg,P_ges_exp,'o--',color=c1,label='experimental')
@@ -484,7 +494,7 @@ def Totalpower_calc(shotnumbers,gases,Type='',plot=False,savefig=False):
         ax.errorbar(arg,P_ges_calc,yerr=(P_ges_calc_error_min,P_ges_calc_error_max), capsize=5,linestyle='None',color=c2)
         leg = lns1  +lns2
         labs = [l.get_label() for l in leg]
-        ax.legend(leg, labs, loc='lower center', title=title,bbox_to_anchor=(0.5,-0.5))
+        ax.legend(leg, labs, loc='lower center', title=title,bbox_to_anchor=(0.5,-0.6))
         fig= plt.gcf()
         plt.show()
         if savefig==True:
@@ -551,7 +561,8 @@ def Totalpower_calc_compare(shotnumbers,gases,Type='',plot=False,savefig=False):
         fig1.savefig('/home/gediz/LaTex/Thesis/Figures/power_study_245_modelled.pdf',bbox_inches='tight')
     return arg,P_ges_calc,P_ges_calc_error_min,P_ges_calc_error_max
 
-
+#Calculates the weighing factor used to weigh each channels power information in the calculation of the total power
+#The weighing factor is explained in the thesis in section 4.6.1
 def Totalpower_from_Profile(s):
     vol_4=[0.00010813,0.0001071,0.00015026,0.00018826,0.00019817,0.00019164,0.00019493,0.000214,0.0002304,0.00019267,0.00019731,0.00018608,0.00019864]
     vol_3=[0,0.00002208,0.00006679,0.000102,0.00015254,0.00021412,0.00026981,0.00031004,0.00027036,0.00020052,0.00019463,0.00018738,0.00019145]
@@ -574,6 +585,11 @@ def Totalpower_from_Profile(s):
     return (weight, mean_T, sum(T_dens_ges)/sum(V_T))
 
 #The power absorbed by the channels calculated with ADAS coefficients
+#The v-factors used for this calculations were derived with the pixelmethod function above. 
+#See the thesis for further description of the power modelling. Chapter 5.2
+#The function plots and compares the exerimental with the modelled bolometerprofile
+#Also the experimental data is corrected with the gold absorption factor for ions and neutrals of the according species.
+#Therefore the amount of power produced by ions and neutrals respectively is derived from the modelled data.
 def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False):
     title=str(g)+', shot n$^\circ$'+str(s)+', MW: '+str(pc.GetMicrowavePower(s)[1])+' \n P$_{\mathrm{MW}}$= '+str(float(f'{pc.GetMicrowavePower(s)[0]:.1f}'))+' W, p='+str(float(f'{pc.Pressure(s,g):.1f}'))+' mPa'
     if makedata==True:
@@ -650,7 +666,7 @@ def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False
         print('hollowness mod:',(np.mean([P_profile_calc[3],P_profile_calc[4]])-np.mean([P_profile_calc[0],P_profile_calc[7]]))/(np.mean([P_profile_calc[2],P_profile_calc[5]])-np.mean([P_profile_calc[0],P_profile_calc[7]])))
         x=[1,2,3,4,5,6,7,8]
         c1=colors2[1]#'#18a8d1'
-        c2=colors2[5]#'#fb8500'
+        c2=colors2[4]#'#fb8500'
         twoaxis=False
         fig, ax=plt.subplots(figsize=(width/2,height*0.8))
         #plt.ylim(0,20)
@@ -674,7 +690,7 @@ def Boloprofile_calc(s,g,savedata=False,savefig=False,makedata=False, plot=False
             ax.errorbar(x,P_profile_calc,yerr=(error_P_calc[0],error_P_calc[1]), capsize=5,linestyle='None',color=c2)
         leg = lns1  +lns2
         labs = [l.get_label() for l in leg]
-        ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.7), title=title)
+        ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.65), title=title)
         fig= plt.gcf()
         plt.show()
         if savefig==True:
@@ -707,7 +723,7 @@ def Boloprofile_correction(s,g,savedata=False):
 
     return P_profile, P_profile_corr,error_P_exp
 
-
+#Calculates the total power from the adas data and flux surface information alone without taking the detour over the lines of sight and each sensors absorbed data
 def Total_cross_section_calc(s,g):
     shotnumbers=s
     gases=g
@@ -752,36 +768,9 @@ def Total_cross_section_calc(s,g):
 
             P_total.append(((P_0+P_1)/sum(flux))*V_T_2)
     return P_total
-def Forward_modeling(s,g):
-        
-    flux_4=[0.00106,0.00105,0.00145,0.00181,0.00188,0.00180,0.00179,0.00191,0.00207,0.00169,0.00178,0.00164,0.00187]
-    flux_3=[0,0.000216,0.000644,0.000984,0.00145,0.00202,0.00249,0.00284,0.00243,0.00194,0.00187,0.00177,0.00177]
-    flux_2=[0,0,0,0,0.0000568,0.000782,0.00144,0.00198,0.00249,0.00271,0.00310,0.00271,0.00237]
-    flux_1=[0,0,0,0,0,0,0,0,0.000667,0.0014,0.00207,0.00258,0.00312]
-    flux_pos=[2.174,5.081,5.844,6.637,7.461,8.324,9.233,10.19,11.207,12.321,13.321,14.321,15.321,16.321]#position of the flux surface edged in cm
-    p_t,t,p_d,d=pc.TemperatureProfile(s,'Values',save=False)[0]*100,pc.TemperatureProfile(s,'Values',save=False)[1],pc.DensityProfile(s,'Values',save=False)[0]*100,pc.DensityProfile(s,'Values',save=False)[1]
-    P_profile=np.genfromtxt('/home/gediz/Results/Bolometer_Profiles/shot{s}/shot{s}_bolometerprofile_from_radiation_powers.txt'.format(s=s),usecols=1)
-    if g=='H':
-        temp,pec= adas.h_adf11(T_max=201)[0],adas.h_adf11(T_max=201)[1]
 
-    flux_t,flux_d,flux_rc=[],[],[]
-    n=pc.Densities(s,g)[0]
-    n_e=pc.Densities(s,g)[1]
-    n_0=pc.Densities(s,g)[2]
-    for i in np.arange(0,len(flux_pos)-1):
-        interpol_t=pchip_interpolate(p_t,t,np.arange(flux_pos[i],flux_pos[i+1],0.01))
-        flux_t.append(np.mean(interpol_t))
-    def P_rad(x,n_e,n_0,v_i):
-        return x*n_e*n_0*v_i*1.602E-19*(A_D/(4*np.pi))
-    pec_modeled=[]
-    for a,b in zip([0,1,2,3,4,5,6,7],[flux_1,flux_2,flux_3,flux_4,flux_4,flux_3,flux_2,flux_1]):
-        for j in np.arange(0,len(flux_d)):
-            n_e=flux_d[j]
-            n_0=pc.Densities(s,g)[2]
-            v_i=b[j]
-            P=P_profile[a]*mesh/gold(g)
-            print(nsolve(P_rad(x,n_e,n_0,v_i),x,P))
-
+#With this function the modelled and measured data are compared. 
+#It calculates the hollowness and delta used in the thesis in chapter 7 to compare model and experiment.
 def Model_accuracy(s,g,plot=False,savefig=False):
     calc_p,calc_err_min,calc_err_max,bolo_p,bolo_err=np.genfromtxt('/home/gediz/Results/Modeled_Data/Bolometerprofiles/shot{s}/shot{s}_modeled_powerprofile_{g}.txt'.format(s=s,g=g),unpack=True, usecols=(1,2,3,4,5))
     mean_calc=(np.mean(calc_p))
@@ -800,16 +789,16 @@ def Model_accuracy(s,g,plot=False,savefig=False):
         x=[1,2,3,4,5,6,7,8]
         c1=colors2[1]
         c2=colors2[5]
-        fig, ax=plt.subplots(figsize=(width/2,height*0.7))
+        fig, ax=plt.subplots(figsize=(width/2,height*0.8))
         ax.set_xticks(x)
         ax.set_xlabel('sensor number')
-        lns1=ax.plot(x,norm_exp,'o--',color=colors2[9],label='experimental, $h$ ='+str('%.2f' %hollowness_exp))
+        lns1=ax.plot(x,norm_exp,'o--',color=colors2[1],label='experimental, $h$ ='+str('%.2f' %hollowness_exp))
         ax.set_ylabel('$\Delta P_{\mathrm{rad}} / \overline{\Delta P}_{\mathrm{rad}}  $ ')
         lns2=ax.plot(x,norm_calc,'v--',color=colors2[4],label='modelled, $h$ ='+str('%.2f' %hollowness_calc))
-        ax.plot(1.5,1.3, marker='*',color=colors2[9], markersize=20)
+        #ax.plot(1.5,1.3, marker='*',color=colors2[9], markersize=20)
         leg = lns1  +lns2
         labs = [l.get_label() for l in leg]
-        ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.8), title=title)
+        ax.legend(leg, labs, loc='lower center',bbox_to_anchor=(0.5,-0.65), title=title)
         for i in x:
             ax.vlines(i,norm_exp[i-1],norm_calc[i-1],color=colors2[2])
         ax.annotate(r'\textbf{$P_{\mathrm{rad, diff}}$} = '+str('%.2f' % sum(diff)),(2.7,0.63),color=colors2[5])
@@ -880,19 +869,19 @@ if __name__ == "__main__":
     start=datetime.now()
     print('start:', start)
     #for shotnumber in np.arange(13079,13085):
-    #shotnumber=13345
-    gas='Ne'
-    shotnumbers=[np.arange(13079,13085)]
-    gases=[['Ne'for i in range(88)]]
+    shotnumber=13281
+    gas='Ar'
+    shotnumbers=[[13265,13263,13261,13259,13257]]
+    gases=[['He'for i in range(88)]]
     density_from=['f' for i in range(len(shotnumbers))]
     #infile='/data6/shot{s}/kennlinien/auswert'.format(s=shotnumber)
 
     #location ='/data6/shot{name}/interferometer/shot{name}.dat'.format(name=shotnumber)
 
-    Totalpower_calc_compare(shotnumbers,gases,Type='Pressure',plot=True)#,savefig=True)
-    #Boloprofile_calc(shotnumber,gas,makedata=True,plot=True,savedata=True)
-    #Model_accuracy(shotnumber,gas,plot=True)
-
+    #Totalpower_calc(shotnumbers[0],gases[0],Type='Power',plot=True,savefig=True)
+    #Boloprofile_calc(shotnumber,gas,makedata=False,plot=True,savefig=True)
+    #Model_accuracy(shotnumber,gas,plot=True,savefig=True)
+    Pixelmethod()
     print('total:',datetime.now()-start)
   # %%
 

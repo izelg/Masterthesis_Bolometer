@@ -1,4 +1,14 @@
 #%%
+
+#For H, He, Ar and Ne the ADF15 and ADF11 data files have been collected (see respective Documentation or Adas website or thesis to find out what data each file contains)
+#These files can be analyzed with the following functions.
+#The ADAS data is stored in complex files with varying syntax according to gas type and age of the data.
+#Therefore individual functions to read out the data files were neccessary.
+#Most of the bellow functions can put out a value (photo emmissivity constant) depending on the density and temperature you put in.
+#As most files don't resolve density you can request a pec for an averaged density.
+#The ADF15 files contain line specific rates which allows the plotting of spectra which is possible with the according functions bellow.
+#For context on the files analyzed here, again: check my documentation on the ADAs Data or the website it originates from https://open.adas.ac.uk/
+
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as mticker
